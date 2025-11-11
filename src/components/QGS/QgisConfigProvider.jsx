@@ -31,11 +31,15 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
   const [relationsLoaded, setRelationsLoaded] = React.useState(false);
   const [relations, setRelations] = React.useState([]);
 
-  // Método para añadir una notificación
+  // Método para añadir una notificación usando el componente Message
   const addNotification = ({ title, text, level }) => {
-    console.log("addNotification level:", level);
-    console.log("addNotification title:", title);
-    console.log("addNotification text:", text);
+    // Normalizar el nivel: 'warn' -> 'warning', 'success' -> 'success', etc.
+    const normalizedLevel = level === 'warn' ? 'warning' : (level || 'info');
+    
+    // Validar que el nivel sea uno de los permitidos por Message
+    const validLevels = ['info', 'success', 'warning', 'error'];
+    const messageLevel = validLevels.includes(normalizedLevel) ? normalizedLevel : 'info';
+    
     let id = Date.now() + Math.random();
     setNotifications(prev => [
       ...prev,
@@ -43,7 +47,7 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
         id: id,
         title,
         text,
-        level // 'info', 'warn', 'error'
+        level: messageLevel // 'info', 'success', 'warning', 'error' - compatible con Message component
       }
     ]);
 
@@ -52,15 +56,25 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
       removeNotification(id);
     }, 5000);
   };
+  
+  // Métodos de conveniencia para añadir notificaciones por tipo
+  const addSuccess = (title, text) => addNotification({ title, text, level: 'success' });
+  const addError = (title, text) => addNotification({ title, text, level: 'error' });
+  const addWarning = (title, text) => addNotification({ title, text, level: 'warning' });
+  const addInfo = (title, text) => addNotification({ title, text, level: 'info' });
 
   // Método para eliminar una notificación (opcional)
   const removeNotification = (id) => {
     setNotifications(prev => prev.filter(n => n.id !== id));
   };
 
-  // Exponer el manager en el contexto
+  // Exponer el manager en el contexto con métodos de conveniencia
   let notificationManager = {
     addNotification,
+    addSuccess,
+    addError,
+    addWarning,
+    addInfo,
     removeNotification,
     notifications
   };
@@ -119,9 +133,17 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
         const promise = fetchAllFeatures(
           qgsUrl,
           qgsProjectPath,
-          relation.referencingLayer.name
+          relation.referencingLayer.name,
+          '',
+          500,
+          token
         ).then(values => {
           relation.referencingLayerValues = values;
+          return relation;
+        }).catch(error => {
+          console.warn(`Error al cargar features de la capa ${relation.referencingLayer.name}:`, error);
+          // Retornar relación sin valores en caso de error
+          relation.referencingLayerValues = [];
           return relation;
         });
 

@@ -1,9 +1,84 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
 import PropTypes from 'prop-types';
-import { MapProvider } from './MapProvider';
+import { MapProvider, useMap } from './MapProvider';
 import MapContainer from './MapContainer';
 import MapControls from './MapControls';
+import MapToolbar from './MapToolbar';
 import './Map.css';
+
+/**
+ * Componente interno que maneja los eventos del mapa
+ */
+const MapEventHandlers = ({ onMapClick, onMapMove, onFeatureSelect }) => {
+  const { mapInstance } = useMap() || {};
+  const handlersRef = useRef({ onMapClick, onMapMove, onFeatureSelect });
+
+  // Actualizar referencias cuando cambien los callbacks
+  useEffect(() => {
+    handlersRef.current = { onMapClick, onMapMove, onFeatureSelect };
+  }, [onMapClick, onMapMove, onFeatureSelect]);
+
+  // Registrar eventos del mapa
+  useEffect(() => {
+    if (!mapInstance) {
+      return;
+    }
+
+    // Handler para click en el mapa
+    const handleMapClick = (e) => {
+      if (handlersRef.current.onMapClick) {
+        handlersRef.current.onMapClick(e);
+      }
+    };
+
+    // Handler para movimiento del mapa
+    const handleMapMove = (e) => {
+      if (handlersRef.current.onMapMove) {
+        handlersRef.current.onMapMove(e);
+      }
+    };
+
+    // Handler para selección de features (GetFeatureInfo)
+    const handleFeatureSelect = (e) => {
+      if (handlersRef.current.onFeatureSelect) {
+        // Intentar obtener información de la feature desde el evento
+        // Esto puede requerir una llamada GetFeatureInfo a QGIS Server
+        const featureInfo = e.layer?.feature || e.target?.feature || null;
+        handlersRef.current.onFeatureSelect({
+          latlng: e.latlng,
+          layerPoint: e.layerPoint,
+          containerPoint: e.containerPoint,
+          feature: featureInfo,
+          originalEvent: e
+        });
+      }
+    };
+
+    // Registrar eventos
+    mapInstance.on('click', handleMapClick);
+    mapInstance.on('moveend', handleMapMove);
+    
+    // Para feature selection, necesitamos escuchar clicks en las capas WMS
+    // Esto se puede hacer interceptando los eventos de las capas
+    // Por ahora, registramos un evento personalizado que se puede disparar desde las capas
+    mapInstance.on('featureclick', handleFeatureSelect);
+
+    // Cleanup: remover listeners
+    return () => {
+      mapInstance.off('click', handleMapClick);
+      mapInstance.off('moveend', handleMapMove);
+      mapInstance.off('featureclick', handleFeatureSelect);
+    };
+  }, [mapInstance]);
+
+  return null;
+};
+
+MapEventHandlers.propTypes = {
+  onMapClick: PropTypes.func,
+  onMapMove: PropTypes.func,
+  onFeatureSelect: PropTypes.func
+};
 
 /**
  * Componente principal del mapa que integra MapProvider, MapContainer y MapControls
@@ -14,7 +89,6 @@ const Map = ({
   width = '100%', 
   height = '400px',
   showControls = true,
-  controlsPosition = 'right',
   className = '',
   onMapReady = null,
   onMapClick = null,
@@ -23,19 +97,6 @@ const Map = ({
   ...mapProps 
 }) => {
   const handleMapReady = (mapInstance) => {
-    console.log('Mapa inicializado:', mapInstance);
-    
-    // Configurar eventos del mapa si se proporcionan
-    if (mapInstance) {
-      if (onMapClick) {
-        mapInstance.on('click', onMapClick);
-      }
-      if (onMapMove) {
-        mapInstance.on('moveend', onMapMove);
-      }
-      // El evento de selección de features se maneja a través del MapProvider
-    }
-    
     if (onMapReady) {
       onMapReady(mapInstance);
     }
@@ -52,11 +113,19 @@ const Map = ({
               onMapReady={handleMapReady}
               {...mapProps}
             />
+            <MapEventHandlers 
+              onMapClick={onMapClick}
+              onMapMove={onMapMove}
+              onFeatureSelect={onFeatureSelect}
+            />
             {showControls && (
-              <div className={`map-sidebar map-sidebar-${controlsPosition}`}>
+              <div className="map-sidebar map-sidebar-right">
                 <MapControls />
               </div>
             )}
+            <div className="map-toolbar-container">
+              <MapToolbar />
+            </div>
           </div>
         </div>
       </div>
@@ -71,8 +140,6 @@ Map.propTypes = {
   height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   /** Mostrar controles del mapa */
   showControls: PropTypes.bool,
-  /** Posición de los controles: 'left' o 'right' */
-  controlsPosition: PropTypes.oneOf(['left', 'right']),
   /** Clase CSS adicional */
   className: PropTypes.string,
   /** Callback cuando el mapa está listo */

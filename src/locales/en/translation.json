@@ -167,6 +167,7 @@
       "loading": "Loading map...",
       "error": "Error loading map",
       "zoomIn": "Zoom in",
+      "zoomInBox": "Zoom to box",
       "zoomOut": "Zoom out",
       "resetView": "Reset view",
       "fullscreen": "Fullscreen",
@@ -176,7 +177,15 @@
       "errorInitializing": "Error initializing the map",
       "errorLoadingLayers": "Error loading map layers",
       "errorLoadingBaseLayers": "Error loading base layers",
-      "wmtsPluginNotAvailable": "WMTS plugin not available, using WMS as fallback"
+      "wmtsPluginNotAvailable": "WMTS plugin not available, using WMS as fallback",
+      "measurements": "Measurements",
+      "measureLine": "Measure distance",
+      "measureArea": "Measure area",
+      "measureStart": "Start",
+      "measureMeter": "m",
+      "measureKilometer": "km",
+      "measureSquareMeter": "m²",
+      "measureSquareKilometer": "km²"
     },
     "toolbar": {
       "actions": "Actions",

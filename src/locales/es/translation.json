@@ -172,6 +172,7 @@
       "loading": "Cargando mapa...",
       "error": "Error al cargar el mapa",
       "zoomIn": "Acercar",
+      "zoomInBox": "Zoom a caja",
       "zoomOut": "Alejar",
       "resetView": "Restablecer vista",
       "fullscreen": "Pantalla completa",
@@ -181,7 +182,15 @@
       "errorInitializing": "Error al inicializar el mapa",
       "errorLoadingLayers": "Error al cargar las capas del mapa",
       "errorLoadingBaseLayers": "Error al cargar las capas base",
-      "wmtsPluginNotAvailable": "Plugin WMTS no disponible, usando WMS como fallback"
+      "wmtsPluginNotAvailable": "Plugin WMTS no disponible, usando WMS como fallback",
+      "measurements": "Mediciones",
+      "measureLine": "Medir distancia",
+      "measureArea": "Medir área",
+      "measureStart": "Inicio",
+      "measureMeter": "m",
+      "measureKilometer": "km",
+      "measureSquareMeter": "m²",
+      "measureSquareKilometer": "km²"
     },
     "toolbar": {
       "actions": "Acciones",

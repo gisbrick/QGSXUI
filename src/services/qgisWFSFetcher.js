@@ -18,11 +18,24 @@ export async function fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filte
   }
 
   const response = await fetch(`${url}?${params.toString()}`);
+  const text = await response.text();
+  
   if (!response.ok) {
-    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+    // Intentar parsear el error como XML si es posible
+    try {
+      const parser = new DOMParser();
+      const xmlDoc = parser.parseFromString(text, 'text/xml');
+      const rootName = xmlDoc.documentElement.nodeName;
+      if (rootName === 'ServiceExceptionReport') {
+        const exceptionText = xmlDoc.querySelector('ServiceException')?.textContent || 'Unknown server error';
+        throw new Error(`QGIS Server returned a ServiceException: ${exceptionText}`);
+      }
+    } catch (parseError) {
+      // Si no se puede parsear como XML, usar el error HTTP
+    }
+    throw new Error(`HTTP error: ${response.status} ${response.statusText}. URL: ${url}?${params.toString()}`);
   }
 
-  const text = await response.text();
   const parser = new DOMParser();
   const xmlDoc = parser.parseFromString(text, 'text/xml');
 
@@ -82,7 +95,7 @@ export async function fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter = 
 export async function fetchAllFeatures(qgsUrl, qgsProjectPath, layerName, filter = '', pageSize = 500, token = null) {
   layerName = layerName.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
   // Primero obtenemos el total de features con el conteo
-  const totalCount = await fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filter);
+  const totalCount = await fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filter, token);
 
   // Si no hay features, retornar un array vacío
   if (totalCount === 0) {
@@ -92,7 +105,7 @@ export async function fetchAllFeatures(qgsUrl, qgsProjectPath, layerName, filter
 
   // Si el total es menor que el tamaño de página, no hay paginación
   if (totalCount <= pageSize) {
-    return await fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter, 0, totalCount);
+    return await fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter, 0, totalCount, token);
   }
 
   

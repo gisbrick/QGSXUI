@@ -42,7 +42,7 @@ export const FormProvider = ({ layerName, featureId, children }) => {
           .catch(() => {
             notificationManager.addNotification({
               title: t('ui.qgis.error.retrievingFeature.title'),
-              message: t('ui.qgis.error.retrievingFeature.message'),
+              text: t('ui.qgis.error.retrievingFeature.message'),
               level: 'error'
             })
           });

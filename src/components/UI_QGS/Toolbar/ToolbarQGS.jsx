@@ -33,6 +33,7 @@ const ToolbarQGS = ({
             <Button
               key={key}
               size={size}
+              circular={itemProps.circular || false}
               onClick={itemProps.onClick || (() => {})}
               disabled={itemProps.disabled || false}
               icon={itemProps.icon}

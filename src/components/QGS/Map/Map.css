@@ -81,6 +81,7 @@
   max-width: none !important;
   max-height: none !important;
   flex: none !important;
+  margin-left: 15px;
 }
 
 .map-sidebar .map-controls-group {
@@ -158,4 +159,28 @@
   font-size: 16px;
   line-height: 1;
   display: inline-block;
+}
+
+/* Estilos para la toolbar del mapa */
+.map-toolbar-container {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  z-index: 1000;
+  pointer-events: none;
+}
+
+.map-toolbar-container .map-toolbar {
+  pointer-events: auto;
+  padding-left: 40px;
+  width: fit-content;
+  background: transparent !important;
+}
+
+.map-toolbar-container .map-toolbar .toolbar-qgs {
+  width: auto !important;
+  background: transparent !important;
+  border: none !important;
+  box-shadow: none !important;
+  padding: 0 !important;
 }

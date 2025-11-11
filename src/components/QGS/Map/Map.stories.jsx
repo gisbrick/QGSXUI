@@ -20,11 +20,6 @@ export default {
       control: 'boolean',
       description: 'Mostrar controles del mapa'
     },
-    controlsPosition: {
-      control: 'select',
-      options: ['left', 'right'],
-      description: 'Posición de los controles'
-    },
     // Props del QgisConfigProvider
     qgsUrl: {
       control: 'text',
@@ -83,7 +78,6 @@ export const Default = {
     // Props del componente Map
     height: 400,
     showControls: true,
-    controlsPosition: 'right',
     // Props del QgisConfigProvider
     qgsUrl: 'http://localhost/cgi-bin/qgis_mapserv.fcgi.exe',
     qgsProjectPath: 'C:/trabajos/gisbrick/QGIS/demo01.qgz',

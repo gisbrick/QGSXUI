@@ -41,6 +41,55 @@ const loadWMTSPlugin = () => {
   }
 };
 
+// Función para cargar el plugin de medición
+const loadMeasurePlugin = () => {
+  if (window.L?.MeasureAction) {
+    return; // Ya está cargado
+  }
+
+  let measureScript = document.querySelector('script[data-measure-plugin]') as HTMLScriptElement | null;
+  
+  if (!measureScript) {
+    measureScript = document.createElement('script') as HTMLScriptElement;
+    measureScript.setAttribute('data-measure-plugin', 'true');
+    measureScript.async = false;
+    
+    // Cargar desde public/leaflet (si está disponible) o desde vendor
+    // Primero intentamos desde public, luego desde vendor
+    const tryLoadMeasure = (path) => {
+      measureScript.src = path;
+      measureScript.onload = () => {
+        console.log('Plugin de medición cargado correctamente');
+        // Cargar CSS después de cargar el JS
+        let measureCSS = document.querySelector('link[data-measure-css]') as HTMLLinkElement | null;
+        if (!measureCSS) {
+          measureCSS = document.createElement('link');
+          measureCSS.setAttribute('data-measure-css', 'true');
+          measureCSS.rel = 'stylesheet';
+          // Intentar cargar CSS desde la misma ubicación
+          const cssPath = path.replace('.js', '.css');
+          measureCSS.href = cssPath;
+          measureCSS.onerror = () => {
+            console.warn('No se pudo cargar el CSS del plugin de medición.');
+          };
+          document.head.appendChild(measureCSS);
+        }
+      };
+      measureScript.onerror = () => {
+        // Si falla desde public, intentar desde vendor (solo en desarrollo)
+        if (path.startsWith('/leaflet/')) {
+          console.warn('No se encontró el plugin de medición en public. Las herramientas de medición pueden no estar disponibles.');
+        }
+      };
+    };
+    
+    // Intentar cargar desde public/leaflet primero
+    tryLoadMeasure('/leaflet/leaflet.measure.js');
+    
+    document.head.appendChild(measureScript);
+  }
+};
+
 const preview: Preview = {
   parameters: {
     controls: {
@@ -76,14 +125,21 @@ const preview: Preview = {
               console.log('Leaflet cargado correctamente');
               // Cargar plugin WMTS después de Leaflet
               loadWMTSPlugin();
+              // Cargar plugin de medición después de Leaflet
+              loadMeasurePlugin();
             };
             script.onerror = () => {
               console.error('Error al cargar Leaflet');
             };
   document.head.appendChild(script);
-          } else if (window.L && !window.L.TileLayer?.WMTS) {
-            // Si Leaflet ya está cargado pero falta WMTS
-            loadWMTSPlugin();
+          } else if (window.L) {
+            // Si Leaflet ya está cargado, cargar plugins si faltan
+            if (!window.L.TileLayer?.WMTS) {
+              loadWMTSPlugin();
+            }
+            if (!window.L.MeasureAction) {
+              loadMeasurePlugin();
+            }
           }
         }
       }, []);
