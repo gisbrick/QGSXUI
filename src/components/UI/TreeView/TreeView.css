@@ -1,0 +1,81 @@
+@import '../ui.css';
+
+.tree-view {
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  user-select: none;
+  color: var(--color-text-primary);
+}
+
+.tree-node {
+  margin: 0;
+}
+
+.tree-node__content {
+  display: flex;
+  align-items: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  cursor: pointer;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-fast);
+}
+
+.tree-node__content:hover {
+  background-color: var(--color-hover);
+}
+
+.tree-node__content--selected {
+  background-color: var(--color-selected);
+  color: var(--color-primary);
+}
+
+.tree-node__content--selected:hover {
+  background-color: var(--color-focus);
+}
+
+.tree-node__toggle {
+  background: none;
+  border: none;
+  width: 16px;
+  height: 16px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  padding: 0;
+  margin-right: var(--spacing-xs);
+  font-size: 10px;
+  color: var(--color-text-secondary);
+  transition: var(--transition-fast);
+  border-radius: var(--border-radius-sm);
+}
+
+.tree-node__toggle:hover {
+  background-color: var(--color-hover);
+}
+
+.tree-node__toggle--expanded {
+  transform: rotate(90deg);
+}
+
+.tree-node__spacer {
+  width: 16px;
+  margin-right: var(--spacing-xs);
+}
+
+.tree-node__icon {
+  margin-right: var(--spacing-sm);
+  display: flex;
+  align-items: center;
+  font-size: var(--font-size-lg);
+}
+
+.tree-node__label {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+/* Children are already indented via inline styles */

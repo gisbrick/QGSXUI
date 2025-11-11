@@ -1,0 +1,113 @@
+.form-layout-qgs {
+  width: 100%;
+  margin: 0 auto;
+  padding: 12px;
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.form-layout-qgs__header {
+  margin-bottom: 12px;
+  border-bottom: 2px solid #e9ecef;
+  padding-bottom: 8px;
+}
+
+.form-layout-qgs__header h3 {
+  margin: 0;
+  color: #333;
+  font-size: 18px;
+}
+
+.form-layout-qgs__content {
+  min-height: 400px;
+}
+
+.form-layout-qgs--error,
+.form-layout-qgs--empty {
+  text-align: center;
+  padding: 40px;
+  color: #666;
+}
+
+.form-layout-qgs--error {
+  border: 2px dashed #dc3545;
+  background: #f8d7da;
+  color: #721c24;
+}
+
+.form-container__content {
+  padding: 4px 0;
+}
+
+.form-groupbox {
+  margin-bottom: 4px;
+}
+
+.form-field {
+  padding: 8px 12px;
+  background: #f8f9fa;
+  border: 1px solid #dee2e6;
+  border-radius: 4px;
+  margin: 4px 0;
+  font-family: monospace;
+  font-size: 14px;
+  color: #495057;
+}
+
+/* Estilos para contenedores */
+.form-container {
+  margin-bottom: 4px;
+}
+
+.form-container__label {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Estilos específicos para contenedores tipo Row */
+.form-container-row {
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+/* Reducir espaciado cuando no hay label */
+.form-container-row--no-label {
+  margin-bottom: 2px;
+}
+
+.form-container-row__label {
+  margin: 0 0 2px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+}
+
+/* Reducir padding interno del content cuando no hay label en la fila */
+.form-container-row--no-label .form-container__content {
+  padding: 2px 0;
+}
+
+/* Asegurar que los FormRow dentro de containers-row ocupen todo el ancho */
+.form-container-row .form-row {
+  width: 100%;
+}
+
+/* Reducir espaciado entre filas cuando no hay label en el contenedor */
+.form-container-row--no-label .form-row {
+  margin-bottom: 2px;
+}
+
+.form-container-row .form-row__content {
+  display: flex;
+  flex-wrap: nowrap;
+  gap: 8px;
+  width: 100%;
+}
+
+.form-container-row .form-row__content .form-field {
+  flex: 1;
+  min-width: 0;
+}

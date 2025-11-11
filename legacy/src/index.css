@@ -1,0 +1,137 @@
+body {
+  margin: 0;
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', 'Roboto', 'Oxygen',
+    'Ubuntu', 'Cantarell', 'Fira Sans', 'Droid Sans', 'Helvetica Neue',
+    sans-serif;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+code {
+  font-family: source-code-pro, Menlo, Monaco, Consolas, 'Courier New',
+    monospace;
+}
+
+.formComponentModal {
+  width: 500px;
+}
+
+/*
+Estilo para el buscador de inhumados
+*/
+.flex-container {
+  display: flex;
+  flex-wrap: wrap;
+}
+.form-item {
+  padding: 5px;
+  flex: 30%;
+}
+
+@media (max-width: 800px) {
+  .form-item {
+    flex: 100%;
+  }
+}
+
+/* Apilar los elementos solo cuando el ancho de la ventana sea menor o igual a 900px */
+@media (max-width: 900px) {
+.formComponentModal {
+  width: 100%;
+}
+
+}
+/* Apilar los elementos solo cuando el ancho de la ventana sea menor o igual a 500px */
+@media (max-width: 500px) {
+  .container-table {
+    display: table;
+  }
+}
+
+/*Modificadores de cursor*/
+.cursor-info {
+  cursor: url('./assets/mouse-info-black.png'), auto;
+}
+
+.cursor-edit-point {
+  /*cursor: url('./assets/icons8-marcador-30.png'), auto;*/
+  cursor: crosshair;
+}
+
+.cursor-edit-line {
+  cursor: crosshair;
+}
+
+.cursor-edit-polygon {
+  cursor: crosshair;
+}
+
+/*Clase que resalta el contenido que se está leyendo*/
+
+.highlight {
+  display: inline;
+  padding: .25em 0;
+  background: #FFC107;
+  box-shadow: .5em 0 0 #FFC107, -.5em 0 0 #FFC107;
+}
+
+
+.ant-table-thead .ant-table-cell {
+  background-color: var(--bg-color) !important;
+  }
+
+
+.ant-tour-mask {
+  z-index: 1050 !important;
+}
+
+.form-view {
+  max-width: 500px;
+}
+
+/* Apilar los elementos solo cuando el ancho de la ventana sea menor o igual a 500px */
+@media (max-width: 500px) {
+  .form-view {
+    max-width: "auto";
+  }
+}
+
+.ant-drawer {
+  z-index: 950 !important;
+}
+
+.leaflet-top {
+  z-index: 900 !important;
+}
+
+.leaflet-bottom {
+  z-index: 900 !important;
+}
+
+.ant-spin-fullscreen {
+  background-color: transparent !important;
+  z-index: 1500;
+}
+
+.blink {
+  background-color: #FFC107;
+  animation: blink-animation 1s infinite; 
+}   
+@keyframes blink-animation {     
+  0% {
+    background-color: #FFC107;
+    opacity: 1; 
+  }     
+  50% { 
+    background-color: #FFC107;
+    opacity: 0; 
+  }     
+  100% { 
+    background-color: #FFC107;
+    opacity: 1; 
+  }   
+}
+
+.selected-row {
+  background-color: #CDEFFF;
+}

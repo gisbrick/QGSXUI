@@ -1,0 +1,26 @@
+{
+    "cemetery": {
+        "inhumation": {
+            "config": {
+
+            }
+        },
+        "transfer": {
+            "config": {
+
+            }
+        },
+        "searcher": {
+            "config": {
+
+            }
+        }
+    },
+    "inventory": {
+        "insertion": {
+            "config": {
+
+            }
+        }
+    }
+}

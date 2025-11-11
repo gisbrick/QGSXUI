@@ -1,0 +1,181 @@
+/* Pagination Component Styles */
+.pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-family: inherit;
+  user-select: none;
+}
+
+/* Botones base */
+.pagination__btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  border: 1px solid #d1d5db;
+  background-color: #ffffff;
+  color: #374151;
+  cursor: pointer;
+  transition: all 0.2s ease-in-out;
+  font-family: inherit;
+  font-weight: 500;
+  text-decoration: none;
+  white-space: nowrap;
+}
+
+.pagination__btn:hover:not(:disabled) {
+  background-color: #f9fafb;
+  border-color: #9ca3af;
+  color: #111827;
+}
+
+.pagination__btn:focus {
+  outline: none;
+  box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.5);
+}
+
+.pagination__btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background-color: #f3f4f6;
+  color: #9ca3af;
+}
+
+/* Botón actual/activo */
+.pagination__btn--current {
+  background-color: #3b82f6;
+  border-color: #3b82f6;
+  color: #ffffff;
+}
+
+.pagination__btn--current:hover:not(:disabled) {
+  background-color: #2563eb;
+  border-color: #2563eb;
+}
+
+/* Tipos de botones */
+.pagination__btn--first,
+.pagination__btn--last {
+  border-radius: 6px;
+}
+
+.pagination__btn--prev,
+.pagination__btn--next {
+  border-radius: 6px;
+}
+
+.pagination__btn--number {
+  border-radius: 4px;
+  min-width: 36px;
+}
+
+/* Contenedor de números */
+.pagination__numbers {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+/* Puntos suspensivos */
+.pagination__ellipsis {
+  padding: 0 8px;
+  color: #9ca3af;
+  font-weight: 500;
+}
+
+/* Iconos */
+.pagination__icon {
+  font-size: 16px;
+  line-height: 1;
+}
+
+/* Texto */
+.pagination__text {
+  font-size: inherit;
+}
+
+/* Info de página */
+.pagination__info {
+  padding: 0 12px;
+  color: #6b7280;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+/* Tamaños */
+.pagination--small {
+  gap: 2px;
+}
+
+.pagination--small .pagination__btn {
+  padding: 4px 8px;
+  font-size: 12px;
+  min-height: 28px;
+}
+
+.pagination--small .pagination__btn--number {
+  min-width: 28px;
+}
+
+.pagination--small .pagination__icon {
+  font-size: 14px;
+}
+
+.pagination--medium {
+  gap: 4px;
+}
+
+.pagination--medium .pagination__btn {
+  padding: 6px 12px;
+  font-size: 14px;
+  min-height: 36px;
+}
+
+.pagination--medium .pagination__btn--number {
+  min-width: 36px;
+}
+
+.pagination--medium .pagination__icon {
+  font-size: 16px;
+}
+
+.pagination--large {
+  gap: 6px;
+}
+
+.pagination--large .pagination__btn {
+  padding: 8px 16px;
+  font-size: 16px;
+  min-height: 44px;
+}
+
+.pagination--large .pagination__btn--number {
+  min-width: 44px;
+}
+
+.pagination--large .pagination__icon {
+  font-size: 18px;
+}
+
+/* Responsive */
+@media (max-width: 640px) {
+  .pagination__text {
+    display: none;
+  }
+  
+  .pagination--small .pagination__btn--prev,
+  .pagination--small .pagination__btn--next {
+    padding: 4px 6px;
+  }
+  
+  .pagination--medium .pagination__btn--prev,
+  .pagination--medium .pagination__btn--next {
+    padding: 6px 8px;
+  }
+  
+  .pagination--large .pagination__btn--prev,
+  .pagination--large .pagination__btn--next {
+    padding: 8px 10px;
+  }
+}

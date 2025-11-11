@@ -1,0 +1,140 @@
+.ui-button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  border: 1px solid #007bff;
+  border-radius: 4px;
+  background-color: #007bff;
+  color: white;
+  font-size: 14px;
+  cursor: pointer;
+  font-family: inherit;
+  transition: all 0.2s ease;
+}
+
+.ui-button:hover:not(:disabled) {
+  background-color: #0056b3;
+  border-color: #0056b3;
+}
+
+.ui-button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+/* Estado seleccionado/activo */
+.ui-button--selected {
+  background-color: #0056b3;
+  border-color: #0056b3;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+}
+
+.ui-button--selected:hover:not(:disabled) {
+  background-color: #004085;
+  border-color: #004085;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.35);
+}
+
+.ui-button__icon {
+  display: inline-flex;
+  align-items: center;
+}
+
+.ui-button__text {
+  display: inline-flex;
+  align-items: center;
+}
+
+/* Tamaños del botón */
+.ui-button--small {
+  padding: 4px 8px;
+  font-size: 12px;
+  gap: 4px;
+}
+
+.ui-button--small .ui-button__icon {
+  font-size: 12px;
+}
+
+.ui-button--small .ui-button__text {
+  font-size: 12px;
+}
+
+.ui-button--medium {
+  padding: 8px 16px;
+  font-size: 14px;
+  gap: 8px;
+}
+
+.ui-button--medium .ui-button__icon {
+  font-size: 14px;
+}
+
+.ui-button--medium .ui-button__text {
+  font-size: 14px;
+}
+
+.ui-button--large {
+  padding: 12px 24px;
+  font-size: 16px;
+  gap: 10px;
+}
+
+.ui-button--large .ui-button__icon {
+  font-size: 18px;
+}
+
+.ui-button--large .ui-button__text {
+  font-size: 16px;
+}
+
+/* Botón circular */
+.ui-button--circular {
+  border-radius: 50% !important;
+  justify-content: center !important;
+  align-items: center !important;
+  padding: 0 !important;
+  box-sizing: border-box;
+  min-width: 0;
+  flex-shrink: 0;
+  gap: 0 !important;
+}
+
+.ui-button--circular.ui-button--small {
+  width: 28px !important;
+  height: 28px !important;
+  min-width: 28px !important;
+  min-height: 28px !important;
+}
+
+.ui-button--circular.ui-button--small .ui-button__icon {
+  font-size: 14px;
+}
+
+.ui-button--circular.ui-button--medium {
+  width: 36px !important;
+  height: 36px !important;
+  min-width: 36px !important;
+  min-height: 36px !important;
+}
+
+.ui-button--circular.ui-button--medium .ui-button__icon {
+  font-size: 16px;
+}
+
+.ui-button--circular.ui-button--large {
+  width: 48px !important;
+  height: 48px !important;
+  min-width: 48px !important;
+  min-height: 48px !important;
+}
+
+.ui-button--circular.ui-button--large .ui-button__icon {
+  font-size: 20px;
+}
+
+/* Para botones circulares, ocultar el texto y solo mostrar el icono */
+.ui-button--circular .ui-button__text {
+  display: none;
+}

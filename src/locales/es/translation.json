@@ -1,0 +1,192 @@
+{
+  "hello": "Hola",
+  "welcome": "Bienvenido a QGSXUI",
+  "ui": {
+    "common": {
+      "ok": "Aceptar",
+      "cancel": "Cancelar",
+      "close": "Cerrar",
+      "save": "Guardar",
+      "delete": "Eliminar",
+      "edit": "Editar",
+      "add": "Agregar",
+      "remove": "Remover",
+      "loading": "Cargando...",
+      "error": "Error",
+      "success": "Éxito",
+      "warning": "Advertencia",
+      "info": "Información",
+      "search": "Buscar",
+      "filter": "Filtrar",
+      "clear": "Limpiar",
+      "select": "Seleccionar",
+      "name": "Nombre",
+      "language": "Idioma",
+      "next": "Siguiente",
+      "previous": "Anterior",
+      "page": "Página",
+      "of": "de",
+      "show": "Mostrar",
+      "hide": "Ocultar",
+      "expand": "Expandir",
+      "collapse": "Contraer",
+      "required": "Requerido",
+      "optional": "Opcional",
+      "dismiss": "Descartar",
+      "saving": "Guardando..."
+    },
+    "accordion": {
+      "expand": "Expandir sección",
+      "collapse": "Contraer sección"
+    },
+    "breadcrumbs": {
+      "navigation": "Navegación",
+      "home": "Inicio"
+    },
+    "confirmDialog": {
+      "title": "Confirmación",
+      "message": "¿Estás seguro de que deseas continuar?",
+      "confirm": "Confirmar",
+      "cancel": "Cancelar"
+    },
+    "contextMenu": {
+      "copy": "Copiar",
+      "cut": "Cortar",
+      "paste": "Pegar",
+      "delete": "Eliminar"
+    },
+    "notificationCenter": {
+      "markAllRead": "Marcar todo como leído",
+      "clearAll": "Limpiar todo",
+      "noNotifications": "No hay notificaciones"
+    },
+    "skeletonLoader": {
+      "loading": "Cargando contenido..."
+    },
+    "spinner": {
+      "loading": "Cargando..."
+    },  
+    "drawer": {
+      "close": "Cerrar panel"
+    },
+    "modal": {
+      "close": "Cerrar modal"
+    },
+    "notification": {
+      "close": "Cerrar notificación",
+      "closeAll": "Cerrar todas"
+    },
+    "pagination": {
+      "previous": "Página anterior",
+      "next": "Página siguiente",
+      "first": "Primera página",
+      "last": "Última página",
+      "page": "Página {{current}} de {{total}}",
+      "itemsPerPage": "Elementos por página",
+      "showing": "Mostrando {{from}} a {{to}} de {{total}} elementos"
+    },
+    "sidePanel": {
+      "close": "Cerrar panel lateral",
+      "toggle": "Alternar panel lateral"
+    },
+    "splitPane": {
+      "resize": "Redimensionar panel"
+    },
+    "table": {
+      "noData": "No hay datos disponibles",
+      "loading": "Cargando datos...",
+      "error": "Error al cargar los datos",
+      "errorLoadingData": "Error al cargar los datos de la tabla",
+      "layerNotFound": "Capa '{{layerName}}' no encontrada",
+      "sortBy": "Ordenar por {{column}}",
+      "filterBy": "Filtrar por {{column}}",
+      "selectAll": "Seleccionar todo",
+      "selectRow": "Seleccionar fila",
+      "actions": "Acciones",
+      "rowsSelected": "{{count}} fila(s) seleccionada(s)",
+      "showingRecords": "Mostrando {{count}} registros de la capa {{layerName}}"
+    },
+    "tabs": {
+      "tab": "Pestaña",
+      "panel": "Panel de pestaña"
+    },
+    "toast": {
+      "close": "Cerrar notificación"
+    },
+    "tooltip": {
+      "moreInfo": "Más información"
+    },
+    "treeView": {
+      "expand": "Expandir nodo",
+      "collapse": "Contraer nodo",
+      "select": "Seleccionar nodo",
+      "loading": "Cargando...",
+      "noChildren": "Sin elementos hijos"
+    },
+    "form": {
+      "required": "Este campo es requerido",
+      "invalid": "Valor inválido",
+      "tooShort": "Muy corto",
+      "tooLong": "Muy largo",
+      "invalidEmail": "Email inválido",
+      "invalidUrl": "URL inválida",
+      "invalidNumber": "Número inválido",
+      "invalidDate": "Fecha inválida",
+      "submit": "Enviar",
+      "reset": "Restablecer",
+      "validation": {
+        "required": "Este campo es obligatorio",
+        "unique": "El valor debe ser único",
+        "invalid": "Valor inválido"
+      }
+    },
+    "controls": {
+      "checkbox": {
+        "checked": "Marcado",
+        "unchecked": "No marcado",
+        "indeterminate": "Parcialmente seleccionado"
+      },
+      "textInput": {
+        "placeholder": "Ingresa texto...",
+        "clear": "Limpiar campo"
+      },
+      "select": {
+        "placeholder": "Selecciona una opción...",
+        "noOptions": "No hay opciones disponibles",
+        "search": "Buscar opciones...",
+        "loading": "Cargando opciones...",
+        "clear": "Limpiar selección"
+      }
+    },
+    "qgis": {
+      "configurationNotDefined": "No se ha definido la configuración del servicio QGIS o proyecto",
+      "serverUrl": "URL del servidor",
+      "projectName": "Nombre del proyecto",
+      "loading": "Cargando configuración QGIS...",
+      "error": "Error en la conexión QGIS",
+      "errorFetchingConfig": "Error al obtener la configuración QGIS",
+      "connected": "Conectado a QGIS",
+      "service": "Servicio QGIS"
+    },
+    "map": {
+      "loading": "Cargando mapa...",
+      "error": "Error al cargar el mapa",
+      "zoomIn": "Acercar",
+      "zoomOut": "Alejar",
+      "resetView": "Restablecer vista",
+      "fullscreen": "Pantalla completa",
+      "layers": "Capas",
+      "attribution": "Atribución",
+      "errorLoadingLibrary": "Leaflet no se pudo cargar después de esperar.",
+      "errorInitializing": "Error al inicializar el mapa",
+      "errorLoadingLayers": "Error al cargar las capas del mapa",
+      "errorLoadingBaseLayers": "Error al cargar las capas base",
+      "wmtsPluginNotAvailable": "Plugin WMTS no disponible, usando WMS como fallback"
+    },
+    "toolbar": {
+      "actions": "Acciones",
+      "tools": "Herramientas",
+      "settings": "Configuración"
+    }
+  }
+}

@@ -1,0 +1,245 @@
+@import '../ui.css';
+
+.tooltip {
+  position: relative;
+  display: inline-block;
+  cursor: help;
+}
+
+.tooltip__trigger {
+  cursor: inherit;
+}
+
+.tooltip__content {
+  position: absolute;
+  z-index: var(--z-tooltip);
+  background: var(--color-text-primary);
+  color: var(--color-text-on-primary);
+  padding: var(--spacing-sm) var(--spacing-md);
+  border-radius: var(--border-radius-md);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-xs);
+  line-height: var(--line-height-normal);
+  white-space: nowrap;
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+  box-shadow: var(--shadow-2);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--transition-fast), visibility var(--transition-fast), transform var(--transition-fast);
+  pointer-events: none;
+}
+
+.tooltip__content--visible {
+  opacity: 1;
+  visibility: visible;
+  pointer-events: auto;
+}
+
+.tooltip__arrow {
+  position: absolute;
+  width: 0;
+  height: 0;
+  border-style: solid;
+}
+
+/* Position variants */
+.tooltip__content--top {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(-4px);
+  margin-bottom: var(--spacing-xs);
+}
+
+.tooltip__content--top.tooltip__content--visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip__content--top .tooltip__arrow {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 4px 4px 0 4px;
+  border-color: var(--color-text-primary) transparent transparent transparent;
+}
+
+.tooltip__content--bottom {
+  top: 100%;
+  left: 50%;
+  transform: translateX(-50%) translateY(4px);
+  margin-top: var(--spacing-xs);
+}
+
+.tooltip__content--bottom.tooltip__content--visible {
+  transform: translateX(-50%) translateY(0);
+}
+
+.tooltip__content--bottom .tooltip__arrow {
+  bottom: 100%;
+  left: 50%;
+  transform: translateX(-50%);
+  border-width: 0 4px 4px 4px;
+  border-color: transparent transparent var(--color-text-primary) transparent;
+}
+
+.tooltip__content--left {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(-4px);
+  margin-right: var(--spacing-xs);
+}
+
+.tooltip__content--left.tooltip__content--visible {
+  transform: translateY(-50%) translateX(0);
+}
+
+.tooltip__content--left .tooltip__arrow {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 4px 0 4px 4px;
+  border-color: transparent transparent transparent var(--color-text-primary);
+}
+
+.tooltip__content--right {
+  left: 100%;
+  top: 50%;
+  transform: translateY(-50%) translateX(4px);
+  margin-left: var(--spacing-xs);
+}
+
+.tooltip__content--right.tooltip__content--visible {
+  transform: translateY(-50%) translateX(0);
+}
+
+.tooltip__content--right .tooltip__arrow {
+  right: 100%;
+  top: 50%;
+  transform: translateY(-50%);
+  border-width: 4px 4px 4px 0;
+  border-color: transparent var(--color-text-primary) transparent transparent;
+}
+
+/* Color variants */
+.tooltip__content--light {
+  background: var(--color-background);
+  color: var(--color-text-primary);
+  border: var(--border-width-thin) solid var(--color-border);
+}
+
+.tooltip__content--light.tooltip__content--top .tooltip__arrow {
+  border-color: var(--color-background) transparent transparent transparent;
+  border-top-color: var(--color-border);
+}
+
+.tooltip__content--light.tooltip__content--top .tooltip__arrow::after {
+  content: '';
+  position: absolute;
+  top: -5px;
+  left: -4px;
+  border-width: 4px 4px 0 4px;
+  border-style: solid;
+  border-color: var(--color-background) transparent transparent transparent;
+}
+
+.tooltip__content--light.tooltip__content--bottom .tooltip__arrow {
+  border-color: transparent transparent var(--color-background) transparent;
+  border-bottom-color: var(--color-border);
+}
+
+.tooltip__content--light.tooltip__content--bottom .tooltip__arrow::after {
+  content: '';
+  position: absolute;
+  bottom: -5px;
+  left: -4px;
+  border-width: 0 4px 4px 4px;
+  border-style: solid;
+  border-color: transparent transparent var(--color-background) transparent;
+}
+
+.tooltip__content--light.tooltip__content--left .tooltip__arrow {
+  border-color: transparent transparent transparent var(--color-background);
+  border-left-color: var(--color-border);
+}
+
+.tooltip__content--light.tooltip__content--left .tooltip__arrow::after {
+  content: '';
+  position: absolute;
+  left: -5px;
+  top: -4px;
+  border-width: 4px 0 4px 4px;
+  border-style: solid;
+  border-color: transparent transparent transparent var(--color-background);
+}
+
+.tooltip__content--light.tooltip__content--right .tooltip__arrow {
+  border-color: transparent var(--color-background) transparent transparent;
+  border-right-color: var(--color-border);
+}
+
+.tooltip__content--light.tooltip__content--right .tooltip__arrow::after {
+  content: '';
+  position: absolute;
+  right: -5px;
+  top: -4px;
+  border-width: 4px 4px 4px 0;
+  border-style: solid;
+  border-color: transparent var(--color-background) transparent transparent;
+}
+
+.tooltip__content--success {
+  background: var(--color-success);
+}
+
+.tooltip__content--success .tooltip__arrow {
+  border-color: var(--color-success);
+}
+
+.tooltip__content--error {
+  background: var(--color-error);
+}
+
+.tooltip__content--error .tooltip__arrow {
+  border-color: var(--color-error);
+}
+
+.tooltip__content--warning {
+  background: var(--color-warning);
+}
+
+.tooltip__content--warning .tooltip__arrow {
+  border-color: var(--color-warning);
+}
+
+.tooltip__content--info {
+  background: var(--color-info);
+}
+
+.tooltip__content--info .tooltip__arrow {
+  border-color: var(--color-info);
+}
+
+/* Size variants */
+.tooltip__content--small {
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+}
+
+.tooltip__content--large {
+  padding: var(--spacing-md) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  max-width: 400px;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .tooltip__content {
+    max-width: 250px;
+    font-size: var(--font-size-sm);
+  }
+  
+  .tooltip__content--large {
+    max-width: 300px;
+  }
+}

@@ -1,0 +1,1 @@
+http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?SERVICE=WMS&REQUEST=GetCapabilities&MAP=C:/trabajos/gisbrick/QGIS/demo01.qgz&SERVICE=QGISPRJ

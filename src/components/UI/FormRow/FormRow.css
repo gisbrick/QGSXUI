@@ -1,0 +1,36 @@
+.form-row {
+  margin-bottom: 4px;
+  width: 100%;
+}
+
+.form-row__label {
+  font-weight: bold;
+  margin-bottom: 2px;
+  color: #333;
+  font-size: 14px;
+}
+
+.form-row__fields {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  flex-wrap: nowrap; /* Mantener en una sola fila */
+  width: 100%;
+}
+
+.form-row__fields > * {
+  flex: 1;
+  min-width: 0; /* Permite que los elementos se encojan */
+  max-width: none;
+}
+
+/* Responsive: permitir wrap solo en pantallas muy pequeñas */
+@media (max-width: 480px) {
+  .form-row__fields {
+    flex-wrap: wrap;
+  }
+  
+  .form-row__fields > * {
+    min-width: 150px;
+  }
+}

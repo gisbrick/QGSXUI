@@ -1,0 +1,44 @@
+{
+
+      "thumbnail": {
+            "authid": "EPSG:4326",
+            "extent": {
+                  "classType": "QgsRectangle",
+                  "xMaximum": "-0.9137291129216556",
+                  "xMinimum": "-0.9237291129216556",
+                  "yMaximum": "41.433892024873906",
+                  "yMinimum": "41.42389202487391"
+            }
+      },
+      "layers": [
+            {
+                  "name": "Catastro",
+                  "source": {
+                        "contextualWMSLegend": "0",
+                        "crs": "EPSG:25830",
+                        "dpiMode": "7",
+                        "featureCount": "10",
+                        "format": "image/png",
+                        "layers": "Catastro",
+                        "styles": "",
+                        "url": "https://ovc.catastro.meh.es/Cartografia/WMS/ServidorWMS.aspx"
+                  }
+            },
+            {
+                  "name": "Fondo",
+                  "source": {
+                        "contextualWMSLegend": "0",
+                        "crs": "EPSG:25830",
+                        "dpiMode": "7",
+                        "featureCount": "10",
+                        "format": "image/jpeg",
+                        "layers": "MTN_Fondo",
+                        "styles": "default",
+                        "tileMatrixSet": "EPSG:25830",
+                        "tilePixelRatio": "0",
+                        "url": "https://www.ign.es/wmts/mapa-raster?request%3DGetCapabilities%26service%3DWMTS"
+                  }
+            }
+      ]
+
+}

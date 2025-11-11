@@ -1,0 +1,186 @@
+/**
+ * Sistema de Temas - Variables CSS Personalizables
+ * 
+ * Este archivo define las variables CSS base que pueden ser sobrescritas
+ * por temas específicos de cliente/organización.
+ * 
+ * Para crear un tema personalizado:
+ * 1. Crea un archivo CSS en src/themes/[nombre-cliente]/theme.css
+ * 2. Sobrescribe las variables CSS que necesites
+ * 3. Importa el tema en tu aplicación o en Storybook
+ */
+
+:root {
+  /* ============================================
+     COLORES PRINCIPALES
+     ============================================ */
+  
+  /* Colores primarios */
+  --color-primary: #1976d2;
+  --color-primary-light: #42a5f5;
+  --color-primary-dark: #1565c0;
+  --color-primary-contrast: #ffffff;
+  
+  /* Colores secundarios */
+  --color-secondary: #388e3c;
+  --color-secondary-light: #66bb6a;
+  --color-secondary-dark: #2e7d32;
+  --color-secondary-contrast: #ffffff;
+  
+  /* Colores de estado */
+  --color-success: #4caf50;
+  --color-success-light: #81c784;
+  --color-success-dark: #388e3c;
+  
+  --color-warning: #ff9800;
+  --color-warning-light: #ffb74d;
+  --color-warning-dark: #f57c00;
+  
+  --color-error: #f44336;
+  --color-error-light: #e57373;
+  --color-error-dark: #d32f2f;
+  
+  --color-info: #2196f3;
+  --color-info-light: #64b5f6;
+  --color-info-dark: #1976d2;
+  
+  /* ============================================
+     COLORES DE FONDO
+     ============================================ */
+  
+  --color-background: #ffffff;
+  --color-background-secondary: #f5f5f5;
+  --color-background-tertiary: #eeeeee;
+  --color-background-hover: #f0f0f0;
+  --color-background-active: #e0e0e0;
+  
+  --color-surface: #ffffff;
+  --color-surface-elevated: #ffffff;
+  
+  /* ============================================
+     COLORES DE TEXTO
+     ============================================ */
+  
+  --color-text-primary: #212121;
+  --color-text-secondary: #757575;
+  --color-text-disabled: #bdbdbd;
+  --color-text-hint: #9e9e9e;
+  --color-text-inverse: #ffffff;
+  
+  /* ============================================
+     COLORES DE BORDES
+     ============================================ */
+  
+  --color-border: #e0e0e0;
+  --color-border-light: #f5f5f5;
+  --color-border-dark: #bdbdbd;
+  --color-border-focus: var(--color-primary);
+  
+  /* ============================================
+     ESPACIADO
+     ============================================ */
+  
+  --spacing-xs: 0.25rem;    /* 4px */
+  --spacing-sm: 0.5rem;     /* 8px */
+  --spacing-md: 0.75rem;    /* 12px */
+  --spacing-lg: 1rem;       /* 16px */
+  --spacing-xl: 1.5rem;     /* 24px */
+  --spacing-xxl: 2rem;      /* 32px */
+  --spacing-xxxl: 3rem;     /* 48px */
+  
+  /* ============================================
+     TIPOGRAFÍA
+     ============================================ */
+  
+  --font-family-base: "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-heading: "Nunito Sans", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-mono: "Courier New", Courier, monospace;
+  
+  --font-size-xs: 0.75rem;    /* 12px */
+  --font-size-sm: 0.875rem;  /* 14px */
+  --font-size-base: 1rem;     /* 16px */
+  --font-size-lg: 1.125rem;  /* 18px */
+  --font-size-xl: 1.25rem;   /* 20px */
+  --font-size-xxl: 1.5rem;   /* 24px */
+  --font-size-xxxl: 2rem;   /* 32px */
+  
+  --font-weight-light: 300;
+  --font-weight-normal: 400;
+  --font-weight-medium: 500;
+  --font-weight-semibold: 600;
+  --font-weight-bold: 700;
+  --font-weight-extrabold: 800;
+  
+  --line-height-tight: 1.25;
+  --line-height-normal: 1.5;
+  --line-height-relaxed: 1.75;
+  
+  /* ============================================
+     BORDES Y RADIOS
+     ============================================ */
+  
+  --border-width: 1px;
+  --border-width-thick: 2px;
+  --border-width-thin: 0.5px;
+  
+  --border-radius-sm: 0.25rem;   /* 4px */
+  --border-radius-md: 0.5rem;    /* 8px */
+  --border-radius-lg: 0.75rem;   /* 12px */
+  --border-radius-xl: 1rem;      /* 16px */
+  --border-radius-full: 9999px;
+  
+  /* ============================================
+     SOMBRAS
+     ============================================ */
+  
+  --shadow-sm: 0 1px 2px 0 rgba(0, 0, 0, 0.05);
+  --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+  --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.1), 0 4px 6px -2px rgba(0, 0, 0, 0.05);
+  --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+  
+  /* ============================================
+     TRANSICIONES
+     ============================================ */
+  
+  --transition-fast: 150ms ease-in-out;
+  --transition-base: 250ms ease-in-out;
+  --transition-slow: 350ms ease-in-out;
+  
+  /* ============================================
+     Z-INDEX
+     ============================================ */
+  
+  --z-index-dropdown: 1000;
+  --z-index-sticky: 1020;
+  --z-index-fixed: 1030;
+  --z-index-modal-backdrop: 1040;
+  --z-index-modal: 1050;
+  --z-index-popover: 1060;
+  --z-index-tooltip: 1070;
+  
+  /* ============================================
+     COMPONENTES ESPECÍFICOS QGS
+     ============================================ */
+  
+  /* Mapa */
+  --map-control-bg: var(--color-background);
+  --map-control-border: var(--color-border);
+  --map-control-hover: var(--color-background-hover);
+  
+  /* Formulario */
+  --form-field-bg: var(--color-background);
+  --form-field-border: var(--color-border);
+  --form-field-focus: var(--color-primary);
+  --form-field-error: var(--color-error);
+  
+  /* Tabla */
+  --table-header-bg: var(--color-background-secondary);
+  --table-row-hover: var(--color-background-hover);
+  --table-border: var(--color-border);
+  
+  /* Toolbar */
+  --toolbar-bg: var(--color-background);
+  --toolbar-border: var(--color-border);
+  --toolbar-button-hover: var(--color-background-hover);
+}
+

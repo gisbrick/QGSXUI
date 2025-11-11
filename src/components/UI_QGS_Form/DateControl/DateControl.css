@@ -1,0 +1,39 @@
+.date-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.date-control__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.date-control__input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.date-control__input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.date-control__input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.date-control__input--error {
+  border-color: #dc3545;
+}
+
+.date-control__error {
+  font-size: 12px;
+  color: #dc3545;
+}

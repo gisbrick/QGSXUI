@@ -1,0 +1,25 @@
+.table {
+  padding: 1rem;
+}
+
+.table h3 {
+  margin: 0 0 1rem 0;
+  color: #333;
+}
+
+.table table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.table th,
+.table td {
+  padding: 0.5rem;
+  text-align: left;
+  border: 1px solid #ddd;
+}
+
+.table th {
+  background-color: #f5f5f5;
+  font-weight: bold;
+}

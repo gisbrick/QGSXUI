@@ -1,0 +1,68 @@
+/**
+ * Tema de Ejemplo - Cliente Personalizado
+ * 
+ * Este es un ejemplo de cómo personalizar el tema para un cliente específico.
+ * Copia este archivo y modifica las variables según las necesidades del cliente.
+ */
+
+:root {
+  /* ============================================
+     COLORES CORPORATIVOS DEL CLIENTE
+     ============================================ */
+  
+  /* Colores primarios personalizados */
+  --color-primary: #1a5490;        /* Azul corporativo */
+  --color-primary-light: #4a7ba7;
+  --color-primary-dark: #0f3a5f;
+  --color-primary-contrast: #ffffff;
+  
+  /* Colores secundarios */
+  --color-secondary: #2d8659;      /* Verde corporativo */
+  --color-secondary-light: #5ba67a;
+  --color-secondary-dark: #1f5d3f;
+  
+  /* ============================================
+     TIPOGRAFÍA CORPORATIVA
+     ============================================ */
+  
+  --font-family-base: "Roboto", "Helvetica Neue", Helvetica, Arial, sans-serif;
+  --font-family-heading: "Roboto Condensed", "Helvetica Neue", sans-serif;
+  
+  /* Tamaños de fuente ligeramente más grandes */
+  --font-size-base: 15px;
+  --font-size-lg: 1.25rem;
+  
+  /* ============================================
+     BORDES Y ESPACIADO
+     ============================================ */
+  
+  /* Bordes más redondeados */
+  --border-radius-md: 0.75rem;
+  --border-radius-lg: 1rem;
+  
+  /* Espaciado más generoso */
+  --spacing-lg: 1.25rem;
+  --spacing-xl: 2rem;
+  
+  /* ============================================
+     SOMBRAS PERSONALIZADAS
+     ============================================ */
+  
+  /* Sombras más suaves */
+  --shadow-md: 0 2px 4px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 4px 8px rgba(0, 0, 0, 0.12);
+  
+  /* ============================================
+     COMPONENTES ESPECÍFICOS
+     ============================================ */
+  
+  /* Formulario con fondo ligeramente diferente */
+  --form-field-bg: #fafafa;
+  --form-field-border: #d0d0d0;
+  --form-field-focus: var(--color-primary);
+  
+  /* Tabla con estilo personalizado */
+  --table-header-bg: #e8f0f5;
+  --table-row-hover: #f0f7fa;
+}
+

@@ -1,0 +1,39 @@
+.number-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.number-control__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.number-control__input {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+}
+
+.number-control__input:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.number-control__input:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}
+
+.number-control__input--error {
+  border-color: #dc3545;
+}
+
+.number-control__error {
+  font-size: 12px;
+  color: #dc3545;
+}

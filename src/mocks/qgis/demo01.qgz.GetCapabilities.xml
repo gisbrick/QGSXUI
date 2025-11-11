@@ -1,0 +1,474 @@
+<WMS_Capabilities version="1.3.0" xsi:schemaLocation="http://www.opengis.net/wms http://schemas.opengis.net/wms/1.3.0/capabilities_1_3_0.xsd http://www.opengis.net/sld http://schemas.opengis.net/sld/1.1.0/sld_capabilities.xsd http://www.qgis.org/wms http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&REQUEST=GetSchemaExtension">
+<Service>
+<Name>WMS</Name>
+<Title>Untitled</Title>
+<KeywordList>
+<Keyword vocabulary="ISO">infoMapAccessService</Keyword>
+</KeywordList>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz"/>
+<Fees>conditions unknown</Fees>
+<AccessConstraints>None</AccessConstraints>
+</Service>
+<Capability>
+<Request>
+<GetCapabilities>
+<Format>text/xml</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</GetCapabilities>
+<GetMap>
+<Format>image/jpeg</Format>
+<Format>image/png</Format>
+<Format>image/png; mode=16bit</Format>
+<Format>image/png; mode=8bit</Format>
+<Format>image/png; mode=1bit</Format>
+<Format>application/dxf</Format>
+<Format>application/pdf</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</GetMap>
+<GetFeatureInfo>
+<Format>text/plain</Format>
+<Format>text/html</Format>
+<Format>text/xml</Format>
+<Format>application/vnd.ogc.gml</Format>
+<Format>application/vnd.ogc.gml/3.1.1</Format>
+<Format>application/json</Format>
+<Format>application/geo+json</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</GetFeatureInfo>
+<sld:GetLegendGraphic>
+<Format>image/jpeg</Format>
+<Format>image/png</Format>
+<Format>application/json</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</sld:GetLegendGraphic>
+<sld:DescribeLayer>
+<Format>text/xml</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</sld:DescribeLayer>
+<qgs:GetStyles>
+<Format>text/xml</Format>
+<DCPType>
+<HTTP>
+<Get>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&"/>
+</Get>
+</HTTP>
+</DCPType>
+</qgs:GetStyles>
+</Request>
+<Exception>
+<Format>XML</Format>
+</Exception>
+<sld:UserDefinedSymbolization UserStyle="1" InlineFeature="0" RemoteWCS="0" UserLayer="0" SupportSLD="1" RemoteWFS="0"/>
+<Layer queryable="1">
+<Title>Untitled</Title>
+<KeywordList>
+<Keyword vocabulary="ISO">infoMapAccessService</Keyword>
+</KeywordList>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-180</westBoundLongitude>
+<eastBoundLongitude>180</eastBoundLongitude>
+<southBoundLatitude>-90</southBoundLatitude>
+<northBoundLatitude>90</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="-19090299.088" minx="-15588982.055" maxx="16588982.055" maxy="19995929.886"/>
+<BoundingBox CRS="EPSG:3857" miny="-44927335.428" minx="-20037508.343" maxx="20037508.343" maxy="44927335.428"/>
+<BoundingBox CRS="EPSG:4326" miny="-180" minx="-90" maxx="90" maxy="180"/>
+<Layer queryable="1">
+<Name>demo 01</Name>
+<Title>demo 01</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-180</westBoundLongitude>
+<eastBoundLongitude>180</eastBoundLongitude>
+<southBoundLatitude>-90</southBoundLatitude>
+<northBoundLatitude>90</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="-19090299.088" minx="-15588982.055" maxx="16588982.055" maxy="19995929.886"/>
+<BoundingBox CRS="EPSG:3857" miny="-44927335.428" minx="-20037508.343" maxx="20037508.343" maxy="44927335.428"/>
+<BoundingBox CRS="EPSG:4326" miny="-180" minx="-90" maxx="90" maxy="180"/>
+<Style>
+<Name>default</Name>
+<Title>default</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=demo 01&FORMAT=image/png&STYLE=default&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+<Layer queryable="1">
+<Name>tabla</Name>
+<Title>tabla</Title>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=tabla&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>demo01</Name>
+<Title>demo01</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-1.067951</westBoundLongitude>
+<eastBoundLongitude>-1.067949</eastBoundLongitude>
+<southBoundLatitude>41.698902</southBoundLatitude>
+<northBoundLatitude>41.698907</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="4618150" minx="660763.375" maxx="660763.5" maxy="4618150.5"/>
+<BoundingBox CRS="EPSG:3857" miny="5115982.608" minx="-118883.728" maxx="-118883.545" maxy="5115983.284"/>
+<BoundingBox CRS="EPSG:4326" miny="-1.067951" minx="41.698902" maxx="41.698907" maxy="-1.067949"/>
+<Style>
+<Name>default</Name>
+<Title>default</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=demo01&FORMAT=image/png&STYLE=default&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+<Layer queryable="1">
+<Name>punto t</Name>
+<Title>punto t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-1.067951</westBoundLongitude>
+<eastBoundLongitude>-1.067949</eastBoundLongitude>
+<southBoundLatitude>41.698902</southBoundLatitude>
+<northBoundLatitude>41.698907</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="4618150" minx="660763.375" maxx="660763.5" maxy="4618150.5"/>
+<BoundingBox CRS="EPSG:3857" miny="5115982.608" minx="-118883.728" maxx="-118883.545" maxy="5115983.284"/>
+<BoundingBox CRS="EPSG:4326" miny="-1.067951" minx="41.698902" maxx="41.698907" maxy="-1.067949"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=punto t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>tabla maestra</Name>
+<Title>tabla maestra</Title>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=tabla maestra&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+</Layer>
+<Layer queryable="1">
+<Name>multipunto t</Name>
+<Title>multipunto t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=multipunto t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>punt z m t</Name>
+<Title>punt z m t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=punt z m t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>multilinea t</Name>
+<Title>multilinea t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=multilinea t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>multilinea z m t</Name>
+<Title>multilinea z m t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-180</westBoundLongitude>
+<eastBoundLongitude>180</eastBoundLongitude>
+<southBoundLatitude>-90</southBoundLatitude>
+<northBoundLatitude>90</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="-19090299.088" minx="-15588982.055" maxx="16588982.055" maxy="19995929.886"/>
+<BoundingBox CRS="EPSG:3857" miny="-44927335.428" minx="-20037508.343" maxx="20037508.343" maxy="44927335.428"/>
+<BoundingBox CRS="EPSG:4326" miny="-180" minx="-90" maxx="90" maxy="180"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=multilinea z m t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>multipoligono t</Name>
+<Title>multipoligono t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-180</westBoundLongitude>
+<eastBoundLongitude>180</eastBoundLongitude>
+<southBoundLatitude>-90</southBoundLatitude>
+<northBoundLatitude>90</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="-19090299.088" minx="-15588982.055" maxx="16588982.055" maxy="19995929.886"/>
+<BoundingBox CRS="EPSG:3857" miny="-44927335.428" minx="-20037508.343" maxx="20037508.343" maxy="44927335.428"/>
+<BoundingBox CRS="EPSG:4326" miny="-180" minx="-90" maxx="90" maxy="180"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=multipoligono t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>poligono t</Name>
+<Title>poligono t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=poligono t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>poligono z m t</Name>
+<Title>poligono z m t</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=poligono z m t&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>Relation</Name>
+<Title>Relation</Title>
+<CRS>CRS:84</CRS>
+<Style>
+<Name>default</Name>
+<Title>default</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=Relation&FORMAT=image/png&STYLE=default&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+<Layer queryable="1">
+<Name>feature tabla relation</Name>
+<Title>feature tabla relation</Title>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=feature tabla relation&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>tabla relation</Name>
+<Title>tabla relation</Title>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=tabla relation&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+</Layer>
+</Layer>
+<Layer queryable="1">
+<Name>Catastro</Name>
+<Title>Catastro</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-22.16424</westBoundLongitude>
+<eastBoundLongitude>5.226473</eastBoundLongitude>
+<southBoundLatitude>26.275782</southBoundLatitude>
+<northBoundLatitude>45.153387</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="3000000" minx="-1050000" maxx="1150000" maxy="5000000"/>
+<BoundingBox CRS="EPSG:3857" miny="3033278.103" minx="-2467311.876" maxx="581808.267" maxy="5645684.708"/>
+<BoundingBox CRS="EPSG:4326" miny="-22.16424" minx="26.275782" maxx="45.153387" maxy="5.226473"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=Catastro&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+<Layer queryable="1">
+<Name>Fondo</Name>
+<Title>Fondo</Title>
+<CRS>CRS:84</CRS>
+<CRS>EPSG:4326</CRS>
+<CRS>EPSG:3857</CRS>
+<CRS>EPSG:25830</CRS>
+<EX_GeographicBoundingBox>
+<westBoundLongitude>-7.488798</westBoundLongitude>
+<eastBoundLongitude>-7.488743</eastBoundLongitude>
+<southBoundLatitude>0.000318</southBoundLatitude>
+<northBoundLatitude>0.000726</northBoundLatitude>
+</EX_GeographicBoundingBox>
+<BoundingBox CRS="EPSG:25830" miny="35.26" minx="-6" maxx="0.01" maxy="80.49"/>
+<BoundingBox CRS="EPSG:3857" miny="35.402" minx="-833649.14" maxx="-833643.145" maxy="80.815"/>
+<BoundingBox CRS="EPSG:4326" miny="-7.488798" minx="0.000318" maxx="0.000726" maxy="-7.488743"/>
+<Style>
+<Name>predeterminado</Name>
+<Title>predeterminado</Title>
+<LegendURL>
+<Format>image/png</Format>
+<OnlineResource xlink:type="simple" xlink:href="http://localhost/cgi-bin/qgis_mapserv.fcgi.exe?MAP=C%3A%2Ftrabajos%2Fgisbrick%2FQGIS%2Fdemo01.qgz&SERVICE=WMS&VERSION=1.3.0&REQUEST=GetLegendGraphic&LAYER=Fondo&FORMAT=image/png&STYLE=predeterminado&SLD_VERSION=1.1.0"/>
+</LegendURL>
+</Style>
+</Layer>
+</Layer>
+</Capability>
+</WMS_Capabilities>

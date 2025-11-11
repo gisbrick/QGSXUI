@@ -1,0 +1,91 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Texto a Voz con Highlight</title>
+    <style>
+        #texto {
+            display: inline-block;
+            position: relative;
+        }
+
+        #highlight {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            height: 1em;
+            background-color: red;
+            display: none;
+            transition: left 0.5s ease-in-out;
+        }
+
+        .highlight {
+            display: inline;
+            padding: .25em 0;
+            background: #FFC107;
+            color: #ffffff;
+            box-shadow: .5em 0 0 #FFC107, -.5em 0 0 #FFC107;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>Texto a Voz con Highlight</h1>
+    <p class="" id="texto">Hola, este es un ejemplo de texto a voz.</p>
+    <div id="highlight"></div>
+
+    <button id="playButton">Reproducir</button>
+
+    <script src="https://code.jquery.com/jquery-3.6.4.min.js"></script>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            var playButton = document.getElementById('playButton');
+            var textoElement = document.getElementById('texto');
+            var highlightElement = document.getElementById('highlight');
+
+            playButton.addEventListener('click',function () {
+                let texto = ["Hola, este es un ejemplo de texto a voz.", "Hola, este es otro ejemplo distinto."]
+                let palabras = texto
+                console.log("text", palabras)
+                palabras.forEach(async (palabra) => {
+                    await reproducirTexto(palabra);
+                   
+                });
+
+            });
+
+            function reproducirTexto(texto) {
+                return new Promise(function (resolve, reject) {
+                    let fin = 0
+                    var synthesis = window.speechSynthesis;
+                    var utterance = new SpeechSynthesisUtterance(texto);
+
+                    utterance.onstart = function () {
+                        textoElement.classList.add("highlight");
+                    };
+
+                    utterance.onend = function () {
+                        textoElement.classList.remove("highlight")
+                        console.log("actua")
+                        fin = 1;
+                    };
+
+                    synthesis.speak(utterance);
+                    if(fin==0) {
+                        console.log("actua")
+                        resolve("Stuff worked!");
+                    }
+                })
+
+            }
+
+        });
+    </script>
+
+</body>
+
+</html>

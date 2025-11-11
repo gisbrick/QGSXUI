@@ -1,0 +1,129 @@
+.error-boundary {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  min-height: 200px;
+  padding: 2rem;
+  background-color: var(--color-background, #ffffff);
+  border: 1px solid var(--color-border-error, #ff6b6b);
+  border-radius: 8px;
+  text-align: center;
+  max-width: 500px;
+  margin: 0 auto;
+}
+
+.error-boundary__icon {
+  font-size: 3rem;
+  margin-bottom: 1rem;
+}
+
+.error-boundary__title {
+  color: var(--color-text-error, #d63384);
+  font-size: 1.5rem;
+  font-weight: 600;
+  margin: 0 0 1rem 0;
+}
+
+.error-boundary__message {
+  color: var(--color-text-secondary, #6c757d);
+  font-size: 1rem;
+  line-height: 1.5;
+  margin: 0 0 1.5rem 0;
+  max-width: 400px;
+}
+
+.error-boundary__details {
+  width: 100%;
+  margin: 1rem 0;
+  padding: 1rem;
+  background-color: var(--color-background-secondary, #f8f9fa);
+  border: 1px solid var(--color-border, #dee2e6);
+  border-radius: 4px;
+  text-align: left;
+}
+
+.error-boundary__details summary {
+  cursor: pointer;
+  font-weight: 500;
+  color: var(--color-text-primary, #495057);
+  margin-bottom: 0.5rem;
+}
+
+.error-boundary__details summary:hover {
+  color: var(--color-primary, #0d6efd);
+}
+
+.error-boundary__error-text {
+  background-color: var(--color-background-code, #f1f3f4);
+  padding: 0.75rem;
+  border-radius: 4px;
+  font-family: 'Courier New', Monaco, monospace;
+  font-size: 0.875rem;
+  color: var(--color-text-error, #d63384);
+  overflow-x: auto;
+  white-space: pre-wrap;
+  word-break: break-word;
+  margin: 0.5rem 0 0 0;
+}
+
+.error-boundary__actions {
+  display: flex;
+  gap: 0.75rem;
+  margin-top: 0.5rem;
+}
+
+.error-boundary__button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.875rem;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s ease;
+  min-width: 100px;
+}
+
+.error-boundary__button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.error-boundary__button:active {
+  transform: translateY(0);
+}
+
+.error-boundary__button--primary {
+  background-color: var(--color-primary, #0d6efd);
+  color: white;
+}
+
+.error-boundary__button--primary:hover {
+  background-color: var(--color-primary-hover, #0b5ed7);
+}
+
+.error-boundary__button--secondary {
+  background-color: var(--color-secondary, #6c757d);
+  color: white;
+}
+
+.error-boundary__button--secondary:hover {
+  background-color: var(--color-secondary-hover, #5c636a);
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .error-boundary {
+    padding: 1.5rem;
+    margin: 1rem;
+  }
+  
+  .error-boundary__actions {
+    flex-direction: column;
+    width: 100%;
+  }
+  
+  .error-boundary__button {
+    width: 100%;
+  }
+}

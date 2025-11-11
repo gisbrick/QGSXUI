@@ -1,0 +1,6 @@
+.tablegrid__cellhovered {
+    background-color: whitesmoke !important;
+}
+.tablegrid__rowselected{
+    background-color: lightgrey !important;
+}

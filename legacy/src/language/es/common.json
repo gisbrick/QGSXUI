@@ -1,0 +1,1181 @@
+{
+    "common": {
+        "value": {
+            "yes": "Si",
+            "no": "No",
+            "publicAccess": "Acceso público"
+        },
+        "tools": {
+            "help": {
+                "name": "Ayuda",
+                "map": {
+                    "title": "Tour por el uso del mapa",
+                    "description": "A lo largo de este tour, se le mostrarán las herramientas principales para el uso del mapa",
+                    "navigation": {
+                        "button": {
+                            "title": "Navegación",
+                            "description": "Mediante estos botones puede hacer zoom más o zoom menos. También puede hacerlo con la ruleta del ratón, o dibujando una caja mientras pulsa la tecla SHIFT"
+                        }
+                    },
+                    "rotation": {
+                        "button": {
+                            "title": "Rotación",
+                            "description": "Con el botón pulsado, puede aplicar una rotación al mapa. Esto es especialmente útil si desea imprimir un mapa, y aplicarle rotación"
+                        }
+                    },
+                    "home": {
+                        "button": {
+                            "title": "Zoom a extensión inicial",
+                            "description": "Pulsando este botón, la extensión del mapa volverá a la extensión inicial."
+                        }
+                    },
+                    "measures": {
+                        "button": {
+                            "title": "Mediciones",
+                            "description": "Mediante esta herramienta, puede realizar mediciones de líneas o polígonos"
+                        }
+                    },
+                    "location": {
+                        "button": {
+                            "title": "Localización GPS",
+                            "description": "Mediante esta herramienta, puede activar la lozalición GPS"
+                        }
+                    },
+                    "toc": {
+                        "button": {
+                            "title": "Mostrar leyenda",
+                            "description": {
+                                "user": "Muestra la leyenda. Allí podrá activar/desactivar la visibilidad de los elementos del mapa.",
+                                "admin": "Muestra la leyenda. Allí podrá activar/desactivar la visibilidad de los elementos del mapa, o acceder a los listados de atributos de las capas del mapa."
+                            }
+                        }
+                    },
+                    "basemaps": {
+                        "button": {
+                            "title": "Mostrar mapas base",
+                            "description": "Muestra las opciones disponibles de mapas base."
+                        }
+                    },
+                    "tableResults": {
+                        "button": {
+                            "title": "Mostrar tabla de resultados",
+                            "description": "Muestra la tabla de elementos registrados."
+                        }
+                    },
+                    "info": {
+                        "button": {
+                            "title": "Herramienta de información",
+                            "description": "Una vez activa la herramienta, puede acceder a las propiedades de las entidades haciendo clic sobre ellas en el mapa."
+                        }
+                    },
+                    "reports": {
+                        "button": {
+                            "title": "Mostrar impresión de mapas",
+                            "description": "Muestra las funciones de impresión de mapas"
+                        }
+                    },
+                    "edition": {
+                        "points": {
+                            "button": {
+                                "title": "Herramienta de dibujo de puntos",
+                                "description": "Activa la herramienta para dibujar nuevos puntos. Una vez dibujado el punto, se solicitará la capa de destino, en caso de existir varias disponibles."
+                            }
+                        },
+                        "lines": {
+                            "button": {
+                                "title": "Herramienta de dibujo de líneas",
+                                "description": "Activa la herramienta para dibujar nuevas líneas. Una vez dibujada la línea, se solicitará la capa de destino, en caso de existir varias disponibles."
+                            }
+                        },
+                        "polygons": {
+                            "button": {
+                                "title": "Herramienta de dibujo de polígonos",
+                                "description": "Activa la herramienta para dibujar nuevos polígonos. Una vez dibujado el polígono, se solicitará la capa de destino, en caso de existir varias disponibles."
+                            }
+                        }
+                    }
+                },
+                "table": {
+                    "colseAllTables": {
+                        "button": {
+                            "title": "Cerrar las tablas",
+                            "description": "Cierra todas las tablas que hay abiertas."
+                        }
+                    },
+                    "collapse": {
+                        "button": {
+                            "title": "Ocultar tablas",
+                            "description": "Oculta todas las tablas que hay abiertas"
+                        }
+                    },
+                    "close": {
+                        "button": {
+                            "title": "Cerrar tabla",
+                            "description": "Cierra la tabla."
+                        }
+                    },
+                    "description": {
+                        "text": {
+                            "title": "Descripción de registros",
+                            "description": "Se muestra el número total de registros, el número de registros mostrados en la tabla y mapa y el número de registros seleccionados."
+                        }
+                    },
+                    "filter_extension": {
+                        "filter": {
+                            "title": "Filtro por extensión",
+                            "description": "Clica sobre el botón para activar el filtro. Se mostrarán en la tabla aquellos registros que sean visibles en la ventana del mapa. Vuelve a clicar el botón para desactivar el filtro."
+                        }
+                    },
+                    "download": {
+                        "link": {
+                            "title": "Descarga",
+                            "description": "Puedes descargar los datos de la tabla en los siguientes formatos: SHP, geojson, kml, gpkg, gpx, xlsx y csv."
+                        }
+                    },
+                    "selection": {
+                        "link": {
+                            "title": "Selector",
+                            "description": "Limpiar selección sirve para quietar todas las selecciones. Eliminar los elementos seleccionados sirve para borrar los registros de base de datos. Editar los atributos de los elementos seleccionados sirve para modificar los atributos de los elementos. Zoom a la selección sirve para acercarse en el mapa a los elementos seleccionados."
+                        }
+                    },
+                    "rowTools": {
+                        "tools": {
+                            "title": "Herramientas",
+                            "description": "Herramienta: 1. Selección, 2. Visualización de atributos, 3. Edición de atributos, 4. Borrar registro."
+                        }
+                    },
+                    "filter_query": {
+                        "button": {
+                            "title": "Filtro por consulta",
+                            "description": "Pulsando este botón se abre una ventana para introducir consultas y poder filtrar."
+                        }
+                    },
+                    "create": {
+                        "button": {
+                            "title": "Crear un nuevo registro",
+                            "description": "Pulsando este botón se abre una ventana para introducir un nuevo reguistro en la tabla."
+                        }
+                    },
+                    "delete_filter": {
+                        "button": {
+                            "title": "Borrar todos los filtros",
+                            "description": "Pulsando este botón elimina todos los filtros y visualiza la tabla en su estado original."
+                        }
+                    }
+                },
+                "form": {
+                    "edit": {
+                        "button": {
+                            "title": "Editar atributos",
+                            "description": "Pulsando este botón, puede habilitar la ventana para editar los atributos de este elemento."
+                        }
+                    },
+                    "geometry": {
+                        "button": {
+                            "title": "Editar geometría",
+                            "description": "Pulsando este botón, puede cambiar la posición del elemento en el mapa."
+                        }
+                    },
+                    "delete": {
+                        "button": {
+                            "title": "Borrar elemento",
+                            "description": "Pulsando este botón eliminará el elemento permanentemente."
+                        }
+                    },
+                    "zoom": {
+                        "button": {
+                            "title": "Zoom al elemento",
+                            "description": "Pulsando este botón realiza un zoom hacia el elemento en el mapa."
+                        }
+                    },
+                    "media": {
+                        "button": {
+                            "title": "Registro documental",
+                            "description": "Pulsando este botón se abrirá una ventana donde se mostrarán las imágenes asociadas a este elemento. También dispondrá de la posibilidad de subir imágenes, vídeos u otros documentos que quedarán asociadas a este elemento."
+                        }
+                    },
+                    "schedule": {
+                        "button": {
+                            "title": "Horario",
+                            "description": "Pulsando este botón se abre una ventana con un horario."
+                        }
+                    },
+                    "reader": {
+                        "button": {
+                            "title": "Lector de contenido",
+                            "description": "Pulsando este botón se activará la lectura automática de contenido de la ficha."
+                        }
+                    },
+                    "save": {
+                        "button": {
+                            "title": "Guardar",
+                            "description": "Pulsando este botón se guardan los cambios realizados en los atributos de este elemento."
+                        }
+                    },
+                    "exit": {
+                        "button": {
+                            "title": "Salir",
+                            "description": "Pulsando este boton se sale de la edición de atributos. Antes de salir se pregunta al usuario si desea guardar los cambios o no."
+                        }
+                    }
+                },
+                "filter": {
+                    "add": {
+                        "button": {
+                            "title": "Añadir consulta",
+                            "description": "Pulsando este botón añades una nueva consulta a la lista."
+                        }
+                    },
+                    "queries": {
+                        "query": {
+                            "title": "Consulta",
+                            "description": "Para definir la consulta primero se selecciona el campo, después el operador y por último el valor. El operador que une las consultas es AND. También hay un botón para eliminar una consulta."
+                        }
+                    },
+                    "execute": {
+                        "button": {
+                            "title": "Aceptar",
+                            "description": "Pulsando este botón se ejecutan todas las consultas de la lista."
+                        }
+                    }
+                },
+                "administration": {
+                    "users": {
+                        "create": {
+                            "button": {
+                                "title": "Crear",
+                                "description": "Pulsando este botón se muestra una ficha para crear un nuevo usuario."
+                            }
+                        },
+                        "edit": {
+                            "button": {
+                                "title": "Editar",
+                                "description": "Pulsando este botón habilita la edición de los atributos del usuario."
+                            }
+                        },
+                        "remove": {
+                            "button": {
+                                "title": "Eliminar",
+                                "description": "Pulsando este botón se elimina el usuario permanentemente."
+                            }
+                        }
+                    },
+                    "units": {
+                        "create": {
+                            "button": {
+                                "title": "Crear",
+                                "description": "Pulsando este botón se muestra una ficha para crear una nueva unidad de gestión."
+                            }
+                        },
+                        "edit": {
+                            "button": {
+                                "title": "Editar",
+                                "description": "Pulsando este botón habilita la edición de los atributos de la unidad de gestión."
+                            }
+                        },
+                        "remove": {
+                            "button": {
+                                "title": "Eliminar",
+                                "description": "Pulsando este botón se elimina la unidad de gestión permanentemente."
+                            }
+                        }
+                    }
+                },
+                "configuration": {
+                    "apps": {
+                        "create": {
+                            "button": {
+                                "title": "Crear",
+                                "description": "Pulsando este botón se muestra una ficha para crear una nueva aplicación."
+                            }
+                        },
+                        "edit": {
+                            "button": {
+                                "title": "Editar",
+                                "description": "Pulsando este botón habilita la edición de los atributos de la aplicación."
+                            }
+                        },
+                        "remove": {
+                            "button": {
+                                "title": "Eliminar",
+                                "description": "Pulsando este botón se elimina la aplicación permanentemente."
+                            }
+                        }
+                    },
+                    "roles": {
+                        "user": {
+                            "add": {
+                                "button": {
+                                    "title": "Añadir usuario a unidad de gestión",
+                                    "description": "Pulsando este botón se muestra una ficha para introducir el nombre del usuario que se desea añadir a la unidad de gestión seleccionada."
+                                }
+                            },
+                            "edit": {
+                                "button": {
+                                    "title": "Editar",
+                                    "description": "Pulsando este botón habilita la edición de la lista de roles vinculados al usuario."
+                                }
+                            },
+                            "remove": {
+                                "button": {
+                                    "title": "Eliminar",
+                                    "description": "Pulsando este botón se elimina el rol del usuario permanentemente."
+                                }
+                            }
+                        },
+                        "permission": {
+                            "edit": {
+                                "button": {
+                                    "title": "Editar",
+                                    "description": "Pulsando este botón habilita la edición de la lista de usuarios vinculados al rol."
+                                }
+                            }
+                        }
+                    },
+                    "role": {
+                        "edit": {
+                            "button": {
+                                "title": "Editar",
+                                "description": "Pulsando este botón habilita la edición de la lista de roles vinculados al usuario."
+                            }
+                        }
+                    },
+                    "permissions": {
+                        "user": {
+                            "add": {
+                                "button": {
+                                    "title": "Añadir permiso al rol",
+                                    "description": "Pulsando este botón se muestra una ficha para introducir el rol que se desea añadir al rol."
+                                }
+                            },
+                            "edit": {
+                                "button": {
+                                    "title": "Editar",
+                                    "description": "Pulsando este botón habilita la edición de la lista de permisos vinculados al rol."
+                                }
+                            },
+                            "remove": {
+                                "button": {
+                                    "title": "Eliminar",
+                                    "description": "Pulsando este botón se elimina el permiso permanentemente."
+                                }
+                            },
+                            "unlink": {
+                                "button": {
+                                    "title": "Quitar permiso",
+                                    "description": "Pulsando este botón se elimina el permiso del rol."
+                                }
+                            }
+                        },
+                        "permission": {
+                            "edit": {
+                                "button": {
+                                    "title": "Editar",
+                                    "description": "Pulsando este botón habilita la edición de la lista de roles vinculados al permiso."
+                                }
+                            }
+                        }
+                    },
+                    "media": {
+                        "create": {
+                            "button": {
+                                "title": "Crear",
+                                "description": "Pulsando este botón se muestra una ficha para crear un nuevo grupo documental."
+                            }
+                        },
+                        "edit": {
+                            "button": {
+                                "title": "Editar",
+                                "description": "Pulsando este botón habilita la edición de los atributos del grupo documental."
+                            }
+                        },
+                        "remove": {
+                            "button": {
+                                "title": "Eliminar",
+                                "description": "Pulsando este botón se elimina el grupo documental permanentemente."
+                            }
+                        }
+                    }
+                }
+            },
+            "measures": {
+                "title": "Mediciones",
+                "linearMeasurement": "Distancias",
+                "areaMeasurement": "Áreas",
+                "start": "Inicio",
+                "meter": "m",
+                "kilometer": "km",
+                "squareMeter": "m²",
+                "squareKilometers": "km²"
+            },
+            "zoom": {
+                "zoomin": "Acercar",
+                "zoomout": "Alejar",
+                "zoomdefault": "Zoom a la extensión por defecto"
+            },
+            "opendata": {
+                "table": "Datos abiertos de '{{table}}'",
+                "format": "'{{table}}' en formato {{format}}"
+            },
+            "temporal_filter": {
+                "name": "Filtros temporales",
+                "from": "Desde",
+                "from_required": "Indique una fecha 'Desde'",
+                "to": "Hasta",
+                "to_required": "Indique una fecha 'Hasta'",
+                "duration": "Duración",
+                "milliseconds": "Milisegundos",
+                "seconds": "Segundos",
+                "minutes": "Minutos",
+                "hours": "Horas",
+                "days": "Días",
+                "weeks": "Semanas",
+                "months": "Meses",
+                "years": "Años",
+                "decades": "Décadas",
+                "denturies": "Centúrias"
+            },
+            "print": {
+                "printing": "Imprimiendo",
+                "layout": {
+                    "name": "Imprimir mapa",
+                    "select": "Seleccione una plantilla de impresión",
+                    "print": "Imprimir",
+                    "outFormat": "Formato de salida"
+                }
+            },
+            "reports": {
+                "name": "Informes"
+            },
+            "location": {
+                "name": "Mostrar mi posición"
+            },
+            "download": {
+                "name": "Descarga",
+                "selectOutputFormat": "Seleccione un formato de salida",
+                "downloadTo": "Descarga a {{format}}"
+            },
+            "basemaps": {
+                "name": "Galería de mapas base"
+            },
+            "toc": {
+                "name": "Leyenda"
+            },
+            "filter": {
+                "name": "Búsqueda por características",
+                "addExpresion": "Añadir característica",
+                "deleteExpresion": "Borrar consulta",
+                "selectField": "Seleccione un campo",
+                "selectComparator": "Comparador",
+                "inputType": "Tipo de entrada",
+                "inputTypeInputValue": "Entrada de valor",
+                "inputTypeValueList": "Listado de valores",
+                "comparatorEqual": "Es",
+                "comparatorNotEqual": "No es",
+                "comparatorStarWith": "Comienza por",
+                "comparatorEndsWith": "Termina por",
+                "comparatorContains": "Contiene",
+                "comparatorNotContains": "No contiene",
+                "comparatorIsEmpty": "Está vacio",
+                "comparatorIsNotEmpty": "No está vacio",
+                "comparatorGreater": "Mayor a",
+                "comparatorSmaller": "Menor a",
+                "comparatorGreaterOrEqual": "Mayor o igual a",
+                "comparatorSmallerOrEqual": "Menor o igual a"
+            },
+            "delete_filter": {
+                "name": "Borrar filtros",
+                "close": "Cerrar"
+            },
+            "table": {
+                "name": "Tabla de atributos",
+                "close": "Cerrar tabla"
+            },
+            "edit": {
+                "points": {
+                    "draw": "Dibujar nuevo punto"
+                },
+                "lines": {
+                    "draw": "Dibujar nueva línea"
+                },
+                "polygons": {
+                    "draw": "Dibujar nuevo polígono"
+                },
+                "finishGeom": "Finalizar geometría",
+                "saveGeom": "Guardar geometría",
+                "selectTargetLayer": "¿Qué tipo de información desea registrar?"
+            },
+            "info": {
+                "name": "Información"
+            },
+            "cadastral_info": {
+                "name": "Información de datos catastrales"
+            },
+            "login": {
+                "login": "Iniciar sesión",
+                "logout": "Cerrar sesión",
+                "logged": "Sesión inciada",
+                "logged_as": "Sesión inciada como",
+                "username": "Nombre de usuario",
+                "username_required": "El nombre de usuario es obligatorio",
+                "password": "Contraseña",
+                "password_required": "La contraseña es obligatoria",
+                "rememberme": "Recordarme",
+                "initsession": "Iniciar sesión"
+            },
+            "legend": {
+                "name": "Leyenda"
+            },
+            "searcher": {
+                "msg": "No existen resultados.",
+                "placeholder": "Buscar dirección"
+            },
+            "registration": {
+                "registration": "Registro de usuario",
+                "username": "Nombre",
+                "username_required": "El nombre es obligatorio",
+                "lastname": "Apellidos",
+                "lastname_required": "Apellidos son obligatorios",
+                "email": "Email",
+                "email_required": "Email es obligatorio",
+                "phone": "Teléfono",
+                "phone_required": "Teléfono es obligatorio",
+                "postalcode": "Código postal",
+                "postalcode_required": "Código postal es obligatorio",
+                "password": "Contraseña",
+                "password_required": "Contraseña es obligatoria",
+                "checkpassword": "Repite contraseña",
+                "repeat_password_error": "Contraseñas no coinciden",
+                "notifications": "Recibir notificaciones",
+                "accept": "Aceptar",
+                "exit": "Salir"
+            }
+        },
+        "actions": {
+            "select": {
+                "name": "Seleccionar",
+                "in": "Seleccionar {{in}}",
+                "commute": "Cambiar selección",
+                "selection": "Selección",
+                "clear": "Limpiar selección",
+                "zoom": "Zoom a la selección",
+                "delete": "Eliminar los elementos seleccionados",
+                "edit": "Editar los atributos de los elementos seleccionados"
+            },
+            "refresh": {
+                "name": "Refrescar"
+            },
+            "unlink": {
+                "name": "Desvincular"
+            },
+            "view": {
+                "name": "Ver",
+                "title": "Consulta de elemento en '{{layername}}'"
+            },
+            "download": {
+                "name": "Descarga",
+                "download": "Descargar documento",
+                "downloadZip": "Descarga carpeta comprimida",
+                "downloading": "Descargando...",
+                "downloaded": "Informe generado",
+                "error": "Se han producido errores en la generación del documento",
+                "preprocessing": "Preparando recursos para la exportación del documento",
+                "processing": "Generando el documento",
+                "wait": "Por favor, espere...",
+                "descriptionStart": "Generación de '{{type}}' iniciada a las '{{time}}'",
+                "descriptionEnd": "Generación de '{{type}}' finalizada a las '{{time}}'",
+                "map": "Mapa",
+                "report": "Informe"
+            },
+            "edit": {
+                "name": "Editar",
+                "title": "Edición de elemento en '{{layername}}'",
+                "attributes": "Editar atributos",
+                "geometry": "Editar geometría"
+            },
+            "delete": {
+                "name": "Borrar",
+                "title": "Borrado de elemento en '{{layername}}'",
+                "confirmMsg": "Va a borrar el elemento seleccionado. Esta acción no puede deshacerse ¿desea continuar?"
+            },
+            "deleteMultiple": {
+                "name": "Borrar selección",
+                "title": "Borrado de elementos en '{{layername}}'",
+                "confirmMsg": "Va a borrar los elementos seleccionados. Esta acción no puede deshacerse ¿desea continuar?"
+            },
+            "deleteAll": {
+                "name": "Borrar todo"
+            },
+            "colseAllTables": {
+                "name": "Cerrar todas las tablas"
+            },
+            "create": {
+                "name": "Crear nuevo",
+                "title": "Creación de nuevo elemento en '{{layername}}'"
+            },
+            "add": {
+                "name": "Añadir",
+                "title": "Añadir nuevo '{{fieldName}}'"
+            },
+            "zoom": {
+                "name": "Zoom"
+            },
+            "cancel": {
+                "name": "Cancelar"
+            },
+            "exit": {
+                "name": "Salir"
+            },
+            "update": {
+                "name": "Actualizar"
+            },
+            "saveNew": {
+                "name": "Crear nuevo"
+            },
+            "save": {
+                "name": "Guardar",
+                "saving": "Guardando..."
+            },
+            "hide": {
+                "name": "Ocultar"
+            },
+            "filter": {
+                "name": "Aceptar",
+                "byMapExtension": "Filtrar por extensión de mapa"
+            },
+            "yes": {
+                "name": "Si"
+            },
+            "no": {
+                "name": "No"
+            },
+            "favourites": "Favoritos",
+            "reader": {
+                "listen": "Escuchar",
+                "end": "No escuchar"
+            },
+            "schedule": {
+                "name": "Agenda",
+                "event": "Evento",
+                "durationSelect": "Seleccione una duración de la reserva",
+                "durationMinutes": "{{duration}} minutos",
+                "duration": "Desde las {{from}} a las {{to}} del {{date}}",
+                "booked": "Reservado",
+                "bookedFor": "Reservado para {{for}}",
+                "title": {
+                    "feature": "Agenda de la selección en la capa '{{layername}}'",
+                    "layer": "Agenda de la capa '{{layername}}'"
+                },
+                "weekday": {
+                    "0": "Domingo",
+                    "1": "Lunes",
+                    "2": "Martes",
+                    "3": "Miercoles",
+                    "4": "Jueves",
+                    "5": "Viernes",
+                    "6": "Sábado"
+                },
+                "errors": {
+                    "eventNotAllowedOnWeekDay": "La agenda no admite eventos en {{weekday}}",
+                    "eventNotAllowedOnWeekDayHour": "La agenda solo admite eventos en {{weekday}} de {{start}} a {{end}}"
+                }
+            },
+            "media": {
+                "name": "Registro documental",
+                "filename": "Fichero",
+                "file": "Fichero",
+                "selectFile": "Seleccione fichero",
+                "mimetype": "Mimetype",
+                "name_": "Nombre",
+                "description": "Descripción",
+                "date": "Fecha",
+                "insert": "Añadir documento",
+                "edit": "Editar documento",
+                "delete": "Eliminar documento",
+                "download": "Descargar fichero",
+                "title": {
+                    "feature": "Registro documental de la selección en la capa '{{layername}}'",
+                    "layer": "Registro documental de la capa '{{layername}}'",
+                    "list": "Listado",
+                    "carousel": "Carrusel"
+                },
+                "error": "Tamaño del archivo supera el límite deFile size exceeds the limit of 5MB"
+            },
+            "incidents": {
+                "name": "Incidencias",
+                "title": {
+                    "feature": "Incidencias de la selección en la capa '{{layername}}'",
+                    "layer": "Incidencias de la capa '{{layername}}'"
+                },
+                "photo": "Foto",
+                "description": "Descripción",
+                "selectPhoto": "Subir foto",
+                "question": "¿Desea ser notificado después de haberse resuelto su incidencia?",
+                "yes": "Sí",
+                "no": "No",
+                "email": "Email",
+                "phone": "Teléfono",
+                "accept": "Aceptar",
+                "exit": "Salir"
+            },
+            "orientation": {
+                "name": "¿Qué hacer?"
+            }
+        },
+        "msg": {
+            "image": {
+                "title": "No hay imagen"
+            },
+            "results": {
+                "title": "Resultados",
+                "linked": "Lista de '{{to}}'",
+                "noData": "No hay datos."
+            },
+            "count": {
+                "selection": "Total registrados: {{total}} | Mostrados en tabla: {{shown}} | Total seleccionados: {{selection}}"
+            },
+            "pendingSave": {
+                "title": "¡Hay cambios sin guardar!",
+                "content": "¿Desea guardar los cambios antes de salir?"
+            },
+            "form": {
+                "requiredField": "Se necesita un valor para el campo '{{fieldName}}'. Por favor, introduzca un valor",
+                "greaterThanNow": "El campo '{{fieldName}}' debe ser superior al momento actual",
+                "smallerThanNow": "El campo '{{fieldName}}' debe ser inferior al momento actual",
+                "greaterThanField": "El campo '{{fieldName}}' debe ser superior al campo '{{comparedFieldName}}'",
+                "greaterEqualThanField": "El campo '{{fieldName}}' debe ser igual o superior al campo '{{comparedFieldName}}'",
+                "smallerThanField": "El campo '{{fieldName}}' debe ser inferior al campo '{{comparedFieldName}}'",
+                "smallerEqualThanField": "El campo '{{fieldName}}' debe ser igual o inferior al campo '{{comparedFieldName}}'",
+                "dniField": "El campo '{{fieldName}}' debe ser un NIF válido",
+                "nieField": "El campo '{{fieldName}}' debe ser un NIE válido",
+                "cifField": "El campo '{{fieldName}}' debe ser un CIF válido",
+                "dniNieCifField": "El campo '{{fieldName}}' debe ser un NIF, NIE o CIF válido",
+                "view": "Ficha de información",
+                "viewNoData": "Fallo al cargar el contenido.",
+                "statusIncident": "No se permite la asignación de un estado previo. Contacte con el administrador.",
+                "dependOn": "El valor del campo '{{comparedFieldName}}' no es el adecuado."
+            }
+        },
+        "notification": {
+            "error": {
+                "title": "¡No se pudo completar la operación!",
+                "invalidFields": "Algunos valores no son válidos",
+                "invalidEvent": "El evento no es válido",
+                "transaction": "Se han producido errores en la petición",
+                "Access denied exception": "No está autorizado a realizar esta operación",
+                "Authentication required exception": "Tiene que estar autentificado para poder hacer uso de este recurso",
+                "Invalid credentials exception": "Sus credenciales de acceso no son válidas",
+                "Item Already exist": "Ese elemento ya existe en el Sistema",
+                "No File exception": "El archivo no existe en el Sistema",
+                "No Map exception": "El mapa no existe en el Sistema",
+                "No Media exception": "El registro documental no existe en el Sistema",
+                "No Myme Type exception": "El Mymetype no existe",
+                "No Resource exception": "El recurso requerido no existe en el Sistema",
+                "No Resource group exception": "El grupo de archivo documental no existe en el Sistema",
+                "No Unit info exception": "La Unidad de gestión no existe en el Sistema",
+                "No UnitUSer info exception": "El Usuario - Unidad no existe en el Sistema",
+                "No User exception": "El Usuario no existe en el Sistema",
+                "No Layer exception": "La capa no existe en el Sistema",
+                "No Directory exception": "No existe el directorio configurado para la unidad de gestión",
+                "Schedule out of limit range exception": "El evento está fuera del rango temporal que permite modificaciones en esta agenda. No puede crear, modificar o borrar eventos fuera de ese rango temporal",
+                "Schedule overlap not allowed exception": "Esta agenda no admite la superposición de eventos. Busque un espacio libre en la agenda",
+                "Schedule user limmit exceeded exception": "No se puede realizar la reserva, ya que se ha excedido el límite temporal de reservas permitidas por periodo para el usuario",
+                "Wrong media config exception": "La configuración del registro documental no es correcta"
+            },
+            "info": {
+                "title": "Información",
+                "invalidEvent": "El evento no es válido"
+            },
+            "success": {
+                "title": "¡Petición completada!",
+                "add": "Se ha añadido correctamente el registro",
+                "save": "Se han guardado correctamente el registro",
+                "delete": "Se ha borrado correctamente el registro indicado",
+                "delete_multiple": "Se han borrado correctamente los registros indicados",
+                "update": "Se ha actualizado correctamente el registro indicado",
+                "deleteMedia": "Se han borrado correctamente los documentos asociados",
+                "email": "Email enviado correctamente",
+                "insertMedia": "Se han guardado correctamente los documentos asociados"
+            }
+        }
+    },
+    "manager": {
+        "user": {
+            "label": "Usuarios",
+            "select": "Seleccione un usuario",
+            "edit": "Editar usuarios",
+            "list": "Lista de usuarios",
+            "roles": "Lista de usuarios asociados al rol '{{name}}'",
+            "name": "Nombre de usuario",
+            "usr": "Nombre de usuario",
+            "password": "Contraseña",
+            "units": "Unidades de gestión asociadas al usuario",
+            "add2unit": "Añadir usuario a unidad de gestión",
+            "setUserName2Add": "Indique el nombre de usuario que desea añadir"
+        },
+        "unit": {
+            "label": "Unidades de gestión",
+            "select": "Seleccione una unidad de gestión",
+            "selectMultiple": "Seleccione las unidades de gestión",
+            "filter": "Filtrar por unidad de gestión",
+            "list": "Lista de unidades de gestión",
+            "name": "Nombre de unidad de gestión",
+            "unitName": "Nombre de unidad",
+            "isManager": "Es gestor",
+            "description": "Descripción",
+            "path": "Ruta a los recursos QGIS de la unidad de gestión",
+            "users": "Usuarios asociados a la unidad '{{name}}'"
+        },
+        "roles": {
+            "label": "Roles",
+            "select": "Seleccione un rol",
+            "edit": "Editar rol",
+            "edituser": "Editar usuarios asociados",
+            "editpermission": "Editar permisos asociados",
+            "user": "Lista de roles asociados al usuario '{{name}}'",
+            "permissions": "Lista de roles asociados al permiso '{{name}}'",
+            "list": "Lista de roles",
+            "name": "Nombre del rol",
+            "prmName": "Nombre del rol",
+            "add2unit": "Añadir rol a unidad",
+            "setRoleName2Add": "Indique el nombre de rol que desea añadir"
+        },
+        "permissions": {
+            "label": "Permisos",
+            "select": "Seleccione un permiso",
+            "edit": "Editar permisos",
+            "role": "Lista de permisos asociados al rol '{{name}}'",
+            "list": "Lista de permisos",
+            "name": "Nombre del permiso",
+            "prmName": "Nombre del permiso",
+            "add2unit": "Añadir permiso a unidad",
+            "editroles": "Editar roles asociados",
+            "setPermissionName2Add": "Indique el nombre de permiso que desea añadir (debe ser único para toda la organización)"
+        },
+        "mediagroup": {
+            "label": "Grupos de registro documental",
+            "create": "Crear grupo de registro documental",
+            "list": "Lista de grupos de registro documental",
+            "name": "Nombre del grupo",
+            "resGrpName": "Nombre del grupo",
+            "uidResGrp": "Identificador único del grupo",
+            "description": "Descripción del grupo"
+        },
+        "app": {
+            "label": "Aplicaciones",
+            "create": "Crear aplicación",
+            "filterByName": "Filtrar por nombre de la aplicación",
+            "edit": "Editar aplicación",
+            "list": "Lista de aplicaciones",
+            "name": "Nombre del aplicación",
+            "language": "Idioma",
+            "appName": "Nombre de aplicación",
+            "isPublished": "Publicada",
+            "description": "Descripción del aplicación",
+            "prmName": "Permiso requerido (opcional)",
+            "config": "Configuración",
+            "thumbnail": "Imagen",
+            "selectThumbnail": "Seleccione una imagen",
+            "appTree": {
+                "configParent": "Directorio",
+                "configLeaf": "Contenido",
+                "parentText": "Texto del menú",
+                "treeText": "Texto del menú",
+                "createRootParent": "Añadir menú en raíz",
+                "createParent": "Añadir submenú",
+                "createRootLeaf": "Añadir contenido en raíz",
+                "createLeaf": "Añadir contenido",
+                "deleteNode": "Borrar",
+                "updateNode": "Editar",
+                "placeholder": "Añada un nombre..."
+            },
+            "contentTree": {
+                "types": {
+                    "map": "Mapa",
+                    "html": "HTML",
+                    "table": "Tabla",
+                    "survey": "Encuesta",
+                    "opendata": "Datos abiertos",
+                    "report": "Informes",
+                    "schedule": "Agenda",
+                    "external_report": "Report con servicio externo",
+                    "custom_app_component": "Componente específico de aplicación"
+                },
+                "type": "Tipo de contenido",
+                "selectContentType": "Seleccione un tipo de contenido",
+                "project": "Proyecto QGIS",
+                "selectProject": "Seleccione un proyecto QGIS",
+                "table": "Tabla",
+                "html": "HTML",
+                "report": "Informe",
+                "selectTable": "Seleccione un tabla",
+                "layer": "Capa",
+                "selectLayer": "Seleccione un capa",
+                "configParent": "Grupo",
+                "height": "Altura del contenido (?px o ?%)",
+                "columns": "Número de columnas",
+                "showAsTab": "Mostrar grupo como Pestaña",
+                "configLeaf": "Contenido",
+                "parentText": "Título del grupo (opcional)",
+                "treeText": "Título del grupo (opcional)",
+                "createRootParent": "Añadir grupo en raiz",
+                "createParent": "Añadir grupo",
+                "createRootLeaf": "Añadir contenido en raiz",
+                "createLeaf": "Añadir contenido",
+                "deleteNode": "Borrar",
+                "updateNode": "Editar",
+                "placeholder": "Añada un nombre...",
+                "custom_app_component": "Componente específico de aplicación",
+                "selectGroup": "Seleccione un grupo",
+                "selectComponent": "Seleccione un component"
+            }
+        },
+        "params": {
+            "label": "Estilos",
+            "palette": {
+                "open": "Abrir paleta",
+                "close": "Cerrar paleta"
+            },
+            "button": {
+                "save": "Guardar",
+                "cancel": "Cancelar"
+            },
+            "sideMenu": {
+                "name": "Elige estilo del menú lateral"
+            },
+            "headMenu": {
+                "name": "Elige estilo del menú cabecera"
+            },
+            "form": {
+                "name": "Elige estilo del formulario y de la ficha de información"
+            },
+            "name_logo": {
+                "name": "Elige nombre y logo de la app"
+            },
+            "legend": {
+                "name": "Elige estilo de la leyenda"
+            },
+            "managerEmail": "Elige el email del gestor",
+            "numberApps": "Elige el número de aplicaciones visibles en el menú lateral",
+            "election": {
+                "name": "Escribe el nombre: ",
+                "logo": "Elige logo: ",
+                "colors": "Elige colores: ",
+                "colorFirst": "Elegir color primario: ",
+                "colorSecond": "Elegir color secundario: ",
+                "colorLettersMenu": "Elegir color letra menú: ",
+                "letterSize": "Tamaño de letra: ",
+                "letterColor": "Color de letra: ",
+                "letterType": "Tipo de letra: ",
+                "borderColor": "Color del borde: ",
+                "bgColorActive": "Color de la casilla activa: ",
+                "bgColorHover": "Color de la casilla seleccionada: ",
+                "managerEmail": "Email del gestor: ",
+                "numberApps": "Número de aplicaciones: "
+            },
+            "letterStyleView": "Estilo de letra"
+        },
+        "security": {
+            "label": "Seguridad"
+        },
+        "home": {
+            "label": "Inicio",
+            "welcomeTourMessage": {
+                "name": "Mensaje de bienvenida",
+                "description": "Configuración del mensaje que desea que le aparezca como bienvenida a los usuarios"
+            },
+            "infoMessage": {
+                "name": "Mensaje de aviso",
+                "description": "Configuración del mensaje de aviso que desea que aparezca a los usuarios al entrar en la aplicación entre las fechas indicadas",
+                "from": "Desde",
+                "to": "Hasta"
+            }
+        }
+    },
+    "urbegis": {
+        "pages": {
+            "innit": {
+                "name": "Información general"
+            },
+            "applications": {
+                "name": "Aplicaciones"
+            },
+            "profile": {
+                "name": "Acceso"
+            },
+            "admin": {
+                "name": "Administración"
+            },
+            "manager": {
+                "name": "Configuración"
+            },
+            "parameterization": {
+                "name": "Parametrización"
+            }
+        }
+    },
+    "reactBigCalendar": {
+        "date": "Fecha",
+        "time": "Hora",
+        "event": "Evento",
+        "allDay": "Todo el día",
+        "week": "Semana",
+        "work_week": "Semana de trabajo",
+        "day": "Día",
+        "month": "Mes",
+        "previous": "Anterior",
+        "next": "Siguiente",
+        "yesterday": "Ayer",
+        "tomorrow": "Mañana",
+        "today": "Hoy",
+        "agenda": "Agenda diaria",
+        "noEventsInRange": "No hay eventos en el intervalo seleccionado",
+        "showMore": "'{{total}}' más"
+    },
+    "text": {
+        "logIn": "Todo usuario no registrado tiene acceso a las aplicaciones para realizar consultas. Los usuarios registrados tienen acceso a más contenido y a funcionalidades avanzadas. Sus datos personales serán incorporados al sistema de tratamiento del que es responsable el ayuntamiento de {{name}}. Tiene derecho a acceder, rectificar y suprimir los datos, así como los demás derechos que le otorga la normativa de protección de datos.",
+        "loggedIn": {
+            "admin": " Bienvenido usuario {{username}}. Has accedido como usuario {{userrole}}. Actualmente tiene permisos para administrar todo la aplicación web. Puedes crear, editar y eliminar unidades de gestión, aplicaciones y usuarios. Puedes añadir y gestionar permisos en unidades y aplicaciones. Puedes gestionar contenido de todas las aplicaciones.",
+            "manager": " Bienvenido usuario {{username}}. Has accedido como usuario {{userrole}}. Actualmente tienes permisos para gestionar y editar las aplicaciones de las unidades de gestión:",
+            "unidad": "{{unidad}}"
+        },
+        "admin": "Administrador",
+        "manager": "Gestor"
+    },
+    "formView": {
+        "characteristics": "Características",
+        "attached": "Documentos adjuntos",
+        "media": "Imágenes",
+        "dates": "Fecha de publicación: ",
+        "link" :"Enlace"
+    },
+    "orientation": {
+        "map": {
+            "text": "Está viendo el componente <strong>Mapa</strong>.",
+            "text1": "El mapa muestra elementos los cuales se nombran en la leyenda. Puedes apretar en los botones del mapa para usar herramientas o para mostrar nuevas ventanas.",
+            "text2": "El botón ",
+            "text3": " te mostrara más información sobre las herramientas."
+        },
+        "report": {
+            "text": "Está viendo el componente <strong>Informe</strong>.",
+            "text1": "En esta vista puede descargar informes en formato PDF.",
+            "text2": "Puede filtrar los datos del informe por fecha."
+        },
+        "html": {
+            "text": "Está viendo el componente <strong>HTML</strong>.",
+            "text1": "La plantilla de HTML sirve para incorporar información adicional a un módulo."
+        },
+        "table": {
+            "text": "Está viendo el componente <strong>Tabla</strong>.",
+            "text1": "En la tabla se pueden ver los datos de los elementos que pertenecen a una capa de información.",
+            "text2": "En la tabla puede hacer descarga de datos, aplicar filtros, realizar selección de elementos y edición de elementos.",
+            "text3": "El botón ",
+            "text4": " te mostrara más información sobre las herramientas."
+        },
+        "opendata": {
+            "text": "Está viendo el componente <strong>Datos Abiertos</strong>.",
+            "text1": "En este módulo puedes realizar la descarga varios formatos de los datos de una capa de información."
+        }
+    },
+    "welcomeMessage": {
+        "slide1": {
+            "text": "En el menú superior derecha, puede iniciar sesión en el sistema o cambiar el idioma."
+        },
+        "slide2": {
+            "text": "En el menú lateral izquierdo tiene el acceso a los principales módulos de URBEGIS. Dependiendo de los permisos de que disponga, se le habilitarán más o menos módulos (Información general, acceso a aplicaciones, o herramientas de gestión y administración).",
+            "text1": "En la pestaña de aplicaciones, verá las aplicaciones habilitadas para sus credenciales de usuario."
+        },
+        "slide3": {
+            "text": "Conforme acceda a los módulos principales, se le presentará nuevo contenido específico en la ventana principal."
+        },
+        "slide4": {
+            "text": "En el caso de las aplicaciones, se mostrará un menú superior, específico para cada aplicación, que le permitirá navegar por los diferentes contenidos."
+        }
+    },
+    "custom_app_component": {
+        "cemetery": {
+            "label": "Cementerios",
+            "inhumation": {
+                "label": "Inhumación",
+                "header": "Realizar el proceso de inhumación"
+            },
+            "transfer": {
+                "label": "Traslado"
+            },
+            "searcher": {
+                "label": "Buscador",
+                "header": "BÚSQUEDA POR PERSONA",
+                "form": {
+                    "zone": "Zona",
+                    "row": "Fila",
+                    "num": "Número",
+                    "name": "Nombre",
+                    "fname": "1º Apellido",
+                    "sname": "2º Apellido",
+                    "birthday": "Fecha de nacimiento",
+                    "deathday": "Fecha de defunción",
+                    "remains": "Tipo de resto",
+                    "choose": "Elegir"
+                }
+            },
+            "actions": {
+                "done": "Hecho",
+                "next": "Siguiente",
+                "previous": "Anterior",
+                "search": "Buscar",
+                "accept": "Aceptar",
+                "selectUnitDefault": "Seleccionar unidad por defecto",
+                "o": "o",
+                "selectOtherUnit": "Seleccionar otra unidad funeraria",
+                "resetSearch": "Borrar búsqueda",
+                "find": "Buscar",
+                "cancel": "Cancelar"
+            },
+            "msg": {
+                "processing": "Finalizando el proceso",
+                "descriptionStart": "Generación de '{{type}}' iniciada a las '{{time}}'",
+                "info": "Debe indicar al menos una de las opciones: nombre, 1º apellido, 2º apellido"
+            },
+            "steps": {
+                "data": {
+                    "label": "Registro de datos"
+                },
+                "unit": {
+                    "label": "Seleccionar unidad funeraria",
+                    "default": "Unidad adjudicada por defecto",
+                    "search": "Buscador de unidad funeraria",
+                    "zone": "Zonas: ",
+                    "num": "Número: ",
+                    "labelzone": "Selecciona una zona",
+                    "msg": {
+                        "success": {
+                            "title": "Aceptado",
+                            "text": "Unidad funeraria seleccionada con éxito, puede pasar a la siguiente paso."
+                        },
+                        "warning": {
+                            "title": "Aviso",
+                            "text1": "La unidad funeraria seleccionada está ocupada actualmente por los siguientes fallecidos:",
+                            "text2": "¿Desea continuar? ",
+                            "text3": "No han pasado más de 5 años desde la última acción sobre esta unidad funeraria.",
+                            "text4": "La unidad funeraria seleccionada está reservada actualmente.",
+                            "accept": "Aceptar"
+                        },
+                        "error": {
+                            "title": "Error",
+                            "text": "En una unidad funeraria de tipo columbario solo se pueden guardar cenizas. Revisa el tipo de resto seleccionado o cambia la unidad funeraria."
+                        }
+                    }
+                },
+                "media": {
+                    "label": "Aportar documentación"
+                }
+            }
+        },
+        "inventory": {
+            "label": "Inventario",
+            "insertion": {
+                "label": "Alta de elemento"
+            }
+        }
+    }
+}

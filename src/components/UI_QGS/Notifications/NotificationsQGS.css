@@ -1,0 +1,33 @@
+/* Contenedor de notificaciones - posicionado en la parte inferior derecha */
+.notifications-qgs {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  z-index: 1000;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  max-width: 400px;
+  pointer-events: none; /* Permite que los clicks pasen a través del contenedor */
+}
+
+/* Hacer que cada notificación individual sea clickeable */
+.notifications-qgs > * {
+  pointer-events: auto;
+}
+
+/* Animación opcional para entrada de notificaciones */
+.notifications-qgs > * {
+  animation: slideInRight 0.3s ease-out;
+}
+
+@keyframes slideInRight {
+  from {
+    transform: translateX(100%);
+    opacity: 0;
+  }
+  to {
+    transform: translateX(0);
+    opacity: 1;
+  }
+}

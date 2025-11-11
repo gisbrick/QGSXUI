@@ -1,0 +1,72 @@
+1.	Data Display
+•	TreeView: Componente para mostrar estructuras jerárquicas y anidadas (árbol de capas, TOC).
+•	Legend: Panel que ilustra la simbología del mapa utilizando iconos, líneas y colores.
+•	Pagination: Control para dividir y navegar colecciones largas en páginas.
+•	SkeletonLoader: Placeholder en forma de rejilla o bloques grises mientras se cargan datos.
+•	DataTable: Tabla avanzada con ordenación, filtrado y virtualización de filas para grandes volúmenes.
+•	Card: Contenedor de contenido con encabezado, cuerpo y pie, útil para resúmenes y servicios.
+•	Chart (BarChart, LineChart, PieChart): Componentes para representar gráficas sencillas de datos.
+2-	Layout & Containers
+•	Modal: Ventana emergente superpuesta al contenido base para formularios o avisos.
+•	Drawer: Panel lateral que se desliza desde el borde para navegación o detalle rápido.
+•	SplitPane: División redimensionable en dos o más áreas (ej. mapa vs. datos).
+•	SidePanel: Panel fijo en uno de los lados para contenido persistente.
+•	Wizard / Stepper: Secuencia de pasos numerados para guiar procesos complejos.
+•	Accordion: Secciones plegables que permiten expandir o colapsar grupos de contenido.
+•	Tabs: Pestañas para alternar entre vistas o formularios relacionados.
+•	Breadcrumbs: Rastro de navegación que muestra la ruta jerárquica actual.
+•	Dock: Ventana acoplable en cualquier borde para herramientas flotantes.
+•	Carousel: Deslizador de elementos horizontales (imágenes, tarjetas, avisos).
+3-	Feedback & Mensajes
+•	Message: Bloque estático de información, éxito, advertencia o error.
+•	Toast: Notificación flotante temporal con autocierre tras unos segundos.
+•	ConfirmDialog: Modal específico para confirmar o cancelar acciones críticas.
+•	ProgressBar: Barra lineal que refleja el avance de tareas o cargas.
+•	Spinner: Indicador circular de actividad en curso.
+•	NotificationCenter: Panel agregador de notificaciones pasadas y pendientes.
+•	Banner / Alert: Franja horizontal destacada para anuncios globales.
+•	ErrorBoundary: Contenedor React que atrapa errores de render y muestra fallback.
+4-	Navigation & Entrada
+•	SearchBar / Geosearch: Campo de búsqueda con autocompletado y filtros.
+•	Dropdown / Select: Menú desplegable para elegir entre varias opciones.
+•	ButtonGroup: Conjunto de botones contiguos para acciones relacionadas.
+•	ToggleSwitch: Interruptor binario para activar/desactivar opciones.
+•	Slider: Control deslizante para seleccionar valores numéricos o rangos.
+•	DatePicker / Calendar: Selector visual de fechas individuales.
+•	DateRangePicker: Selector de dos fechas para definir intervalos.
+•	TimePicker: Selector de hora con analogía o lista de opciones.
+•	Tag / Chip: Etiquetas desplegables o cerrables que representan elementos discretos.
+•	TagInput / Autocomplete: Campo de entrada que genera tags con sugerencias.
+•	FileUploader / FileDropZone: Área drag-and-drop para subir archivos.
+•	Rating / StarInput: Calificador visual con estrellas o iconos.
+•	InputMask: Campo de texto con formato de máscara para telefonos, fechas, etc.
+•	RichTextEditor / MarkdownEditor: Editor de texto enriquecido o Markdown integrado.
+•	CodeEditor: Componente para editar trozos de código con resaltado.
+•	VirtualList: Lista de alto rendimiento que renderiza solo lo visible.
+5-	Map-Specific Tools
+•	MapOverview: Mini-mapa en una de las esquinas que muestra la vista global.
+•	ComparisonSlider: Regla móvil para comparar superposiciones de capas.
+•	ScaleIndicator: Gráfico de escala actual del mapa (metros, kilómetros).
+•	MeasureTool UI: UI para medir distancias y áreas sobre el dibujo del mapa.
+•	GeolocationButton: Botón para centrar el mapa en la posición del usuario.
+•	LayerSwitcher: Selector de capas WMS/WFS para activar o desactivar visualización.
+•	Draw/Edit Tools: Conjunto de botones para dibujar puntos, líneas y polígonos.
+•	HeatmapOverlay: Capa de calor configurable para densidad de puntos.
+6-	Form Extras & Inputs
+•	ColorPicker: Selector de color visual para simbología o temáticas.
+•	SignaturePad: Área libre para firmar a mano alzada con el ratón o táctil.
+•	CurrencyInput: Campo de número con formato de moneda y símbolos.
+•	MaskedInput: Entrada con formato predefinido para datos estructurados.
+•	ImagePreview: Vista previa de imágenes subidas antes de enviar el formulario.
+•	TimeSlider: Control para animar datos temporales mediante desplazador.
+•	CanvasAnnotator: Lienzo para anotaciones o marcas sobre imágenes o mapas.
+7-	Utilities & Overlays
+•	Tooltip: Mensaje contextual al pasar el ratón o el foco sobre un elemento.
+•	Popover: Contenedor flotante que aparece junto a un elemento al hacer clic.
+•	ContextMenu: Menú de acciones contextuales al clic derecho o long press.
+•	Badge: Indicador pequeño para contar elementos o destacar status.
+•	Avatar: Componente para mostrar imagen de usuario o icono circular.
+•	Badge / Pill: Etiqueta pequeña para estados como “nuevo”, “beta” o “error”.
+•	ClipboardButton: Botón que copia texto al portapapeles con feedback.
+•	PasswordStrengthMeter: Indicador visual de la fortaleza de la contraseña.
+•	QRCodeGenerator: Componente para generar un código QR a partir de un texto o URL.

@@ -1,0 +1,32 @@
+.value-map-control {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.value-map-control__label {
+  font-size: 14px;
+  font-weight: 500;
+  color: #333;
+}
+
+.value-map-control__select {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+  font-family: inherit;
+  background-color: white;
+  cursor: pointer;
+}
+
+.value-map-control__select:focus {
+  outline: none;
+  border-color: #007bff;
+}
+
+.value-map-control__select:disabled {
+  background-color: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+}

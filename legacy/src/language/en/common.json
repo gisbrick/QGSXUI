@@ -1,0 +1,1103 @@
+{
+	"common": {
+		"value": {
+			"yes": "Yes",
+			"no": "No",
+			"publicAccess": "Public access"
+		},
+		"tools": {
+			"help": {
+				"name": "Help",
+				"map": {
+					"title": "Tour about the use of the map",
+					"description": "Along this tour, you will be shown the main tools for the use of the map",
+					"navigation": {
+						"button": {
+							"title": "Navegation",
+							"description": "Using these buttons you can zoom in or zoom out. You can also do this with the mouse wheel, or by drawing a box while pressing the SHIFT key."
+						}
+					},
+					"rotation": {
+						"button": {
+							"title": "Rotation",
+							"description": "With the button pressed, you can apply a rotation to the map. This is especially useful if you want to print a map, and apply rotation to it."
+						}
+					},
+					"home": {
+						"button": {
+							"title": "Zoom to default extent",
+							"description": "Pressing this button will return the map extent to the initial extent."
+						}
+					},
+					"measures": {
+						"button": {
+							"title": "Measurements",
+							"description": "Using this tool, you can make measurements of lines or polygons."
+						}
+					},
+					"location": {
+						"button": {
+							"title": "GPS Location",
+							"description": "Using this tool, you can activate GPS tracking."
+						}
+					},
+					"toc": {
+						"button": {
+							"title": "Show legend",
+							"description": "Shows the legend. There you can activate/deactivate the visibility of the map elements, or access the attribute lists of the map layers."
+						}
+					},
+					"basemaps": {
+						"button": {
+							"title": "Show basemaps",
+							"description": "Displays the available basemaps options."
+						}
+					},
+					"tableResults": {
+						"button": {
+							"title": "Show results table",
+							"description": "Displays the table of registered items."
+						}
+					},
+					"info": {
+						"button": {
+							"title": "Information tool",
+							"description": "Once the tool is activated, you can access the properties of the entities by clicking on them on the map."
+						}
+					},
+					"reports": {
+						"button": {
+							"title": "Show map printout",
+							"description": "Displays map printing functions"
+						}
+					},
+					"edition": {
+						"points": {
+							"button": {
+								"title": "Point drawing tool",
+								"description": "Activate the tool to draw new points. Once the point has been drawn, the target layer will be requested, if several are available."
+							}
+						},
+						"lines": {
+							"button": {
+								"title": "Line drawing tool",
+								"description": "Activate the tool to draw new lines. Once the line has been drawn, the target layer will be requested, if several are available"
+							}
+						},
+						"polygons": {
+							"button": {
+								"title": "Polygon drawing tool",
+								"description": "Activate the tool to draw new polygons. Once the polygon has been drawn, the target layer will be requested, if several are available."
+							}
+						}
+					}
+				},
+				"table": {
+					"colseAllTables": {
+						"button": {
+							"title": "Close tables",
+							"description": "Close all open tables."
+						}
+					},
+					"collapse": {
+						"button": {
+							"title": "Hide tables",
+							"description": "Hide all open tables"
+						}
+					},
+					"close": {
+						"button": {
+							"title": "Close table",
+							"description": "Close the table."
+						}
+					},
+					"description": {
+						"text": {
+							"title": "Description of records",
+							"description": "The total number of records, the number of records displayed in the table and in the map and the number of selected records in the table."
+						}
+					},
+					"filter_extension": {
+						"filter": {
+							"title": "Filter by extension",
+							"description": "Click on the button to activate the filter. Records that are visible in the map window will be displayed in the table. Click the button again to deactivate the filter."
+						}
+					},
+					"download": {
+						"link": {
+							"title": "Download",
+							"description": "You can download the table data in the following formats: SHP, geojson, kml, gpkg, gpx, xlsx and csv."
+						}
+					},
+					"selection": {
+						"link": {
+							"title": "Selector",
+							"description": "Clear selection is used to remove all selections. Delete selected items is used to delete the database records. Edit attributes of selected elements is used to modify the attributes of the elements. Zoom to selection is used to zoom in on the selected elements on the map."
+						}
+					},
+					"rowTools": {
+						"tools": {
+							"title": "Tools",
+							"description": "Tools: 1. Selection, 2. Attribute display, 3. Attribute editing, 4. Delete record."
+						}
+					},
+					"filter_query": {
+						"button": {
+							"title": "Filter by query",
+							"description": "Clicking this button opens a window for entering queries and filtering."
+						}
+					},
+					"create": {
+						"button": {
+							"title": "Create a new record",
+							"description": "Clicking this button opens a window to enter a new record in the table."
+						}
+					},
+					"delete_filter": {
+						"button": {
+							"title": "Delete all filters",
+							"description": "Clicking this button removes all filters and displays the table in its original state."
+						}
+					}
+				},
+				"form": {
+					"edit": {
+						"button": {
+							"title": "Edit attributes",
+							"description": "By clicking this button, you can enable the window for editing the attributes of this element."
+						}
+					},
+					"geometry": {
+						"button": {
+							"title": "Edit geometry",
+							"description": "By clicking this button, you can change the position of the item on the map."
+						}
+					},
+					"delete": {
+						"button": {
+							"title": "Delete item",
+							"description": "Clicking this button will delete the item permanently."
+						}
+					},
+					"zoom": {
+						"button": {
+							"title": "Zoom to element",
+							"description": "Clicking this button zooms in to the element on the map."
+						}
+					},
+					"media": {
+						"button": {
+							"title": "Documentary record",
+							"description": "Clicking this button will open a window where the images associated with this element will be displayed. You will also have the possibility of uploading images, videos or other documents that will be associated with this element."
+						}
+					},
+					"schedule": {
+						"button": {
+							"title": "Schedule",
+							"description": "Clicking this button opens a window with a timetable."
+						}
+					},
+					"reader": {
+						"button": {
+							"title": "Content reader",
+							"description": "Clicking this button will activate the automatic reading of the contents of the form sheet."
+						}
+					},
+					"save": {
+						"button": {
+							"title": "Save",
+							"description": "Clicking this button saves the changes made to the attributes of this element."
+						}
+					},
+					"exit": {
+						"button": {
+							"title": "Exit",
+							"description": "Clicking this button exits attribute editing. Before exiting, the user is asked whether he/she wants to save the changes or not."
+						}
+					}
+				},
+				"filter": {
+					"add": {
+						"button": {
+							"title": "Add query",
+							"description": "By clicking this button you add a new query to the list."
+						}
+					},
+					"queries": {
+						"query": {
+							"title": "Query",
+							"description": "To define the query, first select the field, then the operator and finally the value. The operator that joins the queries is AND. there is also a button to delete the query."
+						}
+					},
+					"execute": {
+						"button": {
+							"title": "Accept",
+							"description": "By clicking this button executes all queries in the list."
+						}
+					}
+				},
+				"administration": {
+					"users": {
+						"create": {
+							"button": {
+								"title": "Create",
+								"description": "Clicking this button displays a form to create a new user."
+							}
+						},
+						"edit": {
+							"button": {
+								"title": "Edit",
+								"description": "Clicking this button enables editing of user attributes."
+							}
+						},
+						"remove": {
+							"button": {
+								"title": "Delete",
+								"description": "Clicking this button deletes the user permanently."
+							}
+						}
+					},
+					"units": {
+						"create": {
+							"button": {
+								"title": "Create",
+								"description": "Clicking this button displays a form to create a new management unit."
+							}
+						},
+						"edit": {
+							"button": {
+								"title": "Edit",
+								"description": "Clicking this button enables editing of management unit attributes."
+							}
+						},
+						"remove": {
+							"button": {
+								"title": "Delete",
+								"description": "Clicking this button deletes the management unit permanently."
+							}
+						}
+					}
+				},
+				"configuration": {
+					"apps": {
+						"create": {
+							"button": {
+								"title": "Create",
+								"description": "Clicking this button displays a form to create a new application."
+							}
+						},
+						"edit": {
+							"button": {
+								"title": "Edit",
+								"description": "Clicking this button enables the editing of the application attributes."
+							}
+						},
+						"remove": {
+							"button": {
+								"title": "Delete",
+								"description": "Clicking this button deletes the application permanently."
+							}
+						}
+					},
+					"permissions": {
+						"user": {
+							"add": {
+								"button": {
+									"title": "Add user to management unit",
+									"description": "Clicking this button displays a form to enter the name of the user you wish to add to the selected management unit."
+								}
+							},
+							"edit": {
+								"button": {
+									"title": "Edit",
+									"description": "Clicking this button enables editing of the list of permissions linked to the user."
+								}
+							},
+							"remove": {
+								"button": {
+									"title": "Delete",
+									"description": "Clicking this button removes the user's permission permanently."
+								}
+							}
+						},
+						"permission": {
+							"edit": {
+								"button": {
+									"title": "Edit",
+									"description": "Clicking this button enables editing of the list of users linked to the permit."
+								}
+							}
+						}
+					},
+					"media": {
+						"create": {
+							"button": {
+								"title": "Create",
+								"description": "Clicking this button displays a form to create a new document group."
+							}
+						},
+						"edit": {
+							"button": {
+								"title": "Edit",
+								"description": "Clicking this button enables the editing of the attributes of the document group."
+							}
+						},
+						"remove": {
+							"button": {
+								"title": "Delete",
+								"description": "Clicking this button deletes the document group permanently."
+							}
+						}
+					}
+				}
+			},
+			"measures": {
+				"title": "Measurements",
+				"linearMeasurement": "Distances",
+				"areaMeasurement": "Areas",
+				"start": "Start",
+				"meter": "m",
+				"kilometer": "km",
+				"squareMeter": "m²",
+				"squareKilometers": "km²"
+			},
+			"zoom": {
+				"zoomin": "Zoom in",
+				"zoomout": "Zoom out",
+				"zoomdefault": "Zoom to default extent"
+			},
+			"opendata": {
+				"table": "Open data from '{{table}}'",
+				"format": "'{{table}}' in {{format}} format"
+			},
+			"temporal_filter": {
+				"name": "Temporary filters",
+				"from": "From",
+				"from_required": "Enter a 'From' date",
+				"to": "Until",
+				"to_required": "Enter a 'By' date",
+				"duration": "Duration",
+				"milliseconds": "Milliseconds",
+				"seconds": "Seconds",
+				"minutes": "Minutes",
+				"hours": "Hours",
+				"days": "Days",
+				"weeks": "Weeks",
+				"months": "Months",
+				"years": "Years",
+				"decades": "Decades",
+				"denturies": "Centuries"
+			},
+			"print": {
+				"printing": "Printing",
+				"layout": {
+					"name": "Print map",
+					"select": "Select a print template",
+					"print": "Print",
+					"outFormat": "Output format"
+				}
+			},
+			"reports": {
+				"name": "Reports"
+			},
+			"location": {
+				"name": "Show my position"
+			},
+			"download": {
+				"name": "Download",
+				"selectOutputFormat": "Select an output format",
+				"downloadTo": "Download to {{format}}"
+			},
+			"basemaps": {
+				"name": "Basemap Gallery"
+			},
+			"toc": {
+				"name": "Legend"
+			},
+			"filter": {
+				"name": "Search by characteristics",
+				"addExpresion": "Add characteristic",
+				"deleteExpresion": "Delete query",
+				"selectField": "Select a field",
+				"selectComparator": "Comparator",
+				"inputType": "Entry type",
+				"inputTypeInputValue": "Value input",
+				"inputTypeValueList": "List of values",
+				"comparatorEqual": "Is",
+				"comparatorNotEqual": "It's not",
+				"comparatorStarWith": "Start with",
+				"comparatorEndsWith": "Ends by",
+				"comparatorContains": "Contains",
+				"comparatorNotContains": "It does not have",
+				"comparatorIsEmpty": "It is empty",
+				"comparatorIsNotEmpty": "It's not empty",
+				"comparatorGreater": "Greater than",
+				"comparatorSmaller": "less than",
+				"comparatorGreaterOrEqual": "Greater or equal to",
+				"comparatorSmallerOrEqual": "Less than or equal to"
+			},
+			"delete_filter": {
+				"name": "Clear filters",
+				"close": "Close"
+			},
+			"table": {
+				"name": "Attribute table"
+			},
+			"edit": {
+				"points": {
+					"draw": "Draw new point"
+				},
+				"lines": {
+					"draw": "Draw new line"
+				},
+				"polygons": {
+					"draw": "Draw new polygon"
+				},
+				"finishGeom": "Finalize geometry",
+				"saveGeom": "Save geometry",
+				"selectTargetLayer": "Select the destination layer"
+			},
+			"info": {
+				"name": "Information"
+			},
+			"login": {
+				"login": "Log in",
+				"logout": "Sign off",
+				"logged": "Session started",
+				"logged_as": "Session started as",
+				"username": "Username",
+				"username_required": "Username is required",
+				"password": "Password",
+				"password_required": "Password is required",
+				"rememberme": "Remember me",
+				"initsession": "Log in"
+			},
+			"legend": {
+				"name": "Legend"
+			},
+			"searcher": {
+				"msg": "There are no results.",
+				"placeholder": "Search address"
+			},
+			"registration": {
+				"registration": "User registration",
+				"username": "Name",
+				"username_required": "Name is required",
+				"lastname": "Lastname",
+				"lastname_required": "Lastname is required",
+				"email": "Email",
+				"email_required": "Email is required",
+				"phone": "Phone number",
+				"phone_required": "Phone number is required",
+				"postalcode": "Postal code",
+				"postalcode_required": "Postal code is required",
+				"password": "Password",
+				"password_required": "Password is required",
+				"checkpassword": "Repeat password",
+				"repeat_password_error": "Passwords doesn't match",
+				"notifications": "Receive notifications",
+				"accept": "Accept",
+				"exit": "Exit"
+			}
+		},
+		"actions": {
+			"select": {
+				"name": "Select",
+				"in": "Select {{in}}",
+				"commute": "Change selection",
+				"selection": "Selection",
+				"clear": "Clear selection",
+				"zoom": "Zoom to the selection",
+				"delete": "Delete selected elements",
+				"edit": "Edit the attributes of the selected elements"
+			},
+			"refresh": {
+				"name": "Refresh"
+			},
+			"unlink": {
+				"name": "Unlink"
+			},
+			"view": {
+				"name": "See",
+				"title": "Query for element on '{{layername}}'"
+			},
+			"download": {
+				"name": "Download",
+				"download": "Download document",
+				"downloadZip": "Download zipped folder",
+				"downloading": "Downloading...",
+				"downloaded": "Download completed",
+				"error": "Errors occurred while downloading",
+				"processing": "Processing the document",
+				"wait": "Please wait...",
+				"descriptionStart": "Generation of '{{type}}' started at '{{time}}'",
+				"descriptionEnd": "Generation of '{{type}}' completed at '{{time}}'",
+				"map": "Map",
+				"report": "Report"
+			},
+			"edit": {
+				"name": "Edit",
+				"title": "Editing element on '{{layername}}'",
+				"attributes": "Edit attributes",
+				"geometry": "Edit geometry"
+			},
+			"delete": {
+				"name": "Delete",
+				"title": "Deleting element in '{{layername}}'",
+				"confirmMsg": "It will delete the selected item. This action cannot be undone. Do you want to continue?"
+			},
+			"deleteAll": {
+				"name": "Erase everything"
+			},
+			"colseAllTables": {
+				"name": "Close all tables"
+			},
+			"create": {
+				"name": "Create new",
+				"title": "Creation of new element in '{{layername}}'"
+			},
+			"add": {
+				"name": "Add",
+				"title": "Add new '{{fieldName}}'"
+			},
+			"zoom": {
+				"name": "Zoom"
+			},
+			"cancel": {
+				"name": "Cancel"
+			},
+			"exit": {
+				"name": "Go out"
+			},
+			"update": {
+				"name": "Update"
+			},
+			"saveNew": {
+				"name": "Create new"
+			},
+			"save": {
+				"name": "Keep",
+				"saving": "Saving..."
+			},
+			"hide": {
+				"name": "Disguise"
+			},
+			"filter": {
+				"name": "Execute",
+				"byMapExtension": "Filter by map extent"
+			},
+			"yes": {
+				"name": "Yes"
+			},
+			"no": {
+				"name": "No"
+			},
+			"favourites": "Favourites",
+			"reader": {
+				"listen": "Listen",
+				"end": "Not listen"
+			},
+			"schedule": {
+				"name": "Schedule",
+				"event": "Event",
+				"durationSelect": "Select a booking duration",
+				"durationMinutes": "{{duration}} minutes",
+				"duration": "From {{from}} to {{to}} {{date}}",
+				"booked": "Booked",
+				"bookedFor": "Booked for {{for}}",
+				"title": {
+					"feature": "Agenda of the selection in layer '{{layername}}'",
+					"layer": "Agenda of layer '{{layername}}'"
+				},
+				"weekday": {
+					"0": "Sunday",
+					"1": "Monday",
+					"2": "Tuesday",
+					"3": "Wednesday",
+					"4": "Thursday",
+					"5": "Friday",
+					"6": "Saturday"
+				},
+				"errors": {
+					"eventNotAllowedOnWeekDay": "The agenda does not support events on {{weekday}}",
+					"eventNotAllowedOnWeekDayHour": "The agenda only supports events on {{weekday}} from {{start}} to {{end}}"
+				}
+			},
+			"media": {
+				"name": "Documentary record",
+				"filename": "File",
+				"file": "File",
+				"selectFile": "Select file",
+				"mimetype": "Mimetype",
+				"name_": "Name",
+				"description": "Description",
+				"date": "Date",
+				"insert": "Add document",
+				"edit": "Edit document",
+				"delete": "Delete document",
+				"download": "Download file",
+				"title": {
+					"feature": "Documentary record of the selected entity in layer '{{layername}}'",
+					"layer": "Document record of layer '{{layername}}'",
+					"list": "List",
+					"carousel": "Carousel"
+				},
+				"error": "File size exceeds the limit of 5MB"
+			},
+			"incidents": {
+				"name": "Incidents",
+				"title": {
+					"feature": "Incidents of the selection in layer '{{layername}}'",
+					"layer": "Incidents of layer '{{layername}}'"
+				},
+				"photo": "Photo",
+				"description": "Description",
+				"selectPhoto": "Add photo",
+				"question": "Do you wish to be notified after your issue has been resolved?",
+				"yes": "Yes",
+				"no": "No",
+				"email": "Email",
+				"phone": "Phone",
+				"accept": "Accept",
+				"exit": "Exit"
+			},
+			"orientation" : {
+                "name": "What to do?"
+            }
+		},
+		"msg": {
+			"image": {
+                "title":"No image"
+            },
+			"results": {
+				"title": "Results",
+				"linked": "{{to}} associates",
+				"noData": "No data."
+			},
+			"count": {
+				"selection": "Total registered: {{total}} | Shown in table: {{shown}} | Total selected: {{selection}}"
+			},
+			"pendingSave": {
+				"title": "There are unsaved changes!",
+				"content": "Do you want to save your changes before exiting?"
+			},
+			"form": {
+				"requiredField": "A value is needed for the field '{{fieldName}}'. Please enter a value",
+				"greaterThanNow": "The field '{{fieldName}}' must be greater than the current time",
+				"smallerThanNow": "The field '{{fieldName}}' must be smaller than the current time",
+				"greaterThanField": "The field '{{fieldName}}' must be greater than the field '{{comparedFieldName}}'",
+				"greaterEqualThanField": "The field '{{fieldName}}' must be equal or greater than the field '{{comparedFieldName}}'",
+				"smallerThanField": "The field '{{fieldName}}' must be smaller than the field '{{comparedFieldName}}'",
+				"smallerEqualThanField": "The field '{{fieldName}}' must be equal or smaller than the field '{{comparedFieldName}}'", 
+				"dniField": "The field '{{fieldName}}' must be a valid TIN",
+				"nieField": "The field '{{fieldName}}' must be a valid NIE",
+				"cifField": "The field '{{fieldName}}' must be a valid CIF",
+				"dniNieCifField": "The field '{{fieldName}}' must be a valid NIF, NIE or CIF",
+				"view": "Information sheet",
+				"viewNoData": "Fail to load the content.",
+				"statusIncident": "Assignment of a previous status is not allowed. Contact the administrator.",
+				"dependOn": "The value of the field ‘{{comparedFieldName}}’ is not valid."
+			}
+		},
+		"notification": {
+			"error": {
+				"title": "The operation could not be completed!",
+				"invalidFields": "Some values are invalid.",
+				"invalidEvent": "The event is invalid",
+				"transaction": "Errors occurred in the request",
+				"Access denied exception": "You are not authorized to perform this operation",
+				"Authentication required exception": "You must be authenticated to use this resource",
+				"Invalid credentials exception": "Your login credentials are not valid",
+				"Item Already exist": "That element already exists in the System",
+				"No File exception": "The file does not exist in the system",
+				"No Map exception": "The map does not exist in the system",
+				"No Media exception": "The documentary record does not exist in the System",
+				"No Myme Type exception": "The Mymetype does not exist",
+				"No Resource exception": "The required resource does not exist in the System",
+				"No Resource group exception": "The document archive group does not exist in the System",
+				"No Unit info exception": "The Management Unit does not exist in the System",
+				"No UnitUSer info exception": "The User - Unit does not exist in the System",
+				"No User exception": "The User does not exist in the System",
+				"No Layer exception": "The layer does not exist in the System",
+				"No Directory exception": "The directory configured for the drive does not exist for the management unit",
+				"Schedule out of limit range exception": "The event is outside the time range that allows modifications in this agenda. You cannot create, modify or delete events outside this time range.",
+				"Schedule overlap not allowed exception": "This agenda does not support overlapping events. Find a free space in the agenda",
+				"Schedule user limmit exceeded exception": "The reservation cannot be made, as the time limit of reservations allowed per period for the user has been exceeded.",
+				"Wrong media config exception": "Document registration configuration is not correct"
+			},
+			"info": {
+				"title": "Information"
+			},
+			"success": {
+				"title": "Request completed!",
+				"add": "Registration has been successfully added",
+				"save": "The record has been successfully saved",
+				"delete": "The indicated record has been successfully deleted",
+				"delete_multiple": "The indicated records have been deleted correctly",
+				"update": "The indicated record has been successfully updated",
+				"deleteMedia": "The associated documents have been successfully deleted",
+				"email": "Email sent successfully",
+				"insertMedia": "The associated documents have been successfully saved"
+			}
+		}
+	},
+	"manager": {
+		"user": {
+			"label": "Users",
+			"select": "Select a user",
+			"edit": "Edit users",
+			"list": "User List",
+			"permissions": "List of users associated with the permission",
+			"name": "Username",
+			"usr": "Username",
+			"password": "Password",
+			"units": "Management units associated with the user",
+			"add2unit": "Add user to management unit",
+			"setUserName2Add": "Indicate the username you want to add"
+		},
+		"unit": {
+			"label": "Management units",
+			"select": "Select a management unit",
+			"selectMultiple": "Select some management units",
+			"filter": "Filter by management unit",
+			"list": "Management Unit List",
+			"name": "Management Unit name",
+			"unitName": "Management Unit name",
+			"isManager": "He is a manager",
+			"description": "Description",
+			"path": "Path to the management unit's QGIS resources",
+			"users": "Users associated with the management unit"
+		},
+		"permissions": {
+			"label": "Permissions",
+			"select": "Select a permit",
+			"edit": "Edit permissions",
+			"user": "List of permissions associated with the user",
+			"list": "Permission list",
+			"name": "Permit name",
+			"prmName": "Permit name"
+		},
+		"mediagroup": {
+			"label": "Document registration groups",
+			"create": "Create document registration group",
+			"list": "List of documentary registration groups",
+			"name": "Group name",
+			"resGrpName": "Group name",
+			"uidResGrp": "Unique identifier of the group",
+			"description": "Group Description"
+		},
+		"app": {
+			"label": "Applications",
+			"create": "Create application",
+			"filterByName": "Filter by app name",
+			"edit": "Edit application",
+			"list": "Application List",
+			"name": "Application name",
+			"language": "Language",
+			"appName": "Application name",
+			"isPublished": "Published",
+			"description": "Application Description",
+			"prmName": "Permission required (optional)",
+			"config": "Setting",
+			"thumbnail": "Image",
+			"selectThumbnail": "Select an image",
+			"appTree": {
+				"configParent": "directory",
+				"configLeaf": "Content",
+				"parentText": "Menu text",
+				"treeText": "Menu text",
+				"createRootParent": "Add root menu",
+				"createParent": "Add submenu",
+				"createRootLeaf": "Add root content",
+				"createLeaf": "Add content",
+				"deleteNode": "Delete",
+				"updateNode": "Edit",
+				"placeholder": "Add a name..."
+			},
+			"contentTree": {
+				"types": {
+					"map": "Map",
+					"table": "Board",
+					"opendata": "Open data",
+					"report": "Reports",
+					"html": "HTML",
+					"survey": "Survey",
+					"schedule": "Schedule",
+					"external_report": "Report with external service",                  
+                    "custom_app_component": "Application specific component"
+				},
+				"type": "Type of content",
+				"selectContentType": "Select a content type",
+				"project": "QGIS project",
+				"selectProject": "Select a QGIS project",
+				"table": "Board",
+				"html": "HTML",
+				"report": "Report",
+				"selectTable": "Select a table",
+				"layer": "Layer",
+				"selectLayer": "Select a layer",
+				"configParent": "Cluster",
+				"height": "Content height (?px or ?%)",
+				"columns": "Number of columns",
+				"showAsTab": "Show group as Tab",
+				"configLeaf": "Content",
+				"parentText": "Group title (optional)",
+				"treeText": "Group title (optional)",
+				"createRootParent": "Add root group",
+				"createParent": "Add group",
+				"createRootLeaf": "Add root content",
+				"createLeaf": "Add content",
+				"deleteNode": "Delete",
+				"updateNode": "Edit",
+				"placeholder": "Add a name..."
+			}
+		},
+		"params": {
+			"label": "Styles",
+			"palette": {
+				"open": "Open palette",
+				"close": "Close palette"
+			},
+			"button": {
+				"save": "Save",
+				"cancel": "Cancel"
+			},
+			"sideMenu": {
+				"name": "Choose side menu style"
+			},
+			"headMenu": {
+				"name": "Choose head menu style"
+			},
+			"form": {
+				"name": "Choose form and info sheet styles"
+			},
+			"name_logo": {
+				"name": "Choose name and logo for the app"
+			},
+			"legend": {
+				"name": "Choose legend style"
+			},
+			"managerEmail": "Choose the manager's email",
+			"numberApps": "Choose the number of visible applications in the side menu",
+			"election": {
+				"name": "Write the name: ",
+				"logo": "Choose the logo: ",
+				"colors": "Choose colours: ",
+				"colorFirst": "Choose primary colour: ",
+				"colorSecond": "Choose secundary colour: ",
+				"colorLettersMenu": "Choose letter menu colour: ",
+				"letterSize": "Letter size: ",
+				"letterColor": "Letter colour: ",
+				"letterType": "Type of letter: ",
+				"borderColor": "Border colour: ",
+				"bgColorActive": "Color of the active box: ",
+				"bgColorHover": "Color of the selected box:",
+				"managerEmail": "Manager's email: ",
+				"numberApps": "Number of apps: "
+			},
+			"letterStyleView": "Letter style"
+		},
+		"security": {
+			"label": "Security"
+		},
+		"home": {
+            "label": "Home",
+            "welcomeTourMessage": {
+                "name": "Welcome message",
+                "description": "Configuration of the message you want to be displayed as a welcome to users"
+            },
+            "infoMessage": {
+                "name": "Warning message",
+                "description": "Configuration of the warning message that you want to appear to users when they enter the application between the dates indicated.",
+                "from": "From",
+                "to": "To"
+            }
+        }
+	},
+	"urbegis": {
+		"pages": {
+			"innit": {
+				"name": "General information"
+			},
+			"applications": {
+				"name": "Applications"
+			},
+			"profile": {
+				"name": "Access"
+			},
+			"admin": {
+				"name": "Administration"
+			},
+			"manager": {
+				"name": "Setting"
+			},
+			"parameterization": {
+				"name": "Parameterization"
+			}
+		}
+	},
+	"reactBigCalendar": {
+		"date": "Date",
+		"time": "Time",
+		"event": "Event",
+		"allDay": "All day",
+		"week": "Week",
+		"work_week": "Working week",
+		"day": "Day",
+		"month": "Month",
+		"previous": "Previous",
+		"next": "Next",
+		"yesterday": "Yesterday",
+		"tomorrow": "Tomorrow",
+		"today": "Today",
+		"agenda": "Daily agenda",
+		"noEventsInRange": "There are no events in the selected interval",
+		"showMore": "{{total}}' more"
+	},
+	"text": {
+		"logIn": "All non-registered users have access to the applications for consultation. Registered users have access to more content and advanced functionalities. Your personal data will be incorporated into the processing system for which the council of {{name}} is responsible. You have the right to access, rectify and delete the data, as well as the other rights granted by the data protection regulations.",
+		"loggedIn": {
+			"admin": "Welcome user {{username}}. You are logged in as user {{userrole}}. You currently have permissions to manage the entire web application. You can create, edit and delete drives, applications and users. You can add and manage permissions on drives and applications. You can manage content for all applications.",
+			"manager": "Welcome user {{username}}. You are logged in as user {{userrole}}. You currently have permissions to manage and edit the applications and their contents of the management units: {{unidades}}.",
+			"unidad": "{{unidad}}"
+		},
+		"admin": "Administrator",
+		"manager": "Manager"
+	},
+	"formView": {
+		"characteristics": "Characteristics",
+		"attached": "Attached documents",
+		"media": "Images",
+		"dates": "Date of publication: ",
+		"link": "Link"
+	},
+	"orientation": {
+        "map": {
+            "text": "You are watching the component <strong>Map</strong>.",
+            "text1":"The component has elements that are shown in the legend. You can try the buttons of the map in order to use the tools or to show new windows.",
+            "text2":"The button ",
+            "text3": " "
+        },
+        "report": {
+            "text":"You are watching the component <strong>Report</strong>.",
+            "text1": "In this view you can download reports in PDF format.",
+            "text2": "You can filter the report data by date."
+        },
+        "html": {
+            "text": "",
+            "text1": "The HTML template is used to put additional information in a component."
+        },
+        "table": {
+            "text": "You are watching the component <strong>Table</strong>.",
+            "text1": "In the table you can see the data of the elements belonging to an information layer.",
+            "text2": "In the table you can download data, apply filters, perform element selection and element editing.",
+            "text3": "The button ",
+            "text4": " will show you more information about the tools."
+        },
+        "opendata": {
+            "text": "You are watching the component <strong>Open Data</strong>.",
+            "text1":"In this component you can download various formats of the data of an information layer."
+        }
+    },
+	"welcomeMessage" : {
+        "slide1" : {
+            "text" : "In the top right menu, you can log in to the system or change the language."
+        },
+        "slide2" : {
+            "text": "In the left side menu you have access to the main modules of URBEGIS. Depending on the permissions you have, more or less modules will be enabled (General information, access to applications, or management and administration tools).",
+            "text1": "In the applications tab, you will see the applications enabled for your user credentials."
+        },
+        "slide3" : {
+            "text": "As you access the main modules, you will be presented with specific new content in the main window."
+        },
+        "slide4": {
+            "text": "In the case of applications, a top menu will be displayed, specific to each application, which will allow you to navigate through the different content."
+        }
+    },
+	"custom_app_component": {
+        "cemetery": {
+            "label": "Cementeries",
+            "inhumation": {
+                "label": "Burial",
+                "header": "Performing the burial process"
+            },
+            "transfer": {
+                "label": "Relocation"
+            },
+			"searcher": {
+				"label": "Search tool",
+				"header" : "SEARCH BY PERSON DETAILS",
+				"form" : {
+                    "zone": "Zone",
+                    "row": "Row",
+                    "num": "Number",
+                    "name": "Name",
+                    "fname": "First name",
+                    "sname": "Second name",
+                    "birthday": "Date of birth",
+                    "deathday": "Date of death",
+					"remains": "Type of remains",
+                    "choose": "Choose" 
+                }
+			},
+            "actions" : {
+                "done" : "Done",
+                "next" :"Next",
+                "previous":"Previous",
+                "search": "Search",
+                "accept": "Accept",
+                "selectUnitDefault": "Select default burial unit",
+                "o": "or",
+                "selectOtherUnit": "Select another burial unit",
+				"resetSearch": "Reset search",
+				"find": "Find",
+				"cancel": "Cancel"
+            },
+            "msg": {
+                "processing" : "Finishing the process",
+                "descriptionStart": "Creation of '{{type}}' started at '{{time}}'",
+				"info": "You must writte at least one of these inputs: name, first name, second name"
+            },
+            "steps" : {
+                "data":{
+                    "label": "Data registration"
+                },
+                "unit":{
+                    "label":"Select a burial unit",
+					"default": "Unit allocated by default",
+                    "search" : "Funeral unit finder",
+					"zone": "Zones: ",
+                    "num": "Number: ",
+                    "labelzone": "Select a zone",
+					"msg" :{
+                        "success" : {
+                            "title" : "Accepted",
+                            "text" : "Burial unit successfully selected, you can proceed to the next step."
+                        },
+                        "warning" : {
+                            "title": "Warning",
+                            "text1" : "The selected burial unit is currently occupied by the following deceased:",
+                            "text2" :"Do you want to continue? ",
+                            "text3" :"No more than 5 years have passed since the last action on this burial unit.",
+							"text4": "The selected burial unit is currently booked.",
+                            "accept": "Accept"
+                        },
+                        "error" : {
+                            "title" :"Error",
+                            "text" : "Only ashes can be kept in a columbarium type funeral unit. Check the type of remains selected or change the burial unit."
+                        }    
+                    }
+                },
+                "media":{
+                    "label": "Upload documentation"
+                }
+            }
+        },
+        "inventory": {
+            "label": "Inventory",
+            "insertion": {
+                "label": "Item registration"
+            }
+        }
+    }
+}
