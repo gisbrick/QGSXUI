@@ -185,7 +185,14 @@
       "measureMeter": "m",
       "measureKilometer": "km",
       "measureSquareMeter": "m²",
-      "measureSquareKilometer": "km²"
+      "measureSquareKilometer": "km²",
+      "showLocation": "Show my location",
+      "yourLocation": "Your location",
+      "accuracy": "Accuracy",
+      "locationError": "Error getting location",
+      "locationPermissionDenied": "Location permission denied",
+      "locationUnavailable": "Location unavailable",
+      "locationTimeout": "Location timeout"
     },
     "toolbar": {
       "actions": "Actions",

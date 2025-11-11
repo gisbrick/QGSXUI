@@ -190,7 +190,14 @@
       "measureMeter": "m",
       "measureKilometer": "km",
       "measureSquareMeter": "m²",
-      "measureSquareKilometer": "km²"
+      "measureSquareKilometer": "km²",
+      "showLocation": "Mostrar mi ubicación",
+      "yourLocation": "Tu ubicación",
+      "accuracy": "Precisión",
+      "locationError": "Error al obtener la ubicación",
+      "locationPermissionDenied": "Permiso de ubicación denegado",
+      "locationUnavailable": "Ubicación no disponible",
+      "locationTimeout": "Tiempo de espera agotado"
     },
     "toolbar": {
       "actions": "Acciones",
