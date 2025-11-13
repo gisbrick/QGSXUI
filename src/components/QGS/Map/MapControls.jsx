@@ -43,7 +43,7 @@ const MapControls = () => {
           title={translate('ui.map.zoomIn')}
           aria-label={translate('ui.map.zoomIn')}
         >
-          <i className="fg-zoom-in" aria-hidden="true" />
+          +
         </button>
         <button
           type="button"
@@ -52,7 +52,7 @@ const MapControls = () => {
           title={translate('ui.map.zoomOut')}
           aria-label={translate('ui.map.zoomOut')}
         >
-          <i className="fg-zoom-out" aria-hidden="true" />
+          −
         </button>
         <button
           type="button"

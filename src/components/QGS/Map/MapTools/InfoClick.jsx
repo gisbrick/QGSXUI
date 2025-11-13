@@ -1,8 +1,9 @@
-import React, { useEffect, useContext } from 'react';
+import React, { useEffect, useContext, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { useMap } from '../MapProvider';
 import { QgisConfigContext } from '../../QgisConfigContext';
 import { fetchFeatureInfo } from '../../../../services/qgisWMSFetcher';
+import { renderFeatureInfoPopup } from './FeatureInfoPopup';
 
 /**
  * Herramienta para obtener información de features al hacer click en el mapa
@@ -12,6 +13,10 @@ const InfoClick = ({ active, onActiveChange }) => {
   const { mapInstance, config, qgsUrl, qgsProjectPath, notificationManager, t } = useMap() || {};
   const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
+  
+  // Referencia para el popup y el root de React
+  const popupRef = useRef(null);
+  const reactRootRef = useRef(null);
 
   useEffect(() => {
     if (!mapInstance || !active) {
@@ -27,6 +32,11 @@ const InfoClick = ({ active, onActiveChange }) => {
 
     // Función para realizar la consulta GetFeatureInfo
     const handleMapClick = async (e) => {
+      // Si hay un popup abierto, no hacer nada (permitir PAN del mapa)
+      if (popupRef.current) {
+        return;
+      }
+      
       if (!qgsUrl || !qgsProjectPath || !config) {
         return;
       }
@@ -111,22 +121,88 @@ const InfoClick = ({ active, onActiveChange }) => {
         
         const data = await fetchFeatureInfo(qgsUrl, qgsProjectPath, queryParams, token);
         
+        console.log('InfoClick: GetFeatureInfo response', data);
+        console.log('InfoClick: Features count', data.features?.length);
+        console.log('InfoClick: Config available', !!config);
+        console.log('InfoClick: Config layers', config?.layers ? Object.keys(config.layers) : 'no layers');
+        
         if (data.features && data.features.length > 0) {
-          // Mostrar las features encontradas
-          // Por ahora solo mostramos en consola, luego se puede mostrar en un modal
-          console.log('Features encontradas:', data.features);
+          console.log('InfoClick: Features to display', data.features);
           
-          // TODO: Mostrar las features en un modal o panel lateral
-          // Por ahora, desactivamos la herramienta después de la consulta
-          if (onActiveChange) {
-            onActiveChange(false);
+          // Cerrar popup anterior si existe
+          if (popupRef.current) {
+            map.closePopup(popupRef.current);
+            popupRef.current = null;
           }
+          if (reactRootRef.current) {
+            reactRootRef.current.unmount();
+            reactRootRef.current = null;
+          }
+
+          // Crear contenedor para el popup con ancho mínimo
+          const container = document.createElement('div');
+          container.style.minWidth = '300px';
+          container.style.width = 'auto';
+          container.className = 'feature-info-popup-container';
+          
+          // Crear popup de Leaflet
+          const popup = window.L.popup({
+            minWidth: 300,
+            maxWidth: 500,
+            maxHeight: 400,
+            className: 'feature-info-leaflet-popup'
+          })
+            .setLatLng(loc)
+            .setContent(container)
+            .openOn(map);
+
+          popupRef.current = popup;
+
+          // Listener para cuando se cierra el popup
+          const handlePopupClose = () => {
+            popupRef.current = null;
+            if (reactRootRef.current) {
+              reactRootRef.current.unmount();
+              reactRootRef.current = null;
+            }
+            // Remover el listener después de cerrar
+            map.off('popupclose', handlePopupClose);
+          };
+          
+          map.on('popupclose', handlePopupClose);
+
+          // Renderizar componente React en el contenedor
+          // Pasar el config directamente para asegurar que esté disponible
+          const root = renderFeatureInfoPopup(container, data.features, map, () => {
+            if (popupRef.current) {
+              map.closePopup(popupRef.current);
+              popupRef.current = null;
+            }
+            if (reactRootRef.current) {
+              reactRootRef.current.unmount();
+              reactRootRef.current = null;
+            }
+          }, config, { 
+            t: translate,
+            qgsUrl: qgsUrl,
+            qgsProjectPath: qgsProjectPath,
+            token: qgisConfig?.token || null
+          });
+          
+          reactRootRef.current = root;
+          
+          // Forzar actualización del layout del popup después de renderizar
+          setTimeout(() => {
+            if (popup && popup._updateLayout) {
+              popup._updateLayout();
+            }
+          }, 0);
         } else {
           // No se encontraron features en el punto clickeado
           if (notificationManager && notificationManager.addInfo) {
             notificationManager.addInfo(
-              translate('ui.map.infoClick') || 'Información',
-              translate('ui.map.noFeaturesFound') || 'No se encontraron features en este punto'
+              translate('ui.map.infoClick'),
+              translate('ui.map.noFeaturesFound')
             );
           }
         }
@@ -134,8 +210,8 @@ const InfoClick = ({ active, onActiveChange }) => {
         console.error('Error al obtener información de features:', error);
         if (notificationManager && notificationManager.addError) {
           notificationManager.addError(
-            translate('ui.map.infoClickError') || 'Error',
-            error.message || translate('ui.map.infoClickError') || 'Error al obtener información'
+            translate('ui.map.infoClickError'),
+            error.message || translate('ui.map.infoClickError')
           );
         }
       }
@@ -144,13 +220,23 @@ const InfoClick = ({ active, onActiveChange }) => {
     // Añadir listener de click al mapa
     map.on('click', handleMapClick);
 
-    // Desactivar el arrastre del mapa cuando la herramienta está activa
-    map.dragging.disable();
+    // NO desactivar el arrastre del mapa - permitir PAN incluso con la herramienta activa
+    // El popup abierto evitará que se hagan nuevas requests
 
     // Cleanup
     return () => {
       map.off('click', handleMapClick);
       map.dragging.enable();
+      
+      // Cerrar popup y limpiar React root
+      if (popupRef.current) {
+        map.closePopup(popupRef.current);
+        popupRef.current = null;
+      }
+      if (reactRootRef.current) {
+        reactRootRef.current.unmount();
+        reactRootRef.current = null;
+      }
       
       // Restaurar cursor
       if (container) {

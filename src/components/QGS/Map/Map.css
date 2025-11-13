@@ -165,14 +165,18 @@
 .map-toolbar-container {
   position: absolute;
   top: 10px;
-  left: 10px;
+  left: 60px; /* Dejar espacio para los controles de zoom de Leaflet (normalmente ~50px de ancho) */
   z-index: 1000;
   pointer-events: none;
 }
 
+.map-toolbar-container.no-controls {
+  left: 10px;
+}
+
 .map-toolbar-container .map-toolbar {
   pointer-events: auto;
-  padding-left: 40px;
+  padding-left: 0;
   width: fit-content;
   background: transparent !important;
 }

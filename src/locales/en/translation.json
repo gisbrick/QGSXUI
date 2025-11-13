@@ -30,7 +30,8 @@
       "collapse": "Collapse",
       "required": "Required",
       "optional": "Optional",
-      "saving": "Saving..."
+      "saving": "Saving...",
+      "empty": "—"
     },
     "validation": {
       "required": "This field is required",
@@ -186,6 +187,20 @@
       "measureKilometer": "km",
       "measureSquareMeter": "m²",
       "measureSquareKilometer": "km²",
+      "layerActions": "Layer actions",
+      "actions": {
+        "viewData": "View data",
+        "editAttributes": "Edit attributes",
+        "editGeometry": "Edit geometry",
+        "deleteData": "Delete feature"
+      },
+      "previousLayer": "Previous layer",
+      "nextLayer": "Next layer",
+      "previousFeature": "Previous feature",
+      "nextFeature": "Next feature",
+      "feature": "Feature",
+      "featureProperties": "Feature properties",
+      "availableLayers": "Available layers",
       "showLocation": "Show my location",
       "yourLocation": "Your location",
       "accuracy": "Accuracy",

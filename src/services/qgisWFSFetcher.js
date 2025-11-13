@@ -146,5 +146,37 @@ export async function fetchAllFeatures(qgsUrl, qgsProjectPath, layerName, filter
   return allFeatures;
 }
 
+// Servicio que obtiene una feature específica por su ID mediante WFS GetFeature
+export async function fetchFeatureById(qgsUrl, qgsProjectPath, layerName, featureId, token = null) {
+  layerName = layerName.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
+  // Normalizar el featureId (puede venir como "layerName.featureId" o solo "featureId")
+  const normalizedFeatureId = featureId.includes('.') ? featureId : `${layerName}.${featureId}`;
+  
+  const url = qgsUrl;
+  const params = new URLSearchParams({
+    SERVICE: 'WFS',
+    VERSION: '1.1.0',
+    REQUEST: 'GetFeature',
+    TYPENAME: layerName,
+    FEATUREID: normalizedFeatureId.replace(/\s+/g, '_'), // Reemplazar espacios por guiones bajos en el ID
+    outputFormat: 'application/json',
+    MAP: qgsProjectPath,
+    ...(token ? { TOKEN: token } : {})
+  });
+
+  const response = await fetch(`${url}?${params.toString()}`);
+  if (!response.ok) {
+    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  }
+
+  const data = await response.json();
+
+  if (!data.features || data.features.length === 0) {
+    throw new Error('Feature not found in response');
+  }
+
+  return data.features[0]; // Retornar la primera (y única) feature
+}
+
 
 

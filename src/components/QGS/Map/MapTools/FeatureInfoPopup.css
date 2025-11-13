@@ -1,0 +1,315 @@
+.feature-info-popup {
+  width: 100%;
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+  overflow: hidden;
+  padding: 0;
+  gap: 0;
+  max-height: 400px;
+}
+
+.feature-info-popup-empty {
+  padding: 20px;
+  text-align: center;
+  color: var(--color-text-secondary, #666);
+}
+
+/* Navegación de capas */
+.feature-info-popup-layer-nav {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border, #ddd);
+  background-color: var(--color-background-secondary, #f5f5f5);
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.feature-info-popup-layer-info {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex: 1;
+  gap: 2px;
+}
+
+.feature-info-popup-layer-name {
+  font-weight: 600;
+  font-size: 13px;
+  color: var(--color-text-primary, #333);
+}
+
+.feature-info-popup-layer-count {
+  font-size: 11px;
+  color: var(--color-text-secondary, #666);
+}
+
+.feature-info-popup-layer-info-single {
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border, #ddd);
+  background-color: var(--color-background-secondary, #f5f5f5);
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.feature-info-popup-toolbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 6px 12px;
+  border-bottom: 1px solid var(--color-border, #ddd);
+  background-color: var(--color-background, #fff);
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+.feature-info-popup-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+}
+
+.feature-info-popup-toolbar-button {
+  background: var(--color-background, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 4px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  color: var(--color-text-primary, #333);
+  transition: background-color 0.2s, border-color 0.2s, color 0.2s;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.feature-info-popup-toolbar-button i {
+  font-size: 14px;
+  line-height: 1;
+}
+
+.feature-info-popup-toolbar-button:hover:not(:disabled) {
+  background-color: var(--color-hover, #f0f0f0);
+  border-color: var(--color-primary, #1890ff);
+  color: var(--color-primary, #1890ff);
+}
+
+.feature-info-popup-toolbar-button:active:not(:disabled) {
+  background-color: var(--color-pressed, #e0e0e0);
+}
+
+.feature-info-popup-toolbar-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.feature-info-popup-toolbar-button--danger:hover:not(:disabled) {
+  color: var(--color-danger, #d32f2f);
+  border-color: var(--color-danger, #d32f2f);
+  background-color: rgba(211, 47, 47, 0.08);
+}
+
+/* Lista de capas disponibles */
+.feature-info-popup-layers-list {
+  padding: 6px 12px;
+  border-top: 1px solid var(--color-border, #ddd);
+  background-color: var(--color-background-secondary, #f5f5f5);
+  max-height: 100px;
+  overflow-y: auto;
+  overflow-x: hidden;
+  margin: 0;
+  flex-shrink: 0;
+  box-sizing: border-box;
+}
+
+/* Navegación de features (dentro de la toolbar) */
+.feature-info-popup-feature-nav {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 0 0 auto;
+  margin-left: auto;
+}
+
+.feature-info-popup-feature-info {
+  flex: 0 0 auto;
+  text-align: center;
+  font-size: 11px;
+  color: var(--color-text-secondary, #666);
+  white-space: nowrap;
+  padding: 0 4px;
+}
+
+/* Botones de navegación */
+.feature-info-popup-nav-button {
+  background: var(--color-background, #fff);
+  border: 1px solid var(--color-border, #ddd);
+  border-radius: 3px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  font-size: 16px;
+  color: var(--color-text-primary, #333);
+  transition: all 0.2s;
+  padding: 0;
+  font-family: inherit;
+}
+
+.feature-info-popup-nav-button:hover:not(:disabled) {
+  background-color: var(--color-hover, #f0f0f0);
+  border-color: var(--color-primary, #1890ff);
+}
+
+.feature-info-popup-nav-button:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.feature-info-popup-nav-button:active:not(:disabled) {
+  background-color: var(--color-pressed, #e0e0e0);
+}
+
+/* Cuerpo del contenido */
+.feature-info-popup-body {
+  flex: 1 1 auto;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: 8px 12px;
+  min-height: 0;
+  max-height: none;
+  box-sizing: border-box;
+}
+
+.feature-info-popup-no-template {
+  width: 100%;
+}
+
+.feature-info-popup-properties h4 {
+  margin: 0 0 6px 0;
+  font-size: 13px;
+  color: var(--color-text-primary, #333);
+}
+
+.feature-info-popup-properties-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 11px;
+}
+
+.feature-info-popup-properties-table tbody tr {
+  border-bottom: 1px solid var(--color-border, #eee);
+}
+
+.feature-info-popup-properties-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.feature-info-popup-property-key {
+  padding: 4px 6px;
+  font-weight: 500;
+  color: var(--color-text-secondary, #666);
+  width: 45%;
+  vertical-align: top;
+}
+
+.feature-info-popup-property-value {
+  padding: 4px 6px;
+  color: var(--color-text-primary, #333);
+  word-break: break-word;
+}
+
+.feature-info-popup-layers-list h5 {
+  margin: 0 0 4px 0;
+  font-size: 11px;
+  color: var(--color-text-primary, #333);
+}
+
+.feature-info-popup-layers-list ul {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.feature-info-popup-layers-list li {
+  padding: 3px 6px;
+  cursor: pointer;
+  border-radius: 3px;
+  transition: background-color 0.2s;
+  font-size: 11px;
+}
+
+.feature-info-popup-layers-list li:hover {
+  background-color: var(--color-hover, #f0f0f0);
+}
+
+.feature-info-popup-layers-list li.active {
+  background-color: var(--color-primary, #1890ff);
+  color: var(--color-primary-contrast, white);
+  font-weight: 500;
+}
+
+/* MapTipViewer dentro del popup */
+.feature-info-popup-body .map-tip-viewer {
+  padding: 0;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+.feature-info-popup-body .map-tip-viewer * {
+  max-width: 100%;
+  font-size: 11px;
+  box-sizing: border-box;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Asegurar que las tablas no desborden */
+.feature-info-popup-properties-table {
+  table-layout: fixed;
+  width: 100%;
+}
+
+.feature-info-popup-property-value {
+  word-break: break-word;
+  overflow-wrap: break-word;
+}
+
+/* Contenedor del popup */
+.feature-info-popup-container {
+  min-width: 300px;
+  width: 100%;
+  max-width: 500px;
+  box-sizing: border-box;
+}
+
+/* Estilos específicos para el popup de Leaflet */
+.feature-info-leaflet-popup .leaflet-popup-content {
+  margin: 13px 24px 13px 20px !important;
+  padding: 0;
+  min-width: 300px !important;
+  max-width: 500px !important;
+  width: auto !important;
+  max-height: 400px !important;
+  overflow: hidden !important;
+  display: flex;
+  flex-direction: column;
+  box-sizing: border-box;
+}
+
+.feature-info-leaflet-popup .leaflet-popup-content-wrapper {
+  overflow: hidden;
+  min-width: 300px !important;
+  max-width: 500px !important;
+}
+

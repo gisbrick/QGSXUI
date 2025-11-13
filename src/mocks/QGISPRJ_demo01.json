@@ -3,10 +3,10 @@
 
       "viewExtent": {
             "classType": "QgsRectangle",
-            "xMaximum": "3.785806566341189",
-            "xMinimum": "-4.635305290243",
-            "yMaximum": "43.80560499948952",
-            "yMinimum": "39.2672788294862"
+            "xMaximum": "3.254033079665087",
+            "xMinimum": "-4.702429838315705",
+            "yMaximum": "42.56678700070413",
+            "yMinimum": "40.400948810898086"
       },
       "layoutManager": {
             "classType": "QgsLayoutManager",
@@ -24,6 +24,10 @@
             "children": [
                   {
                         "classType": "QgsLayerTreeGroup",
+                        "isExpanded": "true",
+                        "isVisible": "true",
+                        "name": "demo 01",
+                        "nodeType": "0",
                         "children": [
                               {
                                     "classType": "QgsLayerTreeLayer",
@@ -33,24 +37,24 @@
                               },
                               {
                                     "classType": "QgsLayerTreeGroup",
+                                    "isExpanded": "false",
+                                    "isVisible": "true",
+                                    "name": "demo01",
+                                    "nodeType": "0",
                                     "children": [
-                                          {
-                                                "classType": "QgsLayerTreeLayer",
-                                                "isVisible": "true",
-                                                "name": "punto t",
-                                                "nodeType": "1"
-                                          },
                                           {
                                                 "classType": "QgsLayerTreeLayer",
                                                 "isVisible": "true",
                                                 "name": "tabla maestra",
                                                 "nodeType": "1"
                                           }
-                                    ],
-                                    "isExpanded": "false",
+                                    ]
+                              },
+                              {
+                                    "classType": "QgsLayerTreeLayer",
                                     "isVisible": "true",
-                                    "name": "demo01",
-                                    "nodeType": "0"
+                                    "name": "punto t",
+                                    "nodeType": "1"
                               },
                               {
                                     "classType": "QgsLayerTreeLayer",
@@ -96,6 +100,10 @@
                               },
                               {
                                     "classType": "QgsLayerTreeGroup",
+                                    "isExpanded": "true",
+                                    "isVisible": "true",
+                                    "name": "Relation",
+                                    "nodeType": "0",
                                     "children": [
                                           {
                                                 "classType": "QgsLayerTreeLayer",
@@ -108,48 +116,21 @@
                                                 "isVisible": "true",
                                                 "name": "tabla relation",
                                                 "nodeType": "1"
+                                          },
+                                          {
+                                                "classType": "QgsLayerTreeLayer",
+                                                "isVisible": "true",
+                                                "name": "Catastro",
+                                                "nodeType": "1"
                                           }
-                                    ],
-                                    "isExpanded": "true",
-                                    "isVisible": "true",
-                                    "name": "Relation",
-                                    "nodeType": "0"
+                                    ]
                               }
-                        ],
-                        "isExpanded": "true",
-                        "isVisible": "true",
-                        "name": "demo 01",
-                        "nodeType": "0"
-                  },
-                  {
-                        "classType": "QgsLayerTreeLayer",
-                        "isVisible": "true",
-                        "name": "Catastro",
-                        "nodeType": "1"
+                        ]
                   }
             ]
       },
       "variables": { },
       "layers": {
-            "Catastro": {
-                  "classType": "QgsRasterLayer",
-                  "id": "Catastro_75b562b1_bf2a_4a28_9ae4_b52ce99d676c",
-                  "metadata": {
-                        "classType": "QgsLayerMetadata",
-                        "abstract": "",
-                        "contacts": [ ],
-                        "parentIdentifier": "",
-                        "title": "",
-                        "type": ""
-                  },
-                  "name": "Catastro",
-                  "opacity": "1.0",
-                  "providerType": "wms",
-                  "layer_type": "Raster layer",
-                  "customProperties": { },
-                  "has_geometry": false,
-                  "url": "https://ovc.catastro.meh.es/Cartografia/WMS/simbolos.png"
-            },
             "feature tabla relation": {
                   "classType": "QgsVectorLayer",
                   "attributeTableConfig": {
@@ -179,10 +160,13 @@
                         ]
                   },
                   "id": "feature_tabla_relation_4d2badeb_0d68_4ad5_a4bd_79ef965f59dc",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
+                        "parentIdentifier": "",
+                        "title": "",
+                        "type": "dataset",
                         "contacts": [
                               {
                                     "classType": "Contact",
@@ -194,10 +178,7 @@
                                     "role": "",
                                     "voice": ""
                               }
-                        ],
-                        "parentIdentifier": "",
-                        "title": "",
-                        "type": "dataset"
+                        ]
                   },
                   "name": "feature tabla relation",
                   "opacity": "1.0",
@@ -326,10 +307,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "multilinea t": {
@@ -481,14 +462,14 @@
                         ]
                   },
                   "id": "multilinea_t_2f6e04b5_c4bd_42b1_b97e_cf4e776ee648",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "multilinea t",
                   "opacity": "1.0",
@@ -1399,10 +1380,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "multilinea z m t": {
@@ -1554,14 +1535,14 @@
                         ]
                   },
                   "id": "multilinea_z_m_t_6fc068b3_8cbe_4d53_be88_5d37d207424c",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "multilinea z m t",
                   "opacity": "1.0",
@@ -2472,10 +2453,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "multipoligono t": {
@@ -2627,14 +2608,14 @@
                         ]
                   },
                   "id": "multipoligono_t_4aa8ef1d_907f_49b7_a6e3_5119486bc1c4",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "multipoligono t",
                   "opacity": "1.0",
@@ -3545,10 +3526,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "multipunto t": {
@@ -3700,14 +3681,14 @@
                         ]
                   },
                   "id": "multipunto_t_9c9fc7f0_f791_44d3_9fd8_35a8de6634bd",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "multipunto t",
                   "opacity": "1.0",
@@ -4618,10 +4599,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "poligono t": {
@@ -4633,7 +4614,7 @@
                   },
                   "dataProvider": {
                         "classType": "QgsVectorDataProvider",
-                        "featureCount": "0"
+                        "featureCount": "1"
                   },
                   "displayExpression": "\"texto01\"",
                   "editFormConfig": {
@@ -4773,14 +4754,14 @@
                         ]
                   },
                   "id": "poligono_t_08bb4516_a49a_46aa_abd3_92e7d6d0c9bd",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "poligono t",
                   "opacity": "1.0",
@@ -5691,10 +5672,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "poligono z m t": {
@@ -5846,14 +5827,14 @@
                         ]
                   },
                   "id": "poligono_z_m_t_23ec474b_dd60_4568_9eeb_794cf0522ce5",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "poligono z m t",
                   "opacity": "1.0",
@@ -6764,10 +6745,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "punto t": {
@@ -6919,21 +6900,32 @@
                         ]
                   },
                   "id": "punto_t_0516ab5a_9fad_46ed_bf40_15815ab1e405",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "<div>PLANTILLA VISUALIZACION</div>\r\n<div>[%\"texto01\"%]</div>",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [
+                              {
+                                    "classType": "Contact",
+                                    "email": "",
+                                    "fax": "",
+                                    "name": "",
+                                    "organization": "",
+                                    "position": "",
+                                    "role": "",
+                                    "voice": ""
+                              }
+                        ]
                   },
                   "name": "punto t",
                   "opacity": "1.0",
                   "providerType": "ogr",
                   "temporalProperties": {
                         "classType": "QgsVectorLayerTemporalProperties",
-                        "durationField": "",
+                        "durationField": "fid",
                         "durationUnits": "2",
                         "endField": "",
                         "fixedDuration": "0.0",
@@ -6943,12 +6935,12 @@
                         },
                         "isActive": "false",
                         "mode": "0",
-                        "startField": ""
+                        "startField": "Fecha01"
                   },
                   "wkbType": "1",
                   "layer_type": "Vector layer",
                   "customProperties": { },
-                  "wkbType_name": "Point",
+                  "wkbType_name": "LineGeometry",
                   "has_geometry": true,
                   "fields": [
                         {
@@ -6976,8 +6968,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": true,
                               "constraintUnique": true,
@@ -7010,8 +7002,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7044,8 +7036,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7078,8 +7070,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7112,8 +7104,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7146,8 +7138,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Range"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7180,8 +7172,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Range"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7214,8 +7206,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Range"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7248,8 +7240,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "RelationReference"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7282,8 +7274,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7316,8 +7308,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7350,8 +7342,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7384,8 +7376,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7418,8 +7410,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "TextEdit"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7452,8 +7444,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7486,8 +7478,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7520,8 +7512,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7554,8 +7546,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7588,8 +7580,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7622,8 +7614,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "DateTime"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7656,8 +7648,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "CheckBox"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7690,8 +7682,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "CheckBox"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7724,8 +7716,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "CheckBox"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7758,8 +7750,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Binary"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7792,8 +7784,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Binary"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7826,8 +7818,8 @@
                               "editorWidgetSetup": {
                                     "classType": "QgsEditorWidgetSetup",
                                     "config": "{}",
-                                    "isNull": "true",
-                                    "type": ""
+                                    "isNull": "false",
+                                    "type": "Binary"
                               },
                               "constraintNotNull": false,
                               "constraintUnique": false,
@@ -7837,10 +7829,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "punt  z m t": {
@@ -7992,14 +7984,14 @@
                         ]
                   },
                   "id": "punto_z_m_t_c5999d39_c3f4_489b_a21f_a24488e346f5",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"texto01%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "punt  z m t",
                   "opacity": "1.0",
@@ -8910,10 +8902,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "tabla": {
@@ -8938,7 +8930,20 @@
                                           "classType": "QColor",
                                           "name": "#000000"
                                     },
+                                    "columnCount": "3",
+                                    "isGroupBox": "false",
+                                    "name": "Tab01 texto 2 columnas",
+                                    "showLabel": "true",
+                                    "type": "1",
+                                    "visibilityExpression": {
+                                          "classType": "QgsOptionalExpression"
+                                    },
                                     "children": [
+                                          {
+                                                "classType": "QgsAttributeEditorField",
+                                                "idx": "25",
+                                                "name": "JSON01"
+                                          },
                                           {
                                                 "classType": "QgsAttributeEditorField",
                                                 "idx": "3",
@@ -8959,21 +8964,21 @@
                                                 "idx": "1",
                                                 "name": "texto01"
                                           }
-                                    ],
-                                    "columnCount": "2",
-                                    "isGroupBox": "false",
-                                    "name": "Tab01 texto 2 columnas",
-                                    "showLabel": "true",
-                                    "type": "1",
-                                    "visibilityExpression": {
-                                          "classType": "QgsOptionalExpression"
-                                    }
+                                    ]
                               },
                               {
                                     "classType": "QgsAttributeEditorContainer",
                                     "backgroundColor": {
                                           "classType": "QColor",
                                           "name": "#000000"
+                                    },
+                                    "columnCount": "4",
+                                    "isGroupBox": "false",
+                                    "name": "Tab02 enteros 2 columnas",
+                                    "showLabel": "true",
+                                    "type": "1",
+                                    "visibilityExpression": {
+                                          "classType": "QgsOptionalExpression"
                                     },
                                     "children": [
                                           {
@@ -9006,15 +9011,7 @@
                                                 "idx": "7",
                                                 "name": "entero6401"
                                           }
-                                    ],
-                                    "columnCount": "3",
-                                    "isGroupBox": "false",
-                                    "name": "Tab02 enteros 2 columnas",
-                                    "showLabel": "true",
-                                    "type": "1",
-                                    "visibilityExpression": {
-                                          "classType": "QgsOptionalExpression"
-                                    }
+                                    ]
                               },
                               {
                                     "classType": "QgsAttributeEditorContainer",
@@ -9022,12 +9019,28 @@
                                           "classType": "QColor",
                                           "name": "#000000"
                                     },
+                                    "columnCount": "1",
+                                    "isGroupBox": "false",
+                                    "name": "Otros",
+                                    "showLabel": "true",
+                                    "type": "1",
+                                    "visibilityExpression": {
+                                          "classType": "QgsOptionalExpression"
+                                    },
                                     "children": [
                                           {
                                                 "classType": "QgsAttributeEditorContainer",
                                                 "backgroundColor": {
                                                       "classType": "QColor",
                                                       "name": "#000000"
+                                                },
+                                                "columnCount": "1",
+                                                "isGroupBox": "true",
+                                                "name": "Group box Decimal",
+                                                "showLabel": "true",
+                                                "type": "0",
+                                                "visibilityExpression": {
+                                                      "classType": "QgsOptionalExpression"
                                                 },
                                                 "children": [
                                                       {
@@ -9045,21 +9058,21 @@
                                                             "idx": "10",
                                                             "name": "Decimal01"
                                                       }
-                                                ],
-                                                "columnCount": "2",
-                                                "isGroupBox": "true",
-                                                "name": "Group box Decimal",
-                                                "showLabel": "true",
-                                                "type": "0",
-                                                "visibilityExpression": {
-                                                      "classType": "QgsOptionalExpression"
-                                                }
+                                                ]
                                           },
                                           {
                                                 "classType": "QgsAttributeEditorContainer",
                                                 "backgroundColor": {
                                                       "classType": "QColor",
                                                       "name": "#000000"
+                                                },
+                                                "columnCount": "3",
+                                                "isGroupBox": "true",
+                                                "name": "Group box Fecha",
+                                                "showLabel": "true",
+                                                "type": "0",
+                                                "visibilityExpression": {
+                                                      "classType": "QgsOptionalExpression"
                                                 },
                                                 "children": [
                                                       {
@@ -9092,21 +9105,21 @@
                                                             "idx": "18",
                                                             "name": "FechaHora03"
                                                       }
-                                                ],
-                                                "columnCount": "2",
-                                                "isGroupBox": "true",
-                                                "name": "Group box Fecha",
-                                                "showLabel": "true",
-                                                "type": "0",
-                                                "visibilityExpression": {
-                                                      "classType": "QgsOptionalExpression"
-                                                }
+                                                ]
                                           },
                                           {
                                                 "classType": "QgsAttributeEditorContainer",
                                                 "backgroundColor": {
                                                       "classType": "QColor",
                                                       "name": "#000000"
+                                                },
+                                                "columnCount": "2",
+                                                "isGroupBox": "false",
+                                                "name": "Fila otros",
+                                                "showLabel": "false",
+                                                "type": "2",
+                                                "visibilityExpression": {
+                                                      "classType": "QgsOptionalExpression"
                                                 },
                                                 "children": [
                                                       {
@@ -9133,7 +9146,24 @@
                                                             "classType": "QgsAttributeEditorField",
                                                             "idx": "19",
                                                             "name": "Booleano01"
-                                                      },
+                                                      }
+                                                ]
+                                          },
+                                          {
+                                                "classType": "QgsAttributeEditorContainer",
+                                                "backgroundColor": {
+                                                      "classType": "QColor",
+                                                      "name": "#000000"
+                                                },
+                                                "columnCount": "2",
+                                                "isGroupBox": "false",
+                                                "name": "",
+                                                "showLabel": "false",
+                                                "type": "2",
+                                                "visibilityExpression": {
+                                                      "classType": "QgsOptionalExpression"
+                                                },
+                                                "children": [
                                                       {
                                                             "classType": "QgsAttributeEditorField",
                                                             "idx": "24",
@@ -9148,39 +9178,21 @@
                                                             "classType": "QgsAttributeEditorField",
                                                             "idx": "23",
                                                             "name": "Blob02"
-                                                      },
-                                                      {
-                                                            "classType": "QgsAttributeEditorField",
-                                                            "idx": "25",
-                                                            "name": "JSON01"
                                                       }
-                                                ],
-                                                "columnCount": "2",
-                                                "isGroupBox": "false",
-                                                "name": "Fila otros",
-                                                "showLabel": "true",
-                                                "type": "2",
-                                                "visibilityExpression": {
-                                                      "classType": "QgsOptionalExpression"
-                                                }
+                                                ]
                                           }
-                                    ],
-                                    "columnCount": "1",
-                                    "isGroupBox": "false",
-                                    "name": "Otros",
-                                    "showLabel": "true",
-                                    "type": "1",
-                                    "visibilityExpression": {
-                                          "classType": "QgsOptionalExpression"
-                                    }
+                                    ]
                               }
                         ]
                   },
                   "id": "tabla_6fefa39e_db2e_444b_8d2e_02af87256cff",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
+                        "parentIdentifier": "",
+                        "title": "",
+                        "type": "dataset",
                         "contacts": [
                               {
                                     "classType": "Contact",
@@ -9192,10 +9204,7 @@
                                     "role": "",
                                     "voice": ""
                               }
-                        ],
-                        "parentIdentifier": "",
-                        "title": "",
-                        "type": "dataset"
+                        ]
                   },
                   "name": "tabla",
                   "opacity": "1.0",
@@ -10174,10 +10183,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "tabla maestra": {
@@ -10209,14 +10218,14 @@
                         ]
                   },
                   "id": "tabla_maestra_acd8cc99_16b1_47ea_bbfa_214c0da4cbc5",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"label%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "tabla maestra",
                   "opacity": "1.0",
@@ -10311,10 +10320,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             },
             "tabla relation": {
@@ -10366,14 +10375,14 @@
                         ]
                   },
                   "id": "tabla_relation_f2867379_057f_4cfa_ad52_ab6d6fc18e3c",
-                  "mapTipTemplate": "",
+                  "mapTipTemplate": "[%\"%\"]",
                   "metadata": {
                         "classType": "QgsLayerMetadata",
                         "abstract": "",
-                        "contacts": [ ],
                         "parentIdentifier": "",
                         "title": "",
-                        "type": "dataset"
+                        "type": "dataset",
+                        "contacts": [ ]
                   },
                   "name": "tabla relation",
                   "opacity": "1.0",
@@ -10604,10 +10613,10 @@
                         }
                   ],
                   "WFSCapabilities": {
-                        "allowQuery": false,
-                        "allowDelete": false,
-                        "allowUpdate": false,
-                        "allowInsert": false
+                        "allowQuery": true,
+                        "allowDelete": true,
+                        "allowUpdate": true,
+                        "allowInsert": true
                   }
             }
       },
@@ -10652,10 +10661,21 @@
       "metadata": {
             "classType": "QgsProjectMetadata",
             "abstract": "",
-            "contacts": [ ],
             "parentIdentifier": "",
             "title": "",
-            "type": ""
+            "type": "",
+            "contacts": [
+                  {
+                        "classType": "Contact",
+                        "email": "",
+                        "fax": "",
+                        "name": "",
+                        "organization": "",
+                        "position": "",
+                        "role": "",
+                        "voice": ""
+                  }
+            ]
       }
 
 }

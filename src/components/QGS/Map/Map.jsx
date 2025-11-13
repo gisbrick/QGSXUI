@@ -123,7 +123,7 @@ const Map = ({
                 <MapControls />
               </div>
             )}
-            <div className="map-toolbar-container">
+            <div className={`map-toolbar-container${showControls ? '' : ' no-controls'}`}>
               <MapToolbar />
             </div>
           </div>

@@ -33,7 +33,8 @@
       "required": "Requerido",
       "optional": "Opcional",
       "dismiss": "Descartar",
-      "saving": "Guardando..."
+      "saving": "Guardando...",
+      "empty": "—"
     },
     "accordion": {
       "expand": "Expandir sección",
@@ -191,6 +192,20 @@
       "measureKilometer": "km",
       "measureSquareMeter": "m²",
       "measureSquareKilometer": "km²",
+      "layerActions": "Acciones de la capa",
+      "actions": {
+        "viewData": "Ver datos",
+        "editAttributes": "Editar atributos",
+        "editGeometry": "Editar geometría",
+        "deleteData": "Borrar feature"
+      },
+      "previousLayer": "Capa anterior",
+      "nextLayer": "Siguiente capa",
+      "previousFeature": "Feature anterior",
+      "nextFeature": "Feature siguiente",
+      "feature": "Feature",
+      "featureProperties": "Propiedades de la feature",
+      "availableLayers": "Capas disponibles",
       "showLocation": "Mostrar mi ubicación",
       "yourLocation": "Tu ubicación",
       "accuracy": "Precisión",
