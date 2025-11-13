@@ -1,8 +1,9 @@
-import React, { useState } from 'react';
+import React, { useState, useMemo, useContext } from 'react';
 import { useMap } from './MapProvider';
 import { ToolbarQGS } from '../../UI_QGS';
 import { Button } from '../../UI';
-import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation } from './MapTools';
+import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick } from './MapTools';
+import { QgisConfigContext } from '../QgisConfigContext';
 
 /**
  * Componente de toolbar para el mapa
@@ -10,13 +11,26 @@ import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocatio
  */
 const MapToolbar = () => {
   const mapContext = useMap() || {};
-  const { mapInstance, initialBoundsRef, t } = mapContext;
+  const { mapInstance, initialBoundsRef, t, config } = mapContext;
+  const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
   const [boxZoomActive, setBoxZoomActive] = useState(false);
   const [zoomOutActive, setZoomOutActive] = useState(false);
   const [measureLineActive, setMeasureLineActive] = useState(false);
   const [measureAreaActive, setMeasureAreaActive] = useState(false);
   const [showLocationActive, setShowLocationActive] = useState(false);
+  const [infoClickActive, setInfoClickActive] = useState(false);
+
+  // Verificar si hay capas con WFS habilitado para consultas
+  const hasQueryableLayers = useMemo(() => {
+    if (!config?.layers) {
+      return false;
+    }
+
+    return Object.values(config.layers).some(layer => {
+      return layer.has_geometry && layer.WFSCapabilities?.allowQuery;
+    });
+  }, [config]);
 
 
   // Función para desactivar todas las herramientas excepto la especificada
@@ -26,6 +40,7 @@ const MapToolbar = () => {
     if (except !== 'measure-line') setMeasureLineActive(false);
     if (except !== 'measure-area') setMeasureAreaActive(false);
     if (except !== 'show-location') setShowLocationActive(false);
+    if (except !== 'info-click') setInfoClickActive(false);
   };
 
   const handleToolChange = (toolKey) => {
@@ -54,6 +69,13 @@ const MapToolbar = () => {
       setShowLocationActive(newState);
       if (newState) {
         deactivateAllTools('show-location');
+      }
+    } else if (toolKey === 'info-click') {
+      // Activar/desactivar info en click
+      const newState = !infoClickActive;
+      setInfoClickActive(newState);
+      if (newState) {
+        deactivateAllTools('info-click');
       }
     } else {
       // Desactivar todas las herramientas
@@ -112,6 +134,14 @@ const MapToolbar = () => {
       title: translate('ui.map.showLocation') || 'Mostrar mi ubicación'
     },
     {
+      key: 'info-click',
+      type: 'tool',
+      circular: true,
+      icon: <i className="fg-poi-info" />,
+      title: translate('ui.map.infoClick') || 'Información en click',
+      disabled: !hasQueryableLayers
+    },
+    {
       key: 'measure',
       type: 'selectButton',
       circular: true,
@@ -148,7 +178,10 @@ const MapToolbar = () => {
   ];
 
   // Determinar qué herramienta está seleccionada
-  const selectedTool = boxZoomActive ? 'zoom-in-box' : (zoomOutActive ? 'zoom-out' : (showLocationActive ? 'show-location' : null));
+  const selectedTool = boxZoomActive ? 'zoom-in-box' : 
+    (zoomOutActive ? 'zoom-out' : 
+      (showLocationActive ? 'show-location' : 
+        (infoClickActive ? 'info-click' : null)));
 
   return (
     <div className="map-toolbar">
@@ -158,6 +191,7 @@ const MapToolbar = () => {
       <MeasureLine active={measureLineActive} onActiveChange={setMeasureLineActive} />
       <MeasureArea active={measureAreaActive} onActiveChange={setMeasureAreaActive} />
       <ShowLocation active={showLocationActive} onActiveChange={setShowLocationActive} />
+      <InfoClick active={infoClickActive} onActiveChange={setInfoClickActive} />
       
       <ToolbarQGS 
         items={toolbarItems}

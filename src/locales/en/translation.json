@@ -192,7 +192,10 @@
       "locationError": "Error getting location",
       "locationPermissionDenied": "Location permission denied",
       "locationUnavailable": "Location unavailable",
-      "locationTimeout": "Location timeout"
+      "locationTimeout": "Location timeout",
+      "infoClick": "Info on click",
+      "noFeaturesFound": "No features found at this point",
+      "infoClickError": "Error getting information"
     },
     "toolbar": {
       "actions": "Actions",

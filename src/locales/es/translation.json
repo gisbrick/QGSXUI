@@ -197,7 +197,10 @@
       "locationError": "Error al obtener la ubicación",
       "locationPermissionDenied": "Permiso de ubicación denegado",
       "locationUnavailable": "Ubicación no disponible",
-      "locationTimeout": "Tiempo de espera agotado"
+      "locationTimeout": "Tiempo de espera agotado",
+      "infoClick": "Información en click",
+      "noFeaturesFound": "No se encontraron features en este punto",
+      "infoClickError": "Error al obtener información"
     },
     "toolbar": {
       "actions": "Acciones",

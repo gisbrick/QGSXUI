@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import PropTypes from 'prop-types';
+import './Accordion.css';
 
 const Accordion = ({ 
   items = [], 
@@ -7,39 +8,40 @@ const Accordion = ({
   children, 
   defaultOpen = false,
   expandedItems = [],
-  onToggle
+  onToggle,
+  className = '',
+  variant = 'default'
 }) => {
   const [isOpen, setIsOpen] = useState(defaultOpen);
   const [internalExpanded, setInternalExpanded] = useState(expandedItems);
 
   // Modo simple (retrocompatibilidad): solo title y children
   if (title && children) {
+    const accordionClasses = [
+      'accordion',
+      variant !== 'default' && `accordion--${variant}`,
+      className
+    ].filter(Boolean).join(' ');
+
     return (
-      <div style={{ 
-        border: '1px solid #ddd', 
-        borderRadius: '4px', 
-        marginBottom: '8px',
-        width: '100%'
-      }}>
-        <div 
-          style={{
-            padding: '12px',
-            backgroundColor: '#f5f5f5',
-            cursor: 'pointer',
-            display: 'flex',
-            justifyContent: 'space-between',
-            alignItems: 'center'
-          }}
-          onClick={() => setIsOpen(!isOpen)}
-        >
-          <span>{title}</span>
-          <span>{isOpen ? '−' : '+'}</span>
+      <div className={accordionClasses}>
+        <div className="accordion__item">
+          <button
+            className={`accordion__header ${isOpen ? 'accordion__header--active' : ''}`}
+            onClick={() => setIsOpen(!isOpen)}
+            aria-expanded={isOpen}
+          >
+            <span className="accordion__title">{title}</span>
+            <span className={`accordion__icon ${isOpen ? 'accordion__icon--expanded' : ''}`}>
+              {isOpen ? '−' : '+'}
+            </span>
+          </button>
+          {isOpen && (
+            <div className="accordion__content">
+              {children}
+            </div>
+          )}
         </div>
-        {isOpen && (
-          <div style={{ padding: '12px' }}>
-            {children}
-          </div>
-        )}
       </div>
     );
   }
@@ -64,30 +66,28 @@ const Accordion = ({
     }
   };
 
+  const accordionClasses = [
+    'accordion',
+    variant !== 'default' && `accordion--${variant}`,
+    className
+  ].filter(Boolean).join(' ');
+
   return (
-    <div style={{ 
-      border: '1px solid #ddd', 
-      borderRadius: '4px',
-      width: '100%'
-    }}>
+    <div className={accordionClasses}>
       {items.map((item, index) => (
-        <div key={index} style={{ borderBottom: index < items.length - 1 ? '1px solid #eee' : 'none' }}>
-          <div 
-            style={{
-              padding: '12px',
-              backgroundColor: '#f5f5f5',
-              cursor: 'pointer',
-              display: 'flex',
-              justifyContent: 'space-between',
-              alignItems: 'center'
-            }}
+        <div key={index} className="accordion__item">
+          <button
+            className={`accordion__header ${isExpanded(index) ? 'accordion__header--active' : ''}`}
             onClick={() => toggleItem(index)}
+            aria-expanded={isExpanded(index)}
           >
-            <span>{item.title}</span>
-            <span>{isExpanded(index) ? '−' : '+'}</span>
-          </div>
+            <span className="accordion__title">{item.title}</span>
+            <span className={`accordion__icon ${isExpanded(index) ? 'accordion__icon--expanded' : ''}`}>
+              {isExpanded(index) ? '−' : '+'}
+            </span>
+          </button>
           {isExpanded(index) && (
-            <div style={{ padding: '12px' }}>
+            <div className="accordion__content">
               {item.content}
             </div>
           )}
@@ -109,7 +109,9 @@ Accordion.propTypes = {
     content: PropTypes.node.isRequired
   })),
   expandedItems: PropTypes.arrayOf(PropTypes.number),
-  onToggle: PropTypes.func
+  onToggle: PropTypes.func,
+  className: PropTypes.string,
+  variant: PropTypes.oneOf(['default', 'flush', 'animated'])
 };
 
 export default Accordion;

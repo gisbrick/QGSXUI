@@ -87,6 +87,7 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
     qgsProjectPath, // Path de proyecto QGIS
     language, // Idioma ('en' o 'es')   
     relations, // Relaciones cargadas del proyecto QGIS
+    token, // Token de autenticación
     loading: false, // Estado de carga
     t, // Función de traducción disponible para todos los componentes hijos
     translations, // Traducciones completas disponibles para casos especiales

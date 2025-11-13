@@ -7,7 +7,7 @@ import { QgisConfigContext } from '../QgisConfigContext';
 import QgisConfigProvider from '../QgisConfigProvider';
 import { FormProvider, useForm } from './FormProvider';
 import './Form.css';
-import { FormLayoutQGS } from '../../UI_QGS';
+import { FormLayoutQGS, LoadingQGS } from '../../UI_QGS';
 
 /**
  * Componente de formulario dinámico para edición de features de QGIS
@@ -18,7 +18,7 @@ const Form = ({ layerName, featureId }) => {
   const { config, t, notificationManager } = useContext(QgisConfigContext);
   // Verificar que hay configuración disponible
   if (!config) {
-    return <div>{t('ui.qgis.loading')}</div>;
+    return <LoadingQGS />;
   }
 
 

@@ -1,37 +1,21 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import './Message.css';
 
-const Message = ({ type = 'info', title, message, children, onClose }) => {
-  const colors = {
-    info: '#e3f2fd',
-    success: '#e8f5e8',
-    warning: '#fff3cd',
-    error: '#f8d7da'
-  };
+const Message = ({ type = 'info', title, message, children, onClose, className = '' }) => {
+  const messageClasses = [
+    'ui-message',
+    `ui-message--${type}`,
+    className
+  ].filter(Boolean).join(' ');
 
   return (
-    <div style={{
-      padding: '12px 16px',
-      backgroundColor: colors[type],
-      border: '1px solid #ddd',
-      borderRadius: '4px',
-      margin: '8px 0',
-      position: 'relative'
-    }}>
+    <div className={messageClasses}>
       {/* Botón de cerrar opcional */}
       {onClose && (
         <button
           onClick={onClose}
-          style={{
-            position: 'absolute',
-            top: '8px',
-            right: '8px',
-            background: 'none',
-            border: 'none',
-            fontSize: '16px',
-            cursor: 'pointer',
-            color: '#666'
-          }}
+          className="ui-message__close"
           aria-label="Cerrar mensaje"
         >
           ×
@@ -40,16 +24,16 @@ const Message = ({ type = 'info', title, message, children, onClose }) => {
       
       {/* Título opcional */}
       {title && (
-        <div style={{ fontWeight: 'bold', marginBottom: '4px' }}>
+        <div className="ui-message__title">
           {title}
         </div>
       )}
       
       {/* Mensaje o children */}
       {message ? (
-        <div>{message}</div>
+        <div className="ui-message__content">{message}</div>
       ) : (
-        children
+        <div className="ui-message__content">{children}</div>
       )}
     </div>
   );
@@ -60,7 +44,8 @@ Message.propTypes = {
   title: PropTypes.string,
   message: PropTypes.string,
   children: PropTypes.node,
-  onClose: PropTypes.func
+  onClose: PropTypes.func,
+  className: PropTypes.string
 };
 
 export default Message;

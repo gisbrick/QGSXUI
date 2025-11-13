@@ -1,35 +1,52 @@
 import React from 'react';
+import PropTypes from 'prop-types';
+import './Toast.css';
 
-const Toast = ({ message, type = 'info', onClose }) => (
-  <div 
-    style={{
-      position: 'fixed',
-      top: '20px',
-      right: '20px',
-      padding: '12px 16px',
-      backgroundColor: type === 'error' ? '#f44336' : type === 'success' ? '#4caf50' : '#2196f3',
-      color: 'white',
-      borderRadius: '4px',
-      boxShadow: '0 2px 8px rgba(0,0,0,0.2)',
-      zIndex: 1000
-    }}
-  >
-    {message}
-    {onClose && (
-      <button 
-        onClick={onClose}
-        style={{ 
-          background: 'none', 
-          border: 'none', 
-          color: 'white', 
-          marginLeft: '8px', 
-          cursor: 'pointer' 
-        }}
-      >
-        ×
-      </button>
-    )}
-  </div>
-);
+const Toast = ({ 
+  message, 
+  title,
+  type = 'info', 
+  onClose,
+  icon,
+  className = ''
+}) => {
+  const toastClasses = [
+    'toast',
+    `toast--${type}`,
+    className
+  ].filter(Boolean).join(' ');
+
+  return (
+    <div className={toastClasses}>
+      {icon && (
+        <span className="toast__icon">{icon}</span>
+      )}
+      <div className="toast__content">
+        {title && (
+          <div className="toast__title">{title}</div>
+        )}
+        <div className="toast__message">{message}</div>
+      </div>
+      {onClose && (
+        <button 
+          onClick={onClose}
+          className="toast__close"
+          aria-label="Cerrar"
+        >
+          ×
+        </button>
+      )}
+    </div>
+  );
+};
+
+Toast.propTypes = {
+  message: PropTypes.string.isRequired,
+  title: PropTypes.string,
+  type: PropTypes.oneOf(['info', 'success', 'warning', 'error']),
+  onClose: PropTypes.func,
+  icon: PropTypes.node,
+  className: PropTypes.string
+};
 
 export default Toast;

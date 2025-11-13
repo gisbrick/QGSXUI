@@ -1,0 +1,81 @@
+@import '../ui.css';
+
+.ui-message {
+  padding: var(--spacing-md) var(--spacing-lg);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  margin: var(--spacing-sm) 0;
+  position: relative;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-normal);
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-xs);
+}
+
+.ui-message--info {
+  background-color: rgb(33, 150, 243);
+  border-color: var(--color-info);
+  color: var(--color-text-on-primary);
+}
+
+.ui-message--success {
+  background-color: rgb(76, 175, 80);
+  border-color: var(--color-success);
+  color: var(--color-text-on-primary);
+}
+
+.ui-message--warning {
+  background-color: rgb(255, 152, 0);
+  border-color: var(--color-warning);
+  color: var(--color-text-on-primary);
+}
+
+.ui-message--error {
+  background-color: rgb(244, 67, 54);
+  border-color: var(--color-error);
+  color: var(--color-text-on-primary);
+}
+
+.ui-message__close {
+  position: absolute;
+  top: var(--spacing-sm);
+  right: var(--spacing-sm);
+  background: none;
+  border: none;
+  font-size: var(--font-size-lg);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  padding: var(--spacing-xs);
+  border-radius: var(--border-radius-sm);
+  line-height: 1;
+  transition: var(--transition-fast);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 24px;
+  height: 24px;
+}
+
+.ui-message__close:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.ui-message__close:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+.ui-message__title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-xs);
+  color: var(--color-text-primary);
+}
+
+.ui-message__content {
+  color: var(--color-text-primary);
+  flex: 1;
+}
+

@@ -1,7 +1,9 @@
+@import '../ui.css';
+
 .ui-switch-wrapper {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
+  gap: var(--spacing-sm);
   cursor: pointer;
 }
 
@@ -14,8 +16,9 @@
 }
 
 .ui-switch__label {
-  font-size: 14px;
-  color: #333;
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
   user-select: none;
 }
 
@@ -39,38 +42,36 @@
 .ui-switch__slider {
   position: relative;
   display: block;
-  background-color: #ccc;
-  border-radius: 100px;
-  transition: all 0.3s ease;
-  border: 2px solid transparent;
+  background-color: var(--color-border-dark);
+  border-radius: var(--border-radius-full);
+  transition: var(--transition-normal);
+  border: var(--border-width-thin) solid transparent;
 }
 
 .ui-switch__thumb {
   position: absolute;
   top: 2px;
   left: 2px;
-  background-color: white;
-  border-radius: 50%;
-  transition: all 0.3s ease;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.2);
+  background-color: var(--color-background);
+  border-radius: var(--border-radius-full);
+  transition: var(--transition-normal);
+  box-shadow: var(--shadow-1);
 }
 
 /* Estados del switch */
 .ui-switch__input:checked + .ui-switch__slider {
-  background-color: #007bff;
+  background-color: var(--color-primary);
+  border-color: var(--color-primary);
 }
 
 .ui-switch__input:focus + .ui-switch__slider {
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
-}
-
-.ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
-  transform: translateX(100%);
+  box-shadow: 0 0 0 2px var(--color-focus);
 }
 
 .ui-switch--disabled .ui-switch__slider {
-  background-color: #e9ecef;
+  background-color: var(--color-disabled-bg);
   cursor: not-allowed;
+  opacity: 0.6;
 }
 
 .ui-switch--disabled .ui-switch__thumb {
@@ -78,7 +79,7 @@
 }
 
 .ui-switch--disabled .ui-switch__label {
-  color: #6c757d;
+  color: var(--color-text-disabled);
 }
 
 /* Tamaños del switch */
@@ -93,7 +94,11 @@
 }
 
 .ui-switch--small .ui-switch__label {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
+}
+
+.ui-switch--small .ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
+  transform: translateX(14px);
 }
 
 .ui-switch--medium .ui-switch__slider {
@@ -107,7 +112,11 @@
 }
 
 .ui-switch--medium .ui-switch__label {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
+}
+
+.ui-switch--medium .ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
+  transform: translateX(18px);
 }
 
 .ui-switch--large .ui-switch__slider {
@@ -121,16 +130,7 @@
 }
 
 .ui-switch--large .ui-switch__label {
-  font-size: 16px;
-}
-
-/* Ajustes del transform para diferentes tamaños */
-.ui-switch--small .ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
-  transform: translateX(14px);
-}
-
-.ui-switch--medium .ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
-  transform: translateX(18px);
+  font-size: var(--font-size-base);
 }
 
 .ui-switch--large .ui-switch__input:checked + .ui-switch__slider .ui-switch__thumb {
@@ -139,9 +139,10 @@
 
 /* Hover states */
 .ui-switch:hover:not(.ui-switch--disabled) .ui-switch__slider {
-  background-color: #bbb;
+  background-color: var(--color-border);
 }
 
 .ui-switch:hover:not(.ui-switch--disabled) .ui-switch__input:checked + .ui-switch__slider {
-  background-color: #0056b3;
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
 }

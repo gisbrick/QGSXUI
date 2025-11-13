@@ -1,44 +1,101 @@
+@import '../ui.css';
+
 .ui-button {
   display: inline-flex;
   align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  border: 1px solid #007bff;
-  border-radius: 4px;
-  background-color: #007bff;
-  color: white;
-  font-size: 14px;
+  justify-content: center;
+  gap: var(--spacing-sm);
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: var(--border-width-thin) solid var(--color-primary);
+  border-radius: var(--border-radius-md);
+  background-color: var(--color-primary);
+  color: var(--color-text-on-primary);
+  font-family: var(--font-family-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  line-height: var(--line-height-tight);
   cursor: pointer;
-  font-family: inherit;
-  transition: all 0.2s ease;
+  text-decoration: none;
+  transition: var(--transition-fast);
+  user-select: none;
+  white-space: nowrap;
 }
 
 .ui-button:hover:not(:disabled) {
-  background-color: #0056b3;
-  border-color: #0056b3;
+  background-color: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.ui-button:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
 }
 
 .ui-button:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background-color: var(--color-disabled-bg);
+  color: var(--color-text-disabled);
+  border-color: var(--color-border);
 }
 
 /* Estado seleccionado/activo */
 .ui-button--selected {
-  background-color: #0056b3;
-  border-color: #0056b3;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
+  background-color: var(--color-secondary, #388e3c);
+  border-color: var(--color-secondary, #388e3c);
+  color: var(--color-text-on-primary);
+  box-shadow: 0 0 0 3px var(--color-focus), 0 2px 8px rgba(0, 0, 0, 0.15);
+  transform: scale(1.05);
+  font-weight: var(--font-weight-semibold);
 }
 
 .ui-button--selected:hover:not(:disabled) {
-  background-color: #004085;
-  border-color: #004085;
-  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.35);
+  background-color: var(--color-secondary-dark, #2e7d32);
+  border-color: var(--color-secondary-dark, #2e7d32);
+  box-shadow: 0 0 0 3px var(--color-focus), 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.05);
+}
+
+/* Botones circulares seleccionados - destacar más */
+.ui-button--circular.ui-button--selected {
+  background-color: var(--color-secondary, #388e3c);
+  border-color: var(--color-secondary, #388e3c);
+  box-shadow: 0 0 0 3px var(--color-focus), 0 2px 8px rgba(0, 0, 0, 0.2);
+  transform: scale(1.1);
+}
+
+.ui-button--circular.ui-button--selected:hover:not(:disabled) {
+  background-color: var(--color-secondary-dark, #2e7d32);
+  border-color: var(--color-secondary-dark, #2e7d32);
+  box-shadow: 0 0 0 3px var(--color-focus), 0 3px 12px rgba(0, 0, 0, 0.25);
+  transform: scale(1.1);
+}
+
+/* Variantes de estilo */
+.ui-button--secondary {
+  background-color: transparent;
+  color: var(--color-primary);
+  border-color: var(--color-primary);
+}
+
+.ui-button--secondary:hover:not(:disabled) {
+  background-color: var(--color-focus);
+}
+
+.ui-button--ghost {
+  background-color: transparent;
+  color: var(--color-text-primary);
+  border-color: transparent;
+}
+
+.ui-button--ghost:hover:not(:disabled) {
+  background-color: var(--color-hover);
 }
 
 .ui-button__icon {
   display: inline-flex;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .ui-button__text {
@@ -48,90 +105,90 @@
 
 /* Tamaños del botón */
 .ui-button--small {
-  padding: 4px 8px;
-  font-size: 12px;
-  gap: 4px;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  gap: var(--spacing-xs);
 }
 
 .ui-button--small .ui-button__icon {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .ui-button--small .ui-button__text {
-  font-size: 12px;
+  font-size: var(--font-size-xs);
 }
 
 .ui-button--medium {
-  padding: 8px 16px;
-  font-size: 14px;
-  gap: 8px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  font-size: var(--font-size-sm);
+  gap: var(--spacing-sm);
 }
 
 .ui-button--medium .ui-button__icon {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .ui-button--medium .ui-button__text {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .ui-button--large {
-  padding: 12px 24px;
-  font-size: 16px;
-  gap: 10px;
+  padding: var(--spacing-md) var(--spacing-xl);
+  font-size: var(--font-size-base);
+  gap: var(--spacing-md);
 }
 
 .ui-button--large .ui-button__icon {
-  font-size: 18px;
+  font-size: var(--font-size-lg);
 }
 
 .ui-button--large .ui-button__text {
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 /* Botón circular */
 .ui-button--circular {
-  border-radius: 50% !important;
-  justify-content: center !important;
-  align-items: center !important;
-  padding: 0 !important;
+  border-radius: var(--border-radius-full);
+  justify-content: center;
+  align-items: center;
+  padding: 0;
   box-sizing: border-box;
   min-width: 0;
   flex-shrink: 0;
-  gap: 0 !important;
+  gap: 0;
 }
 
 .ui-button--circular.ui-button--small {
-  width: 28px !important;
-  height: 28px !important;
-  min-width: 28px !important;
-  min-height: 28px !important;
+  width: 28px;
+  height: 28px;
+  min-width: 28px;
+  min-height: 28px;
 }
 
 .ui-button--circular.ui-button--small .ui-button__icon {
-  font-size: 14px;
+  font-size: var(--font-size-sm);
 }
 
 .ui-button--circular.ui-button--medium {
-  width: 36px !important;
-  height: 36px !important;
-  min-width: 36px !important;
-  min-height: 36px !important;
+  width: 36px;
+  height: 36px;
+  min-width: 36px;
+  min-height: 36px;
 }
 
 .ui-button--circular.ui-button--medium .ui-button__icon {
-  font-size: 16px;
+  font-size: var(--font-size-base);
 }
 
 .ui-button--circular.ui-button--large {
-  width: 48px !important;
-  height: 48px !important;
-  min-width: 48px !important;
-  min-height: 48px !important;
+  width: 48px;
+  height: 48px;
+  min-width: 48px;
+  min-height: 48px;
 }
 
 .ui-button--circular.ui-button--large .ui-button__icon {
-  font-size: 20px;
+  font-size: var(--font-size-lg);
 }
 
 /* Para botones circulares, ocultar el texto y solo mostrar el icono */

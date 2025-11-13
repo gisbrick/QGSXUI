@@ -1,6 +1,8 @@
 .loading-qgs {
     width: 100%;
+    min-height: 300px;
     display: flex;
     justify-content: center;
     align-items: center;
+    position: relative;
 }

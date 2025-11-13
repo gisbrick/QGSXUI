@@ -55,7 +55,18 @@ const Select = ({
         })}
       </select>
       <div className="ui-select-arrow">
-        <i className="fas fa-chevron-down"></i>
+        <svg 
+          width="12" 
+          height="12" 
+          viewBox="0 0 12 12" 
+          fill="none" 
+          stroke="currentColor" 
+          strokeWidth="2" 
+          strokeLinecap="round" 
+          strokeLinejoin="round"
+        >
+          <path d="M2 4l4 4 4-4" />
+        </svg>
       </div>
     </div>
   );

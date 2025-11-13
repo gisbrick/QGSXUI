@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { loadTranslations } from '../../../utilities/traslations';
 import { useTranslation } from '../../../hooks/useTranslation';
+import './Modal.css';
 
 const Modal = ({ 
   isOpen, 
@@ -9,7 +10,10 @@ const Modal = ({
   title, 
   children, 
   closeText,
-  lang = 'es' 
+  size = 'medium',
+  footer,
+  lang = 'es',
+  className = ''
 }) => {
   const [translations, setTranslations] = useState(null);
 
@@ -27,45 +31,40 @@ const Modal = ({
 
   if (!isOpen) return null;
 
+  const modalClasses = [
+    'modal-content',
+    `modal-content--${size}`,
+    className
+  ].filter(Boolean).join(' ');
+
   return (
     <div 
-      style={{
-        position: 'fixed',
-        top: 0,
-        left: 0,
-        right: 0,
-        bottom: 0,
-        backgroundColor: 'rgba(0,0,0,0.5)',
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'center',
-        zIndex: 1000
-      }}
+      className="modal-backdrop"
       onClick={onClose}
     >
       <div 
-        style={{
-          backgroundColor: 'white',
-          padding: '20px',
-          borderRadius: '8px',
-          maxWidth: '500px',
-          width: '90%',
-          maxHeight: '80%',
-          overflow: 'auto'
-        }}
+        className={modalClasses}
         onClick={(e) => e.stopPropagation()}
       >
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '16px' }}>
-          <h3 style={{ margin: 0 }}>{title}</h3>
-          <button 
-            onClick={onClose} 
-            style={{ background: 'none', border: 'none', fontSize: '20px', cursor: 'pointer' }}
-            aria-label={closeText || (translations ? t('ui.modal.close') : (lang === 'en' ? 'Close' : 'Cerrar'))}
-          >
-            ×
-          </button>
+        {title && (
+          <div className="modal-header">
+            <h2>{title}</h2>
+            <button 
+              onClick={onClose}
+              aria-label={closeText || (translations ? t('ui.modal.close') : (lang === 'en' ? 'Close' : 'Cerrar'))}
+            >
+              ×
+            </button>
+          </div>
+        )}
+        <div className="modal-body">
+          {children}
         </div>
-        {children}
+        {footer && (
+          <div className="modal-footer">
+            {footer}
+          </div>
+        )}
       </div>
     </div>
   );
@@ -82,8 +81,14 @@ Modal.propTypes = {
   children: PropTypes.node,
   /** Texto del botón de cerrar */
   closeText: PropTypes.string,
+  /** Tamaño del modal */
+  size: PropTypes.oneOf(['small', 'medium', 'large', 'full']),
+  /** Footer del modal (botones, etc.) */
+  footer: PropTypes.node,
   /** Idioma para las traducciones */
-  lang: PropTypes.oneOf(['es', 'en'])
+  lang: PropTypes.oneOf(['es', 'en']),
+  /** Clase CSS adicional */
+  className: PropTypes.string
 };
 
 export default Modal;

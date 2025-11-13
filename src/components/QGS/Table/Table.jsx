@@ -3,6 +3,7 @@ import PropTypes from 'prop-types';
 import { QgisConfigContext } from '../QgisConfigContext';
 import QgisConfigProvider from '../QgisConfigProvider';
 import { fetchFeatures } from '../../../services/qgisWFSFetcher';
+import { LoadingQGS } from '../../UI_QGS';
 import './Table.css';
 
 /**
@@ -69,7 +70,7 @@ const Table = ({ layerName, maxRows = 10 }) => {
 
   // Verificar que hay configuración disponible (después de los hooks)
   if (!config) {
-    return <div>{translate('ui.qgis.loading')}</div>;
+    return <LoadingQGS />;
   }
 
   // Verificar que la capa existe
@@ -89,7 +90,7 @@ const Table = ({ layerName, maxRows = 10 }) => {
   };
 
   if (loading) {
-    return <div>{translate('ui.table.loading')}</div>;
+    return <LoadingQGS />;
   }
 
   if (error) {
