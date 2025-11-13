@@ -25,9 +25,27 @@ const MapContainer = ({
   onMapReady = null,
   ...otherProps
 }) => {
-  // Normalizar width y height: convertir números a strings con 'px'
-  const normalizedWidth = typeof width === 'number' ? `${width}px` : width;
-  const normalizedHeight = typeof height === 'number' ? `${height}px` : height;
+  // Normalizar width y height: convertir números a strings con 'px', mantener strings como están
+  // Acepta: números (se convierten a 'px'), strings con unidades ('100%', '400px', '50vh', etc.)
+  const normalizedWidth = useMemo(() => {
+    if (typeof width === 'number') {
+      return `${width}px`;
+    }
+    if (typeof width === 'string' && width.trim() !== '') {
+      return width.trim();
+    }
+    return '100%'; // Valor por defecto
+  }, [width]);
+
+  const normalizedHeight = useMemo(() => {
+    if (typeof height === 'number') {
+      return `${height}px`;
+    }
+    if (typeof height === 'string' && height.trim() !== '') {
+      return height.trim();
+    }
+    return '400px'; // Valor por defecto
+  }, [height]);
 
   const mapRef = useRef(null);
   const mapContext = useMap();
@@ -143,6 +161,7 @@ const MapContainer = ({
   const maxZoom = 25;
 
   const addedLayersRef = useRef({ base: null, overlays: [] });
+  const mapInitializedRef = useRef(false);
 
   // Inicializar el mapa solo una vez (como en el legacy: initMapView se llama una vez)
   useEffect(() => {
@@ -371,8 +390,10 @@ const MapContainer = ({
 
         // Ajustar vista ANTES de cargar las capas (como en el legacy: setView(mapView, QGISPRJ.viewExtent))
         // Se llama después de guardar QGISPRJ pero antes de cargar capas
-        if (config?.viewExtent) {
+        // Solo ajustar la vista en la primera inicialización para evitar resetear el mapa cuando el usuario navega
+        if (config?.viewExtent && !mapInitializedRef.current) {
           setView(map, config.viewExtent);
+          mapInitializedRef.current = true;
           if (initialBoundsRef) {
             // Guardar bounds para el control de "home" (reset view)
             const bounds = window.L.latLngBounds([
@@ -381,6 +402,13 @@ const MapContainer = ({
             ]);
             initialBoundsRef.current = bounds;
           }
+        } else if (config?.viewExtent && initialBoundsRef && !initialBoundsRef.current) {
+          // Solo actualizar initialBoundsRef si no está establecido, sin cambiar la vista
+          const bounds = window.L.latLngBounds([
+            [parseFloat(config.viewExtent.yMaximum), parseFloat(config.viewExtent.xMinimum)],
+            [parseFloat(config.viewExtent.yMinimum), parseFloat(config.viewExtent.xMaximum)]
+          ]);
+          initialBoundsRef.current = bounds;
         }
 
         // Cargar capas base de WMTSLAYERS (como en el legacy: getBaseLayers)

@@ -1,9 +1,10 @@
 /* Estilos para el componente Map */
 .map-example {
-  width: 100%;
-  height: 100%;
+  /* width y height se aplican via style inline desde el componente */
   display: flex;
   flex-direction: column;
+  min-width: 0;
+  min-height: 0;
 }
 
 .map-layout {
@@ -12,6 +13,8 @@
   width: 100%;
   height: 100%;
   gap: 0;
+  min-width: 0;
+  min-height: 0;
 }
 
 .map-sidebar {
@@ -48,14 +51,17 @@
 .map-content {
   flex: 1;
   position: relative;
-  width: 100%;
-  height: 100%;
+  /* No forzar width/height al 100% para permitir valores específicos */
+  min-width: 0;
+  min-height: 0;
 }
 
-/* Asegurar que el contenedor del mapa tenga dimensiones */
-.map-content > div {
-  width: 100% !important;
-  height: 100% !important;
+/* Asegurar que el contenedor del mapa tenga dimensiones, pero respetar los valores especificados */
+.map-content > div.leaflet-container {
+  /* No usar !important para permitir que los estilos inline funcionen */
+  /* Los estilos inline de MapContainer tendrán prioridad */
+  min-width: 0;
+  min-height: 0;
 }
 
 /* Asegurar que el contenedor Leaflet permita interacciones */
@@ -81,7 +87,6 @@
   max-width: none !important;
   max-height: none !important;
   flex: none !important;
-  margin-left: 15px;
 }
 
 .map-sidebar .map-controls-group {

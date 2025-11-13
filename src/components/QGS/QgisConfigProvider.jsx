@@ -31,8 +31,13 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
   const [relationsLoaded, setRelationsLoaded] = React.useState(false);
   const [relations, setRelations] = React.useState([]);
 
-  // Método para añadir una notificación usando el componente Message
-  const addNotification = ({ title, text, level }) => {
+  // Método para eliminar una notificación (usar useCallback para estabilidad)
+  const removeNotification = React.useCallback((id) => {
+    setNotifications(prev => prev.filter(n => n.id !== id));
+  }, []);
+
+  // Método para añadir una notificación usando el componente Message (usar useCallback)
+  const addNotification = React.useCallback(({ title, text, level }) => {
     // Normalizar el nivel: 'warn' -> 'warning', 'success' -> 'success', etc.
     const normalizedLevel = level === 'warn' ? 'warning' : (level || 'info');
     
@@ -55,33 +60,28 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
     setTimeout(() => {
       removeNotification(id);
     }, 5000);
-  };
+  }, [removeNotification]);
   
-  // Métodos de conveniencia para añadir notificaciones por tipo
-  const addSuccess = (title, text) => addNotification({ title, text, level: 'success' });
-  const addError = (title, text) => addNotification({ title, text, level: 'error' });
-  const addWarning = (title, text) => addNotification({ title, text, level: 'warning' });
-  const addInfo = (title, text) => addNotification({ title, text, level: 'info' });
+  // Métodos de conveniencia para añadir notificaciones por tipo (usar useCallback)
+  const addSuccess = React.useCallback((title, text) => addNotification({ title, text, level: 'success' }), [addNotification]);
+  const addError = React.useCallback((title, text) => addNotification({ title, text, level: 'error' }), [addNotification]);
+  const addWarning = React.useCallback((title, text) => addNotification({ title, text, level: 'warning' }), [addNotification]);
+  const addInfo = React.useCallback((title, text) => addNotification({ title, text, level: 'info' }), [addNotification]);
 
-  // Método para eliminar una notificación (opcional)
-  const removeNotification = (id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  };
-
-  // Exponer el manager en el contexto con métodos de conveniencia
-  let notificationManager = {
+  // Exponer el manager en el contexto con métodos de conveniencia (usar useMemo para evitar recreación)
+  // No incluir 'notifications' en el objeto para evitar re-renders cuando cambia el array
+  const notificationManager = React.useMemo(() => ({
     addNotification,
     addSuccess,
     addError,
     addWarning,
     addInfo,
-    removeNotification,
-    notifications
-  };
+    removeNotification
+  }), [addNotification, addSuccess, addError, addWarning, addInfo, removeNotification]);
 
 
-  // Crear el valor del contexto con la configuración proporcionada
-  const contextValue = {
+  // Crear el valor del contexto con la configuración proporcionada (usar useMemo para evitar recreación)
+  const contextValue = React.useMemo(() => ({
     config, // UConfig
     qgsUrl, // URL del servicio QGIS
     qgsProjectPath, // Path de proyecto QGIS
@@ -92,7 +92,7 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
     t, // Función de traducción disponible para todos los componentes hijos
     translations, // Traducciones completas disponibles para casos especiales
     notificationManager // Manager de notificaciones
-  };
+  }), [config, qgsUrl, qgsProjectPath, language, relations, token, t, translations, notificationManager]);
 
   React.useEffect(() => {
     fetchQgisConfig(qgsUrl, qgsProjectPath, token)

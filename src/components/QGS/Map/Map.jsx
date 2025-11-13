@@ -102,9 +102,20 @@ const Map = ({
     }
   };
 
+  // Normalizar width y height para aplicar al contenedor principal
+  const containerStyle = React.useMemo(() => {
+    const normalizedWidth = typeof width === 'number' ? `${width}px` : (width || '100%');
+    const normalizedHeight = typeof height === 'number' ? `${height}px` : (height || '400px');
+    
+    return {
+      width: normalizedWidth,
+      height: normalizedHeight
+    };
+  }, [width, height]);
+
   return (
     <MapProvider>
-      <div className={`map-example ${className}`}>
+      <div className={`map-example ${className}`} style={containerStyle}>
         <div className="map-layout">
           <div className="map-content">
             <MapContainer
@@ -119,7 +130,7 @@ const Map = ({
               onFeatureSelect={onFeatureSelect}
             />
             {showControls && (
-              <div className="map-sidebar map-sidebar-right">
+              <div className="map-sidebar map-sidebar-left">
                 <MapControls />
               </div>
             )}
