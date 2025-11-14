@@ -20,6 +20,7 @@
   box-shadow: var(--shadow-4);
   max-width: 400px;
   width: 90vw;
+  margin: 0 var(--spacing-lg);
   font-family: var(--font-family-primary);
   animation: ui-scale-in var(--transition-fast);
 }
@@ -42,7 +43,8 @@
 }
 
 .confirm-dialog__message {
-  margin: 0;
+  margin: 0 var(--spacing-lg);
+  padding: var(--spacing-md) 0;
   color: var(--color-text-secondary);
   line-height: var(--line-height-normal);
   font-size: var(--font-size-base);

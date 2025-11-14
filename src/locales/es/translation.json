@@ -215,7 +215,13 @@
       "locationTimeout": "Tiempo de espera agotado",
       "infoClick": "Información en click",
       "noFeaturesFound": "No se encontraron features en este punto",
-      "infoClickError": "Error al obtener información"
+      "infoClickError": "Error al obtener información",
+      "deleteConfirmTitle": "Borrar feature",
+      "deleteConfirmMessage": "Va a borrar el elemento seleccionado. Esta acción no puede deshacerse ¿desea continuar?",
+      "deleteSuccess": "Feature borrada",
+      "deleteSuccessMessage": "Se ha borrado correctamente el registro indicado",
+      "deleteError": "Error al borrar",
+      "deleteErrorMessage": "Ha ocurrido un error al intentar borrar la feature"
     },
     "toolbar": {
       "actions": "Acciones",

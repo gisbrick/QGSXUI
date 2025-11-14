@@ -210,7 +210,13 @@
       "locationTimeout": "Location timeout",
       "infoClick": "Info on click",
       "noFeaturesFound": "No features found at this point",
-      "infoClickError": "Error getting information"
+      "infoClickError": "Error getting information",
+      "deleteConfirmTitle": "Delete feature",
+      "deleteConfirmMessage": "You are about to delete the selected item. This action cannot be undone. Do you want to continue?",
+      "deleteSuccess": "Feature deleted",
+      "deleteSuccessMessage": "The record has been successfully deleted",
+      "deleteError": "Delete error",
+      "deleteErrorMessage": "An error occurred while trying to delete the feature"
     },
     "toolbar": {
       "actions": "Actions",

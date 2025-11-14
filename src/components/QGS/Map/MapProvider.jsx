@@ -8,6 +8,7 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const mapInstanceRef = useRef(null);
   const initialBoundsRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
+  const [refreshWMSLayer, setRefreshWMSLayer] = useState(null);
 
   // Obtener configuración QGIS y función de traducción del contexto
   const qgisConfig = useContext(QgisConfigContext);
@@ -28,7 +29,9 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     t,
     notificationManager,
     qgsUrl,
-    qgsProjectPath
+    qgsProjectPath,
+    refreshWMSLayer,
+    setRefreshWMSLayer
   };
 
   return (

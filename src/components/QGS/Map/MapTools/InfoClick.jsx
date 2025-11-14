@@ -186,7 +186,8 @@ const InfoClick = ({ active, onActiveChange }) => {
             t: translate,
             qgsUrl: qgsUrl,
             qgsProjectPath: qgsProjectPath,
-            token: qgisConfig?.token || null
+            token: qgisConfig?.token || null,
+            notificationManager: notificationManager || qgisConfig?.notificationManager || null
           });
           
           reactRootRef.current = root;

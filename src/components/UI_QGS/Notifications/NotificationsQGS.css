@@ -3,7 +3,7 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 1000;
+  z-index: 10000; /* Por encima de modales y diálogos */
   display: flex;
   flex-direction: column;
   gap: 8px;

@@ -3,7 +3,8 @@ import PropTypes from 'prop-types';
 import { createRoot } from 'react-dom/client';
 import MapTipViewer from './MapTipViewer';
 import { QgisConfigContext } from '../../QgisConfigContext';
-import { fetchFeatureById } from '../../../../services/qgisWFSFetcher';
+import { fetchFeatureById, deleteFeature } from '../../../../services/qgisWFSFetcher';
+import ConfirmDialog from '../../../UI/ConfirmDialog/ConfirmDialog';
 import './FeatureInfoPopup.css';
 
 /**
@@ -19,11 +20,15 @@ const FeatureInfoPopup = ({
   t: propTranslate,
   qgsUrl: qgsUrlProp = null,
   qgsProjectPath: qgsProjectPathProp = null,
-  token: tokenProp = null
+  token: tokenProp = null,
+  notificationManager: notificationManagerProp = null
 }) => {
   const qgisContext = React.useContext(QgisConfigContext);
   const contextConfig = qgisContext?.config;
   const contextT = qgisContext?.t;
+  // Usar notificationManager de prop primero, luego del contexto
+  const notificationManager = notificationManagerProp || qgisContext?.notificationManager;
+  const language = qgisContext?.language || 'es';
 
   const translate = React.useCallback(
     (key) => {
@@ -132,6 +137,8 @@ const FeatureInfoPopup = ({
   // Estado para la capa y feature seleccionadas
   const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(0);
+  const [showDeleteDialog, setShowDeleteDialog] = useState(false);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   // Referencia a la capa gráfica de selección
   const selectionLayerRef = React.useRef(null);
@@ -303,6 +310,12 @@ const FeatureInfoPopup = ({
       return;
     }
 
+    // Si es una acción de borrado, mostrar el diálogo de confirmación
+    if (action === 'delete') {
+      setShowDeleteDialog(true);
+      return;
+    }
+
     const payload = {
       action,
       layer: selectedLayer.layer,
@@ -318,6 +331,119 @@ const FeatureInfoPopup = ({
     } else {
       console.warn('FeatureInfoPopup toolbar action triggered but no handler provided', payload);
     }
+  };
+
+  // Función para confirmar el borrado
+  const handleConfirmDelete = async () => {
+    if (!selectedFeature || !qgsUrl || !qgsProjectPath) {
+      // Mostrar error si faltan datos
+      if (notificationManager?.addError) {
+        notificationManager.addError(
+          translate('ui.map.deleteError'),
+          translate('ui.map.deleteErrorMessage') || 'Faltan datos necesarios para borrar la feature'
+        );
+      }
+      return;
+    }
+
+    setIsDeleting(true);
+
+    try {
+      await deleteFeature(qgsUrl, qgsProjectPath, selectedFeature, token);
+      
+      // Mostrar notificación de éxito
+      if (notificationManager?.addSuccess) {
+        notificationManager.addSuccess(
+          translate('ui.map.deleteSuccess'),
+          translate('ui.map.deleteSuccessMessage')
+        );
+      } else {
+        console.warn('notificationManager.addSuccess no disponible');
+      }
+
+      // Refrescar la capa WMS para mostrar los cambios
+      // Primero intentar refrescar directamente desde la capa del mapa
+      if (map && map.wmsLayer) {
+        // Actualizar el cache busting para forzar la recarga de tiles
+        if (map.wmsLayer.options) {
+          map.wmsLayer.options.cacheBust = Date.now();
+        }
+        // Redibujar todos los tiles visibles
+        if (map.wmsLayer.redraw) {
+          map.wmsLayer.redraw();
+        }
+        // Invalidar el tamaño del mapa para forzar actualización
+        if (map.invalidateSize) {
+          map.invalidateSize();
+        }
+      }
+
+      // Cerrar el diálogo
+      setShowDeleteDialog(false);
+
+      // Cerrar el popup
+      if (map && map.closePopup) {
+        map.closePopup();
+      }
+      if (onClose) {
+        onClose();
+      }
+
+      // Notificar al handler externo si existe
+      if (typeof onToolbarAction === 'function') {
+        onToolbarAction({
+          action: 'delete',
+          layer: selectedLayer.layer,
+          layerName: selectedLayer.layerName,
+          layerIndex: selectedLayerIndex,
+          feature: selectedFeature,
+          featureIndex: selectedFeatureIndex,
+          map,
+          deleted: true
+        });
+      }
+    } catch (error) {
+      console.error('Error al borrar feature:', error);
+      
+      // Obtener mensaje de error más descriptivo
+      let errorMessage = translate('ui.map.deleteErrorMessage') || 'Ha ocurrido un error al intentar borrar la feature';
+      
+      if (error && error.message) {
+        errorMessage = error.message;
+      } else if (error && typeof error === 'string') {
+        errorMessage = error;
+      } else if (error) {
+        errorMessage = String(error);
+      }
+      
+      // Mostrar notificación de error usando el sistema de notificaciones
+      // Siempre usar addNotification que es el método base que funciona con Message
+      if (notificationManager && notificationManager.addNotification) {
+        notificationManager.addNotification({
+          title: translate('ui.map.deleteError') || 'Error al borrar',
+          text: errorMessage,
+          level: 'error'
+        });
+      } else if (notificationManager && notificationManager.addError) {
+        // Si addError está disponible, usarlo
+        notificationManager.addError(
+          translate('ui.map.deleteError') || 'Error al borrar',
+          errorMessage
+        );
+      } else {
+        console.error('notificationManager no disponible o sin métodos:', notificationManager);
+      }
+      
+      // NO cerrar el diálogo si hay error, para que el usuario pueda ver el mensaje
+      // El diálogo se cerrará cuando el usuario cancele o intente de nuevo
+    } finally {
+      setIsDeleting(false);
+    }
+  };
+
+  // Función para cancelar el borrado
+  const handleCancelDelete = () => {
+    setShowDeleteDialog(false);
   };
 
 
@@ -543,6 +669,20 @@ const FeatureInfoPopup = ({
           </ul>
         </div>
       )}
+
+      {/* Diálogo de confirmación de borrado - se renderiza fuera del popup usando Portal */}
+      <ConfirmDialog
+        open={showDeleteDialog}
+        title={translate('ui.map.deleteConfirmTitle')}
+        message={translate('ui.map.deleteConfirmMessage')}
+        confirmText={translate('ui.common.ok')}
+        cancelText={translate('ui.common.cancel')}
+        onConfirm={handleConfirmDelete}
+        onCancel={handleCancelDelete}
+        loading={isDeleting}
+        variant="danger"
+        lang={language}
+      />
     </div>
   );
 };
@@ -556,7 +696,8 @@ FeatureInfoPopup.propTypes = {
   t: PropTypes.func,
   qgsUrl: PropTypes.string,
   qgsProjectPath: PropTypes.string,
-  token: PropTypes.string
+  token: PropTypes.string,
+  notificationManager: PropTypes.object
 };
 
 /**
@@ -568,7 +709,8 @@ export const renderFeatureInfoPopup = (container, features, map, onClose, config
     t: translate = null,
     qgsUrl = null,
     qgsProjectPath = null,
-    token = null
+    token = null,
+    notificationManager = null
   } = options || {};
   const root = createRoot(container);
   root.render(
@@ -582,6 +724,7 @@ export const renderFeatureInfoPopup = (container, features, map, onClose, config
       qgsUrl={qgsUrl}
       qgsProjectPath={qgsProjectPath}
       token={token}
+      notificationManager={notificationManager}
     />
   );
   return root;

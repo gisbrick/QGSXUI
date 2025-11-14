@@ -58,10 +58,14 @@ const MapContainer = ({
     t,
     notificationManager,
     qgsUrl,
-    qgsProjectPath
+    qgsProjectPath,
+    setRefreshWMSLayer
   } = mapContext || {};
 
   const translate = typeof t === 'function' ? t : (key) => key;
+  
+  // Referencia para la función de refresh de la capa WMS
+  const refreshWMSLayerRef = useRef(null);
 
   // Estado para las capas base WMTSLAYERS
   const [baseLayersConfig, setBaseLayersConfig] = useState(null);
@@ -340,6 +344,8 @@ const MapContainer = ({
           window.L.TileLayer.WMS.prototype.initialize.call(this, url, options);
           this.options.qgsMap = qgsProjectPath;
           this.options.qgsFilter = filters || '';
+          // Cache busting: usar timestamp para evitar caché del navegador
+          this.options.cacheBust = options.cacheBust || Date.now();
         },
         
         getTileUrl: function(coords) {
@@ -355,6 +361,10 @@ const MapContainer = ({
           if (this.options.qgsFilter) {
             url += `&FILTER=${encodeURIComponent(this.options.qgsFilter)}`;
           }
+          
+          // Añadir cache busting para evitar que el navegador use imágenes cacheadas
+          // Usar el timestamp almacenado en las opciones
+          url += `&_t=${this.options.cacheBust}`;
           
           return url;
         }
@@ -439,6 +449,20 @@ const MapContainer = ({
               // Si hay capa base, la WMS es overlay
               addedLayersRef.current.overlays = [wmsLayer];
             }
+            
+            // Crear función para refrescar la capa WMS (actualizar cache busting y redibujar)
+            refreshWMSLayerRef.current = () => {
+              if (wmsLayer && map) {
+                // Actualizar el cache busting para forzar la recarga de tiles
+                wmsLayer.options.cacheBust = Date.now();
+                // Redibujar todos los tiles visibles
+                wmsLayer.redraw();
+                // Invalidar el tamaño del mapa para forzar actualización
+                if (map.invalidateSize) {
+                  map.invalidateSize();
+                }
+              }
+            };
           }
         }
 
@@ -504,6 +528,13 @@ const MapContainer = ({
     qgsUrl,
     translate
   ]);
+  
+  // Exponer la función de refresh a través del contexto
+  useEffect(() => {
+    if (setRefreshWMSLayer && refreshWMSLayerRef.current) {
+      setRefreshWMSLayer(() => refreshWMSLayerRef.current);
+    }
+  }, [setRefreshWMSLayer]);
 
   return (
     <div

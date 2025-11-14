@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import PropTypes from 'prop-types';
 import { loadTranslations } from '../../../utilities/traslations';
 import { useTranslation } from '../../../hooks/useTranslation';
@@ -13,7 +14,8 @@ const ConfirmDialog = ({
     onConfirm,
     onCancel,
     variant = 'default',
-    lang = 'es'
+    lang = 'es',
+    loading = false
 }) => {
     const [translations, setTranslations] = useState(null);
 
@@ -29,21 +31,29 @@ const ConfirmDialog = ({
     // Usar el hook de traducción
     const t = useTranslation(lang, translations);
 
-    // Si las traducciones no están cargadas, mostrar loading
-    if (!translations) {
-        return null; // Para modales, mejor no mostrar nada mientras carga
-    }
+    // Función helper para obtener traducciones de forma segura
+    const getTranslation = (key, fallback) => {
+        if (translations && typeof t === 'function') {
+            const translated = t(key);
+            // Si la traducción existe y no es igual a la clave, usarla
+            if (translated && translated !== key) {
+                return translated;
+            }
+        }
+        return fallback;
+    };
 
     // Usar traducciones por defecto si no se proporcionan
-    const resolvedTitle = title || t('ui.confirmDialog.title');
-    const resolvedMessage = message || t('ui.confirmDialog.message');
-    const resolvedConfirmText = confirmText || t('ui.confirmDialog.confirm');
-    const resolvedCancelText = cancelText || t('ui.confirmDialog.cancel');
+    const resolvedTitle = title || getTranslation('ui.confirmDialog.title', lang === 'en' ? 'Confirm' : 'Confirmar');
+    const resolvedMessage = message || getTranslation('ui.confirmDialog.message', lang === 'en' ? 'Are you sure?' : '¿Estás seguro?');
+    const resolvedConfirmText = confirmText || getTranslation('ui.confirmDialog.confirm', lang === 'en' ? 'Confirm' : 'Confirmar');
+    const resolvedCancelText = cancelText || getTranslation('ui.confirmDialog.cancel', lang === 'en' ? 'Cancel' : 'Cancelar');
+    const loadingText = getTranslation('ui.common.loading', lang === 'en' ? 'Loading...' : 'Cargando...');
 
     if (!open) return null;
 
-    return (
-        <div className="confirm-dialog-backdrop">
+    const dialogContent = (
+        <div className="confirm-dialog-overlay">
             <div className={`confirm-dialog confirm-dialog--${variant}`} role="dialog" aria-modal="true">
                 <div className="confirm-dialog__header">
                     <h3 className="confirm-dialog__title">{resolvedTitle}</h3>
@@ -57,6 +67,7 @@ const ConfirmDialog = ({
                         onClick={onCancel}
                         type="button"
                         aria-label={resolvedCancelText}
+                        disabled={loading}
                     >
                         {resolvedCancelText}
                     </button>
@@ -65,13 +76,21 @@ const ConfirmDialog = ({
                         onClick={onConfirm}
                         type="button"
                         aria-label={resolvedConfirmText}
+                        disabled={loading}
                     >
-                        {resolvedConfirmText}
+                        {loading ? loadingText : resolvedConfirmText}
                     </button>
                 </div>
             </div>
         </div>
     );
+
+    // Renderizar usando Portal para que aparezca fuera del árbol de componentes
+    if (typeof document !== 'undefined') {
+        return createPortal(dialogContent, document.body);
+    }
+    
+    return dialogContent;
 };
 
 ConfirmDialog.propTypes = {
@@ -83,7 +102,8 @@ ConfirmDialog.propTypes = {
     onConfirm: PropTypes.func.isRequired,
     onCancel: PropTypes.func.isRequired,
     variant: PropTypes.oneOf(['default', 'danger', 'warning']),
-    lang: PropTypes.string // Idioma para las traducciones
+    lang: PropTypes.string, // Idioma para las traducciones
+    loading: PropTypes.bool // Estado de carga
 };
 
 export default ConfirmDialog;
