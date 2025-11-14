@@ -1,6 +1,6 @@
 import React, { useState, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { loadTranslations } from '../../../utilities/traslations';
+import { loadTranslations } from '../../../hooks/translations';
 import { useTranslation } from '../../../hooks/useTranslation';
 import './SelectButton.css';
 

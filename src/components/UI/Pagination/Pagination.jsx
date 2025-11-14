@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './Pagination.css';
-import { loadTranslations } from '../../../utilities/traslations';
+import { loadTranslations } from '../../../hooks/translations';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 

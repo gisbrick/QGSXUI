@@ -1,7 +1,7 @@
 import React, { useState, useCallback, useRef, useEffect } from 'react';
 import PropTypes from 'prop-types';
-import { useClickOutside } from '../hooks';
-import { loadTranslations } from '../../../utilities/traslations';
+import { useClickOutside } from '../../../hooks';
+import { loadTranslations } from '../../../hooks/translations';
 import { useTranslation } from '../../../hooks/useTranslation';
 import Toast from '../Toast/Toast';
 import './NotificationCenter.css';

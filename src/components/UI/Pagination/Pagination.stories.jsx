@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import Pagination from './Pagination';
-import { loadTranslations } from '../../../utilities/traslations';
+import { loadTranslations } from '../../../hooks/translations';
 import { useTranslation } from '../../../hooks/useTranslation';
 
 export default {
