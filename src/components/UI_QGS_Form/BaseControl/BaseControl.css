@@ -1,13 +1,14 @@
 .base-control {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .base-control__label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #333;
+  margin-bottom: 2px;
 }
 
 .base-control__required {

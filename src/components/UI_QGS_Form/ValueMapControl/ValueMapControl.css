@@ -1,17 +1,18 @@
 .value-map-control {
   display: flex;
   flex-direction: column;
-  gap: 4px;
+  gap: 2px;
 }
 
 .value-map-control__label {
-  font-size: 14px;
+  font-size: 13px;
   font-weight: 500;
   color: #333;
+  margin-bottom: 2px;
 }
 
 .value-map-control__select {
-  padding: 8px 12px;
+  padding: 4px 8px;
   border: 1px solid #ccc;
   border-radius: 4px;
   font-size: 14px;

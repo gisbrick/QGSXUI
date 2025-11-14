@@ -5,9 +5,9 @@
 .checkbox-control__label {
   display: flex;
   align-items: center;
-  gap: 8px;
+  gap: 6px;
   cursor: pointer;
-  font-size: 14px;
+  font-size: 13px;
   color: #333;
 }
 

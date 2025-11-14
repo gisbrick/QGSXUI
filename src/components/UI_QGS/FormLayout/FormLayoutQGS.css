@@ -1,7 +1,7 @@
 .form-layout-qgs {
   width: 100%;
   margin: 0 auto;
-  padding: 12px;
+  padding: var(--spacing-sm, 0.5rem);
   background: white;
   border-radius: 8px;
   box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
@@ -31,7 +31,7 @@
 .form-layout-qgs__content--vertical {
   display: flex;
   flex-direction: column;
-  gap: 16px;
+  gap: var(--spacing-xs, 0.25rem);
   min-height: auto;
 }
 
@@ -54,19 +54,19 @@
 }
 
 .form-container__content {
-  padding: 4px 0;
+  padding: 2px 0;
 }
 
 .form-groupbox {
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs, 0.25rem);
 }
 
 .form-field {
-  padding: 8px 12px;
+  padding: 4px 8px;
   background: #f8f9fa;
   border: 1px solid #dee2e6;
   border-radius: 4px;
-  margin: 4px 0;
+  margin: 2px 0;
   font-family: monospace;
   font-size: 14px;
   color: #495057;
@@ -74,19 +74,19 @@
 
 /* Estilos para contenedores */
 .form-container {
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs, 0.25rem);
 }
 
 .form-container__label {
   margin: 0 0 2px 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
 
 /* Estilos específicos para contenedores tipo Row */
 .form-container-row {
-  margin-bottom: 4px;
+  margin-bottom: var(--spacing-xs, 0.25rem);
   width: 100%;
 }
 
@@ -97,7 +97,7 @@
 
 .form-container-row__label {
   margin: 0 0 2px 0;
-  font-size: 16px;
+  font-size: 14px;
   font-weight: 600;
   color: #333;
 }
@@ -120,7 +120,7 @@
 .form-container-row .form-row__content {
   display: flex;
   flex-wrap: nowrap;
-  gap: 8px;
+  gap: var(--spacing-xs, 0.25rem);
   width: 100%;
 }
 
