@@ -1,7 +1,7 @@
 import React from 'react';
 import './TextControl.css';
 
-const TextControl = ({
+const TextControl = React.memo(({
   label,
   value,
   onChange,
@@ -12,12 +12,15 @@ const TextControl = ({
   className = '',
   ...props
 }) => {
+  // Asegurar que value siempre sea una cadena para evitar problemas con inputs controlados
+  const inputValue = value !== null && value !== undefined ? String(value) : '';
+  
   return (
     <div className={`text-control ${className}`}>
       {label && <label className="text-control__label">{label}</label>}
       <input
         type={type}
-        value={value}
+        value={inputValue}
         onChange={onChange}
         placeholder={placeholder}
         disabled={disabled}
@@ -27,6 +30,6 @@ const TextControl = ({
       {error && <span className="text-control__error">{error}</span>}
     </div>
   );
-};
+});
 
 export default TextControl;

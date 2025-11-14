@@ -53,19 +53,27 @@ const FeatureInfoPopup = ({
   // Usar config pasado como prop o del contexto
   const config = configProp || contextConfig;
 
+  // Estado local para mantener las features actualizadas
+  const [updatedFeatures, setUpdatedFeatures] = useState(features);
+  
+  // Actualizar el estado local cuando cambien las features del prop
+  React.useEffect(() => {
+    setUpdatedFeatures(features);
+  }, [features]);
+
   // Agrupar features por capa
   const layersWithFeatures = useMemo(() => {
-    if (!features || !config) {
-      console.log('FeatureInfoPopup: No features or config', { features, config });
+    if (!updatedFeatures || !config) {
+      console.log('FeatureInfoPopup: No features or config', { features: updatedFeatures, config });
       return [];
     }
 
-    console.log('FeatureInfoPopup: Processing features', features);
+    console.log('FeatureInfoPopup: Processing features', updatedFeatures);
     console.log('FeatureInfoPopup: Available layers in config', Object.keys(config.layers || {}));
 
     const grouped = {};
     
-    features.forEach(feature => {
+    updatedFeatures.forEach(feature => {
       console.log('FeatureInfoPopup: Processing feature', feature);
       
       // El ID de la feature tiene formato "layerName.featureId" o puede ser solo el nombre de la capa
@@ -133,7 +141,7 @@ const FeatureInfoPopup = ({
     const result = Object.values(grouped);
     console.log('FeatureInfoPopup: Grouped layers', result);
     return result;
-  }, [features, config]);
+  }, [updatedFeatures, config]);
 
   // Estado para la capa y feature seleccionadas
   const [selectedLayerIndex, setSelectedLayerIndex] = useState(0);
@@ -141,6 +149,9 @@ const FeatureInfoPopup = ({
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
   const [showAttributesDialog, setShowAttributesDialog] = useState(false);
+  const [showEditDialog, setShowEditDialog] = useState(false);
+  // Key para forzar re-render cuando se actualizan las features
+  const [featuresUpdateKey, setFeaturesUpdateKey] = useState(0);
 
   // Referencia a la capa gráfica de selección
   const selectionLayerRef = React.useRef(null);
@@ -321,6 +332,12 @@ const FeatureInfoPopup = ({
     // Si es una acción de ver atributos, abrir el diálogo de atributos
     if (action === 'view') {
       setShowAttributesDialog(true);
+      return;
+    }
+
+    // Si es una acción de editar atributos, abrir el diálogo de edición
+    if (action === 'editAttributes') {
+      setShowEditDialog(true);
       return;
     }
 
@@ -627,9 +644,10 @@ const FeatureInfoPopup = ({
 
       {/* Contenido: MapTipTemplate o información básica */}
       {selectedFeature && selectedLayer && (
-        <div className="feature-info-popup-body">
+        <div className="feature-info-popup-body" key={`feature-${selectedFeature.id}-${featuresUpdateKey}`}>
           {selectedLayer.layer.mapTipTemplate && selectedLayer.layer.mapTipTemplate.trim() !== '' ? (
             <MapTipViewer
+              key={`maptip-${selectedFeature.id}-${featuresUpdateKey}`}
               layer={selectedLayer.layer}
               feature={selectedFeature}
               map={map}
@@ -692,13 +710,14 @@ const FeatureInfoPopup = ({
         lang={language}
       />
       
-      {/* Diálogo de atributos */}
+      {/* Diálogo de atributos (modo lectura) */}
       {selectedLayer && selectedFeature && (
         <FeatureAttributesDialog
           isOpen={showAttributesDialog}
           onClose={() => setShowAttributesDialog(false)}
           layerName={selectedLayer.layerName}
           feature={selectedFeature}
+          readOnly={true}
           language={language}
           config={config}
           qgsUrl={qgsUrl}
@@ -706,6 +725,99 @@ const FeatureInfoPopup = ({
           token={token}
           t={translate}
           notificationManager={notificationManager}
+        />
+      )}
+
+      {/* Diálogo de edición de atributos */}
+      {selectedLayer && selectedFeature && (
+        <FeatureAttributesDialog
+          isOpen={showEditDialog}
+          onClose={() => setShowEditDialog(false)}
+          layerName={selectedLayer.layerName}
+          feature={selectedFeature}
+          readOnly={false}
+          language={language}
+          config={config}
+          qgsUrl={qgsUrl}
+          qgsProjectPath={qgsProjectPath}
+          token={token}
+          t={translate}
+          notificationManager={notificationManager}
+          onSave={async (savedData) => {
+            // Recargar la feature desde el servidor para obtener los valores actualizados
+            if (selectedFeature && selectedFeature.id && qgsUrl && qgsProjectPath) {
+              try {
+                const updatedFeature = await fetchFeatureById(
+                  qgsUrl,
+                  qgsProjectPath,
+                  selectedLayer.layerName,
+                  selectedFeature.id,
+                  token
+                );
+                
+                // Función helper para normalizar IDs (reemplazar espacios por guiones bajos)
+                const normalizeId = (id) => {
+                  if (!id) return id;
+                  return id.toString().replace(/\s+/g, '_');
+                };
+                
+                // Normalizar el ID de la feature actualizada para comparar
+                const normalizedUpdatedId = normalizeId(updatedFeature.id);
+                
+                // Actualizar el estado local de features con la feature actualizada
+                setUpdatedFeatures(prevFeatures => {
+                  if (!prevFeatures) return prevFeatures;
+                  
+                  // Buscar y actualizar la feature en el array usando comparación normalizada
+                  return prevFeatures.map(f => {
+                    const normalizedFId = normalizeId(f.id);
+                    
+                    if (normalizedFId === normalizedUpdatedId) {
+                      return {
+                        ...f,
+                        properties: updatedFeature.properties,
+                        geometry: updatedFeature.geometry || f.geometry
+                      };
+                    }
+                    return f;
+                  });
+                });
+                
+                // Actualizar featureWithGeometry si es la feature seleccionada
+                // Usar comparación normalizada también aquí
+                const normalizeFeatureId = (id) => {
+                  if (!id) return id;
+                  return id.toString().replace(/\s+/g, '_');
+                };
+                if (featureWithGeometry && normalizeFeatureId(featureWithGeometry.id) === normalizedUpdatedId) {
+                  setFeatureWithGeometry(updatedFeature);
+                }
+                
+                // Forzar re-render del popup incrementando el key
+                setFeaturesUpdateKey(prev => prev + 1);
+              } catch (error) {
+                console.error('Error al recargar la feature después de guardar:', error);
+              }
+            }
+            
+            // Refrescar la capa WMS para mostrar los cambios en el mapa
+            if (map && map.wmsLayer) {
+              // Actualizar el cache busting para forzar la recarga de tiles
+              if (map.wmsLayer.options) {
+                map.wmsLayer.options.cacheBust = Date.now();
+              }
+              // Redibujar todos los tiles visibles
+              if (map.wmsLayer.redraw) {
+                map.wmsLayer.redraw();
+              }
+              // Invalidar el tamaño del mapa para forzar actualización
+              if (map.invalidateSize) {
+                map.invalidateSize();
+              }
+            }
+            
+            // NO cerrar el diálogo - el usuario puede seguir editando
+          }}
         />
       )}
     </div>

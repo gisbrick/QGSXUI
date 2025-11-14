@@ -13,7 +13,7 @@ import { FormLayoutQGS, LoadingQGS } from '../../UI_QGS';
  * Componente de formulario dinámico para edición de features de QGIS
  * Genera campos de formulario basados en la configuración del proyecto QGIS
  */
-const Form = ({ layerName, featureId, readOnly = false }) => {
+const Form = ({ layerName, featureId, readOnly = false, onSave = null, hideActions = false, renderActions = null }) => {
   // Obtener configuración QGIS y función de traducción del contexto
   const { config, t, notificationManager } = useContext(QgisConfigContext);
   
@@ -23,8 +23,9 @@ const Form = ({ layerName, featureId, readOnly = false }) => {
   }
 
   return (
-    <FormProvider layerName={layerName} featureId={featureId} readOnly={readOnly}>
-      <Form_ />
+    <FormProvider layerName={layerName} featureId={featureId} readOnly={readOnly} onSave={onSave}>
+      <Form_ hideActions={hideActions} />
+      {renderActions && renderActions()}
     </FormProvider>
 
   );
@@ -33,14 +34,17 @@ const Form = ({ layerName, featureId, readOnly = false }) => {
 Form.propTypes = {
   layerName: PropTypes.string.isRequired,
   featureId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
-  readOnly: PropTypes.bool
+  readOnly: PropTypes.bool,
+  onSave: PropTypes.func,
+  hideActions: PropTypes.bool,
+  renderActions: PropTypes.func
 };
 
 export { QgisConfigProvider };
 export default Form;
 
 
-const Form_ = ({layerName, featureId  }) => {
+const Form_ = ({layerName, featureId, hideActions = false }) => {
 
   const { t } = useContext(QgisConfigContext);
   const {
@@ -114,8 +118,8 @@ const Form_ = ({layerName, featureId  }) => {
       ))
         */}
 
-      {/* Botones de acción - solo mostrar si no está en modo solo lectura */}
-      {!readOnly && (
+      {/* Botones de acción - solo mostrar si no está en modo solo lectura y no se ocultan */}
+      {!readOnly && !hideActions ? (
         <div className="qgs-form-actions">
           <button 
             type="submit" 
@@ -132,7 +136,7 @@ const Form_ = ({layerName, featureId  }) => {
             {translate('ui.common.cancel')}
           </button>
         </div>
-      )}
+      ) : null}
     </form>
   )
 }

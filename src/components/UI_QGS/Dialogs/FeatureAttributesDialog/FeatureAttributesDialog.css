@@ -1,7 +1,9 @@
 .feature-attributes-dialog__content {
-  padding: var(--spacing-md);
-  max-height: 70vh;
+  width: 100%;
+  min-height: 0;
+  /* Asegurar que el contenido pueda hacer scroll si es necesario */
   overflow-y: auto;
+  max-height: 100%;
 }
 
 .feature-attributes-dialog__error {
@@ -10,13 +12,69 @@
   color: var(--color-error, #f44336);
 }
 
+/* Ajustar el modal-body para que el scroll funcione correctamente */
 .feature-attributes-dialog .modal-body {
-  padding: 0;
+  padding: var(--spacing-xl);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* Asegurar que el scroll funcione correctamente */
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* Altura máxima para activar el scroll */
+  max-height: calc(90vh - 120px); /* Restar espacio para header y footer */
 }
 
 /* Asegurar que el contenido del formulario se vea bien en el modal */
 .feature-attributes-dialog .form-layout-qgs {
   padding: var(--spacing-md);
+  width: 100%;
+}
+
+/* Estilos para el footer del diálogo con los botones */
+.feature-attributes-dialog__footer-actions {
+  display: flex;
+  gap: var(--spacing-md);
+  justify-content: flex-end;
+  padding: var(--spacing-md) 0;
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button {
+  min-width: 100px;
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-base);
+  font-weight: var(--font-weight-medium);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+  border: var(--border-width-thin) solid transparent;
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button--primary {
+  background-color: var(--color-primary, #1976d2);
+  color: var(--color-on-primary, #ffffff);
+  border-color: var(--color-primary, #1976d2);
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button--primary:hover:not(:disabled) {
+  background-color: var(--color-primary-dark, #1565c0);
+  border-color: var(--color-primary-dark, #1565c0);
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button--primary:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button--secondary {
+  background-color: transparent;
+  color: var(--color-text-primary, #212121);
+  border-color: var(--color-border, #e0e0e0);
+}
+
+.feature-attributes-dialog__footer-actions .qgs-form-button--secondary:hover {
+  background-color: var(--color-background-hover, #f5f5f5);
+  border-color: var(--color-border-dark, #bdbdbd);
 }
 
 

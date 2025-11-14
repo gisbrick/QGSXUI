@@ -1,4 +1,4 @@
-import React, { useContext, useMemo } from 'react';
+import React, { useContext, useMemo, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import './FormFieldQGS.css';
 import { QgisConfigContext } from '../../QGS';
@@ -97,10 +97,12 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
   const isDisabled = readOnly || field.readOnly || false;
 
   // Handler para cambios de valor
-  const handleChange = (newValue) => {
-    setValue(field.name, newValue);
-    validateField(field.name, newValue);
-  };
+  const handleChange = React.useCallback((newValue) => {
+    // Asegurar que el valor es una cadena completa
+    const valueToSet = newValue !== null && newValue !== undefined ? String(newValue) : '';
+    setValue(field.name, valueToSet);
+    validateField(field.name, valueToSet);
+  }, [field.name, setValue, validateField]);
 
   // Función para formatear valores según el tipo (para modo lectura)
   const formatValueForDisplay = useMemo(() => {
@@ -218,11 +220,20 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
       );
     } else {
       // Input de texto simple
+      // Asegurar que el valor siempre sea una cadena
+      const textValue = fieldValue !== null && fieldValue !== undefined ? String(fieldValue) : '';
+      
+      // Memoizar el handler onChange para evitar recreaciones innecesarias
+      const onChangeHandler = React.useCallback((e) => {
+        const newValue = e.target.value;
+        handleChange(newValue);
+      }, [handleChange]);
+      
       control = (
         <TextControl
           label={fieldAlias}
-          value={fieldValue || ''}
-          onChange={(e) => handleChange(e.target.value)}
+          value={textValue}
+          onChange={onChangeHandler}
           disabled={isDisabled}
           error={fieldError}
           type="text"
