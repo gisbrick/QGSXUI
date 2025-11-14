@@ -2,16 +2,19 @@
 
 .confirm-dialog-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
+  inset: 0; /* Equivalente a top: 0; right: 0; bottom: 0; left: 0; */
+  width: 100vw;
+  height: 100vh;
+  margin: 0;
+  padding: 0;
   background-color: rgba(0, 0, 0, 0.5);
-  z-index: var(--z-modal-backdrop);
+  z-index: 10000; /* Z-index alto para asegurar que esté por encima del mapa y popups de Leaflet */
   display: flex;
   align-items: center;
   justify-content: center;
   animation: ui-fade-in var(--transition-fast);
+  /* Asegurar que el overlay esté en la raíz del viewport */
+  box-sizing: border-box;
 }
 
 .confirm-dialog {
