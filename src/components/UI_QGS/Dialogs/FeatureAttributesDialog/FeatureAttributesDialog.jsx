@@ -2,10 +2,9 @@ import React, { useContext, useMemo } from 'react';
 import PropTypes from 'prop-types';
 import { createPortal } from 'react-dom';
 import Modal from '../../../UI/Modal/Modal';
-import Form from '../../Form/Form';
-import { QgisConfigContext } from '../../QgisConfigContext';
+import Form from '../../../QGS/Form/Form';
+import { QgisConfigContext } from '../../../QGS/QgisConfigContext';
 import { useUITranslation } from '../../../../hooks/useTranslation';
-import { LoadingQGS } from '../../../UI_QGS';
 import './FeatureAttributesDialog.css';
 
 // Importar traducciones
@@ -229,4 +228,5 @@ FeatureAttributesDialog.propTypes = {
 };
 
 export default FeatureAttributesDialog;
+
 

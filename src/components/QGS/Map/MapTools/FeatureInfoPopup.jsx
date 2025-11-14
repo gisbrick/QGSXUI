@@ -5,7 +5,7 @@ import MapTipViewer from './MapTipViewer';
 import { QgisConfigContext } from '../../QgisConfigContext';
 import { fetchFeatureById, deleteFeature } from '../../../../services/qgisWFSFetcher';
 import ConfirmDialog from '../../../UI/ConfirmDialog/ConfirmDialog';
-import FeatureAttributesDialog from './FeatureAttributesDialog';
+import { FeatureAttributesDialog } from '../../../UI_QGS';
 import './FeatureInfoPopup.css';
 
 /**
