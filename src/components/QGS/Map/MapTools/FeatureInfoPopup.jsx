@@ -5,6 +5,7 @@ import MapTipViewer from './MapTipViewer';
 import { QgisConfigContext } from '../../QgisConfigContext';
 import { fetchFeatureById, deleteFeature } from '../../../../services/qgisWFSFetcher';
 import ConfirmDialog from '../../../UI/ConfirmDialog/ConfirmDialog';
+import FeatureAttributesDialog from './FeatureAttributesDialog';
 import './FeatureInfoPopup.css';
 
 /**
@@ -139,6 +140,7 @@ const FeatureInfoPopup = ({
   const [selectedFeatureIndex, setSelectedFeatureIndex] = useState(0);
   const [showDeleteDialog, setShowDeleteDialog] = useState(false);
   const [isDeleting, setIsDeleting] = useState(false);
+  const [showAttributesDialog, setShowAttributesDialog] = useState(false);
 
   // Referencia a la capa gráfica de selección
   const selectionLayerRef = React.useRef(null);
@@ -313,6 +315,12 @@ const FeatureInfoPopup = ({
     // Si es una acción de borrado, mostrar el diálogo de confirmación
     if (action === 'delete') {
       setShowDeleteDialog(true);
+      return;
+    }
+
+    // Si es una acción de ver atributos, abrir el diálogo de atributos
+    if (action === 'view') {
+      setShowAttributesDialog(true);
       return;
     }
 
@@ -683,6 +691,23 @@ const FeatureInfoPopup = ({
         variant="danger"
         lang={language}
       />
+      
+      {/* Diálogo de atributos */}
+      {selectedLayer && selectedFeature && (
+        <FeatureAttributesDialog
+          isOpen={showAttributesDialog}
+          onClose={() => setShowAttributesDialog(false)}
+          layerName={selectedLayer.layerName}
+          feature={selectedFeature}
+          language={language}
+          config={config}
+          qgsUrl={qgsUrl}
+          qgsProjectPath={qgsProjectPath}
+          token={token}
+          t={translate}
+          notificationManager={notificationManager}
+        />
+      )}
     </div>
   );
 };

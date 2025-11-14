@@ -36,23 +36,106 @@ const FormLayoutQGS = ({ layerName, featureId }) => {
     return <div>{t('ui.qgis.loading')}</div>;
   }
 
-
-
-  if (!layer || !layer.editFormConfig) {
+  // Si no hay layer, mostrar error
+  if (!layer) {
     return (
       <div className="form-layout-qgs form-layout-qgs--error">
-        <p>No se encontró configuración de formulario para la capa: {layerName}</p>
+        <p>No se encontró la capa: {layerName}</p>
+      </div>
+    );
+  }
+
+  // Si no hay editFormConfig o no hay tabs, renderizar todos los campos verticalmente
+  if (!layer.editFormConfig || !layer.editFormConfig.tabs || layer.editFormConfig.tabs.length === 0) {
+    // Verificar que hay campos disponibles
+    if (!layer.fields || !Array.isArray(layer.fields) || layer.fields.length === 0) {
+      return (
+        <div className="form-layout-qgs form-layout-qgs--empty">
+          <p>No se encontraron campos para la capa: {layerName}</p>
+        </div>
+      );
+    }
+
+    // Filtrar campos ocultos y renderizar todos los campos verticalmente
+    const visibleFields = layer.fields.filter(field => {
+      // Excluir campos ocultos
+      if (field.editorWidgetSetup && field.editorWidgetSetup.type === 'Hidden') {
+        return false;
+      }
+      return true;
+    });
+
+    if (visibleFields.length === 0) {
+      return (
+        <div className="form-layout-qgs form-layout-qgs--empty">
+          <p>No hay campos visibles para mostrar</p>
+        </div>
+      );
+    }
+
+    return (
+      <div className="form-layout-qgs form-layout-qgs--vertical">
+        <div className="form-layout-qgs__content form-layout-qgs__content--vertical">
+          {visibleFields.map((field, arrayIndex) => {
+            // Usar field.index si está disponible, sino usar el índice del array
+            const fieldIndex = field.index !== undefined ? field.index : arrayIndex;
+            return (
+              <div key={`field-${fieldIndex}-${field.name}`} className="form-field form-field--vertical">
+                <FormFieldQGS
+                  layerName={layerName}
+                  featureId={featureId}
+                  field_idx={fieldIndex}
+                  field_name={field.name}
+                />
+              </div>
+            );
+          })}
+        </div>
       </div>
     );
   }
 
   const { editFormConfig } = layer;
 
-  // Si no hay tabs, mostrar mensaje
-  if (!editFormConfig.tabs || editFormConfig.tabs.length === 0) {
+  // Verificar si todos los elementos en tabs son campos directos (QgsAttributeEditorField)
+  // En ese caso, renderizarlos verticalmente sin crear tabs
+  const allTabsAreFields = editFormConfig.tabs.every(
+    tab => tab.classType === 'QgsAttributeEditorField'
+  );
+
+  if (allTabsAreFields) {
+    // Filtrar campos ocultos
+    const visibleTabs = editFormConfig.tabs.filter(tab => {
+      // Buscar el campo en layer.fields para verificar si está oculto
+      const field = layer.fields?.find(f => f.name === tab.name);
+      if (field && field.editorWidgetSetup && field.editorWidgetSetup.type === 'Hidden') {
+        return false;
+      }
+      return true;
+    });
+
+    if (visibleTabs.length === 0) {
+      return (
+        <div className="form-layout-qgs form-layout-qgs--empty">
+          <p>No hay campos visibles para mostrar</p>
+        </div>
+      );
+    }
+
     return (
-      <div className="form-layout-qgs form-layout-qgs--empty">
-        <p>No se encontraron pestañas en la configuración del formulario</p>
+      <div className="form-layout-qgs form-layout-qgs--vertical">
+        <div className="form-layout-qgs__content form-layout-qgs__content--vertical">
+          {visibleTabs.map((tab) => (
+            <div key={`field-${tab.idx}-${tab.name}`} className="form-field form-field--vertical">
+              <FormFieldQGS
+                layerName={layerName}
+                featureId={featureId}
+                field_idx={parseInt(tab.idx)}
+                field_name={tab.name}
+              />
+            </div>
+          ))}
+        </div>
       </div>
     );
   }
@@ -80,17 +163,6 @@ const FormLayoutQGS = ({ layerName, featureId }) => {
     const columnCount = parseInt(container.columnCount || container.ColumnCount || container.columns || container.Columns || 1);
     const { children = [], isGroupBox, name, showLabel = true, type } = container;
 
-    // Debug: mostrar información del contenedor
-    console.log('Renderizando contenedor:', {
-      name,
-      isGroupBox,
-      type,
-      columnCount,
-      containerProps: Object.keys(container),
-      childrenCount: children.length,
-      children: children.map(c => ({ type: c.classType, name: c.name, idx: c.idx }))
-    });
-
     // Renderizar hijos del contenedor
     const renderChildren = (isRowType = false) => {
       const fields = [];
@@ -105,11 +177,8 @@ const FormLayoutQGS = ({ layerName, featureId }) => {
         }
       });
 
-      console.log('Campos encontrados:', fields.length, 'Columnas configuradas:', columnCount, 'Es Row:', isRowType);
-
       // Si es un Row (type === "2"), todos los campos van en una sola fila
       if (isRowType || type === "2") {
-        console.log('Renderizando como Row: todos los campos en una fila');
         return (
           <div className="form-container__content">
             {fields.length > 0 && (
@@ -126,7 +195,6 @@ const FormLayoutQGS = ({ layerName, featureId }) => {
       const fieldRows = [];
       for (let i = 0; i < fields.length; i += columnCount) {
         const rowFields = fields.slice(i, i + columnCount);
-        console.log(`Fila ${Math.floor(i / columnCount)}: ${rowFields.length} campos de ${columnCount} columnas máximas`);
         fieldRows.push(
           <FormRow key={`row-${i}`} showLabel={false}>
             {rowFields}

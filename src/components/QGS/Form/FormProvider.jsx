@@ -2,14 +2,15 @@ import React, { createContext, useContext, useEffect, useState } from 'react';
 import { validateValue } from '../../../utilities/formValuesValidators';
 import { QgisConfigContext } from '../QgisConfigContext';
 import { useActionHandlers } from '../../../contexts/ActionHandlersContext';
+import { fetchFeatureById } from '../../../services/qgisWFSFetcher';
 
 // Creamos un contexto para compartir estado entre componentes
 const FormContext = createContext(null);
 
-export const FormProvider = ({ layerName, featureId, children }) => {
+export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = false, children }) => {
 
   // Obtener configuración QGIS y función de traducción del contexto
-  const { config, t, notificationManager } = useContext(QgisConfigContext);
+  const { config, t, notificationManager, qgsUrl, qgsProjectPath, token } = useContext(QgisConfigContext);
   
   // Obtener action handlers personalizables
   const { getHandler } = useActionHandlers();
@@ -20,32 +21,61 @@ export const FormProvider = ({ layerName, featureId, children }) => {
   const [values, setValues] = useState({});     // valores actuales del formulario
   const [errors, setErrors] = useState({});     // errores actuales por campo
   const [isDirty, setIsDirty] = useState(false); // si el usuario ha modificado algo
-  const [readOnly, setReadOnly] = useState(false); // modo solo lectura
+  const [readOnly, setReadOnly] = useState(readOnlyProp); // modo solo lectura
 
+
+  // Actualizar readOnly cuando cambie la prop
+  useEffect(() => {
+    setReadOnly(readOnlyProp);
+  }, [readOnlyProp]);
 
   useEffect(() => {
+    // Verificar que config existe antes de usarlo
+    if (!config || !config.layers) {
+      console.warn('FormProvider: config o config.layers no está disponible');
+      setLayer(null);
+      return;
+    }
+
     // Buscar la capa que coincide con layerName en config.layers
     const layer_ = Object.entries(config.layers).find(
       ([key]) => key === layerName
     )?.[1];
+    
     setLayer(layer_);
 
     if (layer_) {
       if (featureId) {
-        // Recuperar la feature desde el servicio
-        layer_.service.getFeature(featureId)
-          .then(f => {
+        // Recuperar la feature desde el servicio o usando fetchFeatureById directamente
+        const fetchFeature = async () => {
+          try {
+            let f;
+            // Si la capa tiene un servicio con getFeature, usarlo
+            if (layer_.service && typeof layer_.service.getFeature === 'function') {
+              f = await layer_.service.getFeature(featureId);
+            } else if (qgsUrl && qgsProjectPath) {
+              // Si no hay servicio, usar fetchFeatureById directamente
+              f = await fetchFeatureById(qgsUrl, qgsProjectPath, layerName, featureId, token);
+            } else {
+              throw new Error('No hay servicio disponible ni parámetros QGIS para obtener la feature');
+            }
+            
             setFeature(f);
             setValues(f.properties || {});
             setisNewFeature(false);
-          })
-          .catch(() => {
-            notificationManager.addNotification({
-              title: t('ui.qgis.error.retrievingFeature.title'),
-              text: t('ui.qgis.error.retrievingFeature.message'),
-              level: 'error'
-            })
-          });
+          } catch (error) {
+            console.error('Error obteniendo feature:', error);
+            if (notificationManager && notificationManager.addNotification) {
+              notificationManager.addNotification({
+                title: t('ui.qgis.error.retrievingFeature.title') || 'Error',
+                text: t('ui.qgis.error.retrievingFeature.message') || error.message || 'Error al obtener la feature',
+                level: 'error'
+              });
+            }
+          }
+        };
+        
+        fetchFeature();
       } else {
         // Inicializar valores vacíos 
         setValues({});
@@ -53,7 +83,7 @@ export const FormProvider = ({ layerName, featureId, children }) => {
         setisNewFeature(true);
       }
     }
-  }, []);
+  }, [layerName, featureId, qgsUrl, qgsProjectPath, token]);
 
 
 

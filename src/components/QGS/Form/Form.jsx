@@ -13,17 +13,17 @@ import { FormLayoutQGS, LoadingQGS } from '../../UI_QGS';
  * Componente de formulario dinámico para edición de features de QGIS
  * Genera campos de formulario basados en la configuración del proyecto QGIS
  */
-const Form = ({ layerName, featureId }) => {
+const Form = ({ layerName, featureId, readOnly = false }) => {
   // Obtener configuración QGIS y función de traducción del contexto
   const { config, t, notificationManager } = useContext(QgisConfigContext);
+  
   // Verificar que hay configuración disponible
   if (!config) {
     return <LoadingQGS />;
   }
 
-
   return (
-    <FormProvider layerName={layerName} featureId={featureId}>
+    <FormProvider layerName={layerName} featureId={featureId} readOnly={readOnly}>
       <Form_ />
     </FormProvider>
 
@@ -32,7 +32,8 @@ const Form = ({ layerName, featureId }) => {
 
 Form.propTypes = {
   layerName: PropTypes.string.isRequired,
-  featureId: PropTypes.oneOfType([PropTypes.string, PropTypes.number])
+  featureId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  readOnly: PropTypes.bool
 };
 
 export { QgisConfigProvider };
@@ -113,23 +114,25 @@ const Form_ = ({layerName, featureId  }) => {
       ))
         */}
 
-      {/* Botones de acción */}
-      <div className="qgs-form-actions">
-        <button 
-          type="submit" 
-          disabled={!canSave || isSaving}
-          className="qgs-form-button qgs-form-button--primary"
-        >
-          {isSaving ? translate('ui.common.saving') : translate('ui.common.save')}
-        </button>
-        <button 
-          type="button" 
-          onClick={onCancel}
-          className="qgs-form-button qgs-form-button--secondary"
-        >
-          {translate('ui.common.cancel')}
-        </button>
-      </div>
+      {/* Botones de acción - solo mostrar si no está en modo solo lectura */}
+      {!readOnly && (
+        <div className="qgs-form-actions">
+          <button 
+            type="submit" 
+            disabled={!canSave || isSaving}
+            className="qgs-form-button qgs-form-button--primary"
+          >
+            {isSaving ? translate('ui.common.saving') : translate('ui.common.save')}
+          </button>
+          <button 
+            type="button" 
+            onClick={onCancel}
+            className="qgs-form-button qgs-form-button--secondary"
+          >
+            {translate('ui.common.cancel')}
+          </button>
+        </div>
+      )}
     </form>
   )
 }

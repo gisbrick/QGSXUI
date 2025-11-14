@@ -23,6 +23,23 @@
   min-height: 400px;
 }
 
+/* Estilos para layout vertical (sin tabs) */
+.form-layout-qgs--vertical {
+  width: 100%;
+}
+
+.form-layout-qgs__content--vertical {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  min-height: auto;
+}
+
+.form-field--vertical {
+  width: 100%;
+  margin: 0;
+}
+
 .form-layout-qgs--error,
 .form-layout-qgs--empty {
   text-align: center;

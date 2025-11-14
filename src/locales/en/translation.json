@@ -216,7 +216,13 @@
       "deleteSuccess": "Feature deleted",
       "deleteSuccessMessage": "The record has been successfully deleted",
       "deleteError": "Delete error",
-      "deleteErrorMessage": "An error occurred while trying to delete the feature"
+      "deleteErrorMessage": "An error occurred while trying to delete the feature",
+      "attributes": {
+        "title": "Attributes",
+        "error": {
+          "missingData": "Missing data required to display attributes"
+        }
+      }
     },
     "toolbar": {
       "actions": "Actions",

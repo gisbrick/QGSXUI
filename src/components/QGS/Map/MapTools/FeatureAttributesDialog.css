@@ -1,0 +1,21 @@
+.feature-attributes-dialog__content {
+  padding: var(--spacing-md);
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.feature-attributes-dialog__error {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-error, #f44336);
+}
+
+.feature-attributes-dialog .modal-body {
+  padding: 0;
+}
+
+/* Asegurar que el contenido del formulario se vea bien en el modal */
+.feature-attributes-dialog .form-layout-qgs {
+  padding: var(--spacing-md);
+}
+

@@ -221,7 +221,13 @@
       "deleteSuccess": "Feature borrada",
       "deleteSuccessMessage": "Se ha borrado correctamente el registro indicado",
       "deleteError": "Error al borrar",
-      "deleteErrorMessage": "Ha ocurrido un error al intentar borrar la feature"
+      "deleteErrorMessage": "Ha ocurrido un error al intentar borrar la feature",
+      "attributes": {
+        "title": "Atributos",
+        "error": {
+          "missingData": "Faltan datos necesarios para mostrar los atributos"
+        }
+      }
     },
     "toolbar": {
       "actions": "Acciones",
