@@ -1,5 +1,5 @@
 import React, { createContext, useContext, useEffect, useState } from 'react';
-import { validateValue } from '../../../utilities/formValuesValidators';
+import { validateValue, validateFieldValue } from '../../../utilities/formValuesValidators';
 import { QgisConfigContext } from '../QgisConfigContext';
 import { useActionHandlers } from '../../../contexts/ActionHandlersContext';
 import { fetchFeatureById, updateFeature } from '../../../services/qgisWFSFetcher';
@@ -103,30 +103,125 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
   };
 
   // Función que valida un campo específico usando las reglas definidas
-  const validateField = (field, value) => {
-    // Verificar que config y fields existan
-    if (!config || !config.fields || !Array.isArray(config.fields)) {
-      // Si no hay config.fields, intentar buscar en layer.fields
-      if (layer && layer.fields && Array.isArray(layer.fields)) {
-        const fieldConfig = layer.fields.find(f => f.name === field);
-        const rules = fieldConfig?.validate || [];
-        const error = validateValue(value, rules);
-        setErrors(prev => ({ ...prev, [field]: error }));
-        return;
+  const validateField = React.useCallback((fieldName, value) => {
+    // Buscar el campo en la configuración de la capa
+    if (!layer || !layer.fields || !Array.isArray(layer.fields)) {
+      // Si no hay layer.fields, intentar buscar en config.fields como fallback
+      if (config && config.fields && Array.isArray(config.fields)) {
+        const fieldConfig = config.fields.find(f => f.name === fieldName);
+        if (fieldConfig) {
+          const rules = fieldConfig?.validate || [];
+          const error = validateValue(value, rules);
+          setErrors(prev => ({ ...prev, [fieldName]: error }));
+        }
       }
-      // Si no hay campos disponibles, no validar
       return;
     }
     
-    const fieldConfig = config.fields.find(f => f.name === field);
-    const rules = fieldConfig?.validate || [];
-    const error = validateValue(value, rules);
-    setErrors(prev => ({ ...prev, [field]: error }));
-  };
+    // Buscar el campo en layer.fields
+    const fieldConfig = layer.fields.find(f => f.name === fieldName);
+    if (!fieldConfig) {
+      // Si no se encuentra el campo, limpiar el error
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+      return;
+    }
+    
+    // Usar el nuevo sistema de validación completo
+    // Usar los valores actuales del estado para validaciones comparativas
+    const validation = validateFieldValue(fieldConfig, value, values, layer, t);
+    
+    if (validation.valid) {
+      // Si es válido, limpiar el error
+      setErrors(prev => {
+        const newErrors = { ...prev };
+        delete newErrors[fieldName];
+        return newErrors;
+      });
+    } else {
+      // Si no es válido, establecer el mensaje de error
+      // validateFieldValue siempre debe devolver un error específico cuando valid es false
+      if (validation.error && validation.error.trim()) {
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          newErrors[fieldName] = validation.error;
+          return newErrors;
+        });
+      } else {
+        // Si por alguna razón no hay mensaje de error, intentar generar uno específico
+        const fieldAlias = fieldConfig.alias || fieldConfig.name || fieldName;
+        let errorMessage = '';
+        
+        // Intentar determinar el tipo de error
+        if (fieldConfig.constraintNotNull && (value === null || value === undefined || value === '')) {
+          errorMessage = `El campo "${fieldAlias}" debe rellenarse de manera obligatoria`;
+        } else if (fieldConfig.typeName) {
+          const typeNameUpper = String(fieldConfig.typeName).toUpperCase();
+          if (typeNameUpper.includes('INT') || typeNameUpper.includes('LONG')) {
+            errorMessage = `El campo "${fieldAlias}": El valor debe ser un número entero`;
+          } else if (typeNameUpper.includes('REAL') || typeNameUpper.includes('FLOAT')) {
+            errorMessage = `El campo "${fieldAlias}": El valor debe ser un número`;
+          } else if (typeNameUpper.includes('DATE')) {
+            errorMessage = `El campo "${fieldAlias}": El valor debe ser una fecha válida`;
+          } else {
+            errorMessage = `El campo "${fieldAlias}": El valor introducido no es válido`;
+          }
+        } else {
+          errorMessage = `El campo "${fieldAlias}": El valor introducido no es válido`;
+        }
+        
+        setErrors(prev => {
+          const newErrors = { ...prev };
+          newErrors[fieldName] = errorMessage;
+          return newErrors;
+        });
+      }
+    }
+  }, [layer, values, config, t]);
 
   // Determina si todos los campos son válidos
-  const isValid = Object.values(errors).every(e => !e);
+  const isValid = Object.values(errors).every(e => !e || e === '');
   const canSave = isDirty && isValid; // solo se puede guardar si hay cambios y todo está válido
+  
+  // Validar todos los campos cuando se intenta guardar
+  const validateAllFields = React.useCallback(() => {
+    if (!layer || !layer.fields) return { valid: true, errors: {} };
+    
+    const newErrors = {};
+    let hasErrors = false;
+    
+    layer.fields.forEach(field => {
+      // Solo validar campos editables
+      if (field.readOnly) return;
+      
+      const value = values[field.name];
+      const validation = validateFieldValue(field, value, values, layer, t);
+      
+      if (!validation.valid && validation.error) {
+        newErrors[field.name] = validation.error;
+        hasErrors = true;
+      }
+    });
+    
+    // Actualizar errores: mantener los existentes y añadir/actualizar los nuevos
+    setErrors(prev => {
+      const updatedErrors = { ...prev };
+      // Añadir o actualizar errores encontrados
+      Object.keys(newErrors).forEach(fieldName => {
+        updatedErrors[fieldName] = newErrors[fieldName];
+      });
+      // Log para depuración
+      if (hasErrors) {
+        console.log('[FormProvider] Errores de validación encontrados:', updatedErrors);
+      }
+      return updatedErrors;
+    });
+    
+    return { valid: !hasErrors, errors: newErrors };
+  }, [layer, values, t]);
 
   // Handler por defecto para guardar
   // Usar useRef para mantener una referencia a los valores actuales
@@ -136,6 +231,32 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
   }, [values]);
   
   const defaultSave = async (data, context) => {
+    // Validar todos los campos antes de guardar
+    const validationResult = validateAllFields();
+    if (!validationResult.valid) {
+      // Si hay errores de validación, no guardar y mostrar notificación con detalles
+      const errorFields = Object.keys(validationResult.errors);
+      const errorMessages = errorFields.map(fieldName => {
+        const field = layer?.fields?.find(f => f.name === fieldName);
+        const fieldAlias = field?.alias || fieldName;
+        const errorMsg = validationResult.errors[fieldName];
+        return `• ${fieldAlias}: ${errorMsg}`;
+      });
+      
+      const errorText = errorMessages.length > 0 
+        ? `Por favor, corrige los siguientes errores:\n${errorMessages.join('\n')}`
+        : 'Por favor, corrige los errores en el formulario antes de guardar';
+      
+      if (notificationManager && notificationManager.addNotification) {
+        notificationManager.addNotification({
+          title: t('ui.qgis.error.validationFailed.title') || 'Error de validación',
+          text: errorText,
+          level: 'error'
+        });
+      }
+      throw new Error('Hay errores de validación en el formulario');
+    }
+    
     // Siempre usar los valores actuales del estado en lugar de los datos pasados
     // Esto evita problemas con closures que capturan valores antiguos
     const currentValues = valuesRef.current;

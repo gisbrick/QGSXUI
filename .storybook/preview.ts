@@ -6,7 +6,8 @@ import 'font-gis/css/font-gis.css';
 import '@fortawesome/fontawesome-free/css/all.css';
 import '../src/index.css';
 // Importar estilos de Leaflet
-import '../public/leaflet/leaflet.css';
+// Nota: Los archivos en public/ se sirven desde la raíz, así que usamos la ruta absoluta
+// Para Storybook, cargamos el CSS dinámicamente ya que no se puede importar directamente
 // Importar sistema de temas (variables CSS)
 import '../src/themes/theme.css';
 
@@ -114,6 +115,18 @@ const preview: Preview = {
   decorators: [
     (Story) => {
       React.useEffect(() => {
+        // Cargar CSS de Leaflet dinámicamente
+        if (typeof document !== 'undefined') {
+          const existingLink = document.querySelector('link[data-leaflet-css]');
+          if (!existingLink) {
+            const link = document.createElement('link');
+            link.setAttribute('data-leaflet-css', 'true');
+            link.rel = 'stylesheet';
+            link.href = '/leaflet/leaflet.css';
+            document.head.appendChild(link);
+          }
+        }
+        
         // Cargar Leaflet si no está disponible
         if (typeof window !== 'undefined' && !window.L) {
           const existingScript = document.querySelector('script[src="/leaflet/leaflet.js"]');

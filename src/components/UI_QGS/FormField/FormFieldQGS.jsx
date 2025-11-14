@@ -91,18 +91,55 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
 
   const widgetType = field.editorWidgetSetup?.type || '';
   const fieldValue = values?.[field.name] ?? null;
-  const fieldError = errors?.[field.name];
+  // Obtener el error del campo, asegurándose de que sea una cadena no vacía
+  const fieldErrorRaw = errors?.[field.name];
+  const fieldError = fieldErrorRaw && String(fieldErrorRaw).trim() ? String(fieldErrorRaw) : undefined;
   const fieldAlias = field.alias || field.name;
+  
+  // Log para depuración (solo cuando hay error)
+  React.useEffect(() => {
+    if (fieldError) {
+      console.log(`[FormFieldQGS] Error en campo ${field.name}:`, fieldError);
+    }
+  }, [fieldError, field.name]);
   const isRequired = field.constraintNotNull || false;
   const isDisabled = readOnly || field.readOnly || false;
 
   // Handler para cambios de valor
   const handleChange = React.useCallback((newValue) => {
-    // Asegurar que el valor es una cadena completa
-    const valueToSet = newValue !== null && newValue !== undefined ? String(newValue) : '';
+    // Convertir el valor según el tipo de campo antes de validar
+    let valueToSet = newValue;
+    
+    // Para campos numéricos, intentar convertir a número
+    if (fieldIs(field, getIntegerTypes()) || fieldIs(field, getFloatTypes())) {
+      if (newValue === '' || newValue === null || newValue === undefined) {
+        valueToSet = null;
+      } else {
+        const numValue = Number(newValue);
+        if (!isNaN(numValue)) {
+          // Para enteros, asegurar que es entero
+          if (fieldIs(field, getIntegerTypes())) {
+            valueToSet = Math.floor(numValue);
+          } else {
+            valueToSet = numValue;
+          }
+        } else {
+          // Si no se puede convertir, mantener como string para que la validación muestre el error
+          valueToSet = String(newValue);
+        }
+      }
+    } else if (fieldIs(field, getBooleanTypes())) {
+      // Para booleanos, convertir a booleano
+      valueToSet = newValue === true || newValue === 1 || newValue === '1' || newValue === 'true';
+    } else {
+      // Para texto y otros, mantener como string
+      valueToSet = newValue !== null && newValue !== undefined ? String(newValue) : '';
+    }
+    
     setValue(field.name, valueToSet);
+    // Validar después de establecer el valor
     validateField(field.name, valueToSet);
-  }, [field.name, setValue, validateField]);
+  }, [field, setValue, validateField]);
 
   // Función para formatear valores según el tipo (para modo lectura)
   const formatValueForDisplay = useMemo(() => {
