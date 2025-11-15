@@ -2,217 +2,97 @@ import React from 'react';
 import PropTypes from 'prop-types';
 import { QgisConfigContext } from './QgisConfigContext';
 import { useUITranslation } from '../../hooks/useTranslation';
-import Spinner from '../UI/Spinner/Spinner';
-
-// Importar traducciones base (para carga inicial rápida)
-import enTranslations from '../../locales/en/translation.json';
-import esTranslations from '../../locales/es/translation.json';
-import { getTranslationsSync, loadTranslations } from '../../utilities/translationsLoader';
-import { normalizeLanguage, DEFAULT_LANGUAGE } from '../../config/languages';
 import { LoadingQGS, NotificationsQGS } from '../UI_QGS';
 import { fetchQgisConfig } from '../../services/qgisConfigFetcher';
-import { fetchAllFeatures } from '../../services/qgisWFSFetcher';
+import { useNotifications } from './hooks/useNotifications';
+import { useQgisTranslations } from './hooks/useQgisTranslations';
+import { useQgisRelations } from './hooks/useQgisRelations';
 
 
 
 /**
  * Proveedor de contexto para la configuración de QGIS
- * Proporciona configuración del servidor QGIS para todos los componentes hijos
+ * 
+ * Este componente proporciona la configuración del servidor QGIS, traducciones,
+ * notificaciones y relaciones a todos los componentes hijos que lo consuman.
+ * 
+ * @param {Object} props - Propiedades del componente
+ * @param {string} props.qgsUrl - URL del servicio QGIS Server
+ * @param {string} props.qgsProjectPath - Ruta del archivo de proyecto QGIS (.qgs o .qgz)
+ * @param {string} props.language - Código del idioma (ej: 'es', 'en', 'ca', 'fr')
+ * @param {string} props.token - Token de autenticación opcional
+ * @param {React.ReactNode} props.children - Componentes hijos que consumirán el contexto
  */
 const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children }) => {
+  // Estado de la configuración del proyecto QGIS
+  const [config, setConfig] = React.useState(null);
 
-  const [config, setConfig] = React.useState();
-  const [translations, setTranslations] = React.useState(() => {
-    // Carga inicial síncrona con traducciones base
-    const normalizedLang = normalizeLanguage(language);
-    const availableTranslations = { es: esTranslations, en: enTranslations };
-    return getTranslationsSync(normalizedLang, availableTranslations);
-  });
-
-  // Cargar traducciones dinámicamente si el idioma no está en las traducciones base
-  React.useEffect(() => {
-    const normalizedLang = normalizeLanguage(language);
-    const availableTranslations = { es: esTranslations, en: enTranslations };
-    
-    // Si el idioma ya está disponible síncronamente, usarlo
-    if (availableTranslations[normalizedLang]) {
-      setTranslations(availableTranslations[normalizedLang]);
-      return;
-    }
-    
-    // Si no, cargarlo dinámicamente
-    loadTranslations(normalizedLang).then(loadedTranslations => {
-      if (loadedTranslations && Object.keys(loadedTranslations).length > 0) {
-        setTranslations(loadedTranslations);
-      }
-    }).catch(error => {
-      console.error(`Error cargando traducciones para ${normalizedLang}:`, error);
-      // Mantener las traducciones actuales en caso de error
-    });
-  }, [language]);
-
+  // Hook para gestionar traducciones
+  const translations = useQgisTranslations(language);
   const { t } = useUITranslation(language, translations);
 
-  // Notificación manager
-  const [notifications, setNotifications] = React.useState([]);
+  // Hook para gestionar notificaciones
+  const { notifications, notificationManager } = useNotifications();
 
-  const [relationsLoaded, setRelationsLoaded] = React.useState(false);
-  const [relations, setRelations] = React.useState([]);
-
-  // Método para eliminar una notificación (usar useCallback para estabilidad)
-  const removeNotification = React.useCallback((id) => {
-    setNotifications(prev => prev.filter(n => n.id !== id));
-  }, []);
-
-  // Método para añadir una notificación usando el componente Message (usar useCallback)
-  const addNotification = React.useCallback(({ title, text, level }) => {
-    // Normalizar el nivel: 'warn' -> 'warning', 'success' -> 'success', etc.
-    const normalizedLevel = level === 'warn' ? 'warning' : (level || 'info');
-    
-    // Validar que el nivel sea uno de los permitidos por Message
-    const validLevels = ['info', 'success', 'warning', 'error'];
-    const messageLevel = validLevels.includes(normalizedLevel) ? normalizedLevel : 'info';
-    
-    let id = Date.now() + Math.random();
-    setNotifications(prev => [
-      ...prev,
-      {
-        id: id,
-        title,
-        text,
-        level: messageLevel // 'info', 'success', 'warning', 'error' - compatible con Message component
-      }
-    ]);
-
-    // Eliminar la notificación después de 5 segundos
-    setTimeout(() => {
-      removeNotification(id);
-    }, 5000);
-  }, [removeNotification]);
-  
-  // Métodos de conveniencia para añadir notificaciones por tipo (usar useCallback)
-  const addSuccess = React.useCallback((title, text) => addNotification({ title, text, level: 'success' }), [addNotification]);
-  const addError = React.useCallback((title, text) => addNotification({ title, text, level: 'error' }), [addNotification]);
-  const addWarning = React.useCallback((title, text) => addNotification({ title, text, level: 'warning' }), [addNotification]);
-  const addInfo = React.useCallback((title, text) => addNotification({ title, text, level: 'info' }), [addNotification]);
-
-  // Exponer el manager en el contexto con métodos de conveniencia (usar useMemo para evitar recreación)
-  // No incluir 'notifications' en el objeto para evitar re-renders cuando cambia el array
-  const notificationManager = React.useMemo(() => ({
-    addNotification,
-    addSuccess,
-    addError,
-    addWarning,
-    addInfo,
-    removeNotification
-  }), [addNotification, addSuccess, addError, addWarning, addInfo, removeNotification]);
+  // Hook para cargar relaciones del proyecto
+  const { relations, relationsLoaded } = useQgisRelations(config, qgsUrl, qgsProjectPath, token);
 
 
-  // Crear el valor del contexto con la configuración proporcionada (usar useMemo para evitar recreación)
-  const contextValue = React.useMemo(() => {
-    const value = {
-      config, // UConfig
-      qgsUrl, // URL del servicio QGIS
-      qgsProjectPath, // Path de proyecto QGIS
-      language, // Idioma ('en' o 'es')   
-      relations, // Relaciones cargadas del proyecto QGIS
-      token, // Token de autenticación
-      loading: false, // Estado de carga
-      t, // Función de traducción disponible para todos los componentes hijos
-      translations, // Traducciones completas disponibles para casos especiales
-      notificationManager // Manager de notificaciones
-    };
-    console.log('[QgisConfigProvider] contextValue creado:', {
-      'language': value.language,
-      'language prop recibida': language,
-      'translations disponible': !!value.translations,
-      't disponible': typeof value.t === 'function',
-      'ui.common.save': value.translations?.ui?.common?.save,
-      'ui.common.cancel': value.translations?.ui?.common?.cancel
-    });
-    return value;
-  }, [config, qgsUrl, qgsProjectPath, language, relations, token, t, translations, notificationManager]);
+  /**
+   * Valor del contexto que se proporciona a los componentes hijos
+   * Se memoiza para evitar recreaciones innecesarias
+   */
+  const contextValue = React.useMemo(() => ({
+    config,                    // Configuración del proyecto QGIS (UConfig)
+    qgsUrl,                    // URL del servicio QGIS Server
+    qgsProjectPath,            // Ruta del archivo de proyecto QGIS
+    language,                  // Código del idioma actual
+    relations,                 // Relaciones cargadas del proyecto QGIS
+    token,                     // Token de autenticación (opcional)
+    loading: false,            // Estado de carga (siempre false, se maneja con config)
+    t,                         // Función de traducción
+    translations,              // Objeto completo de traducciones
+    notificationManager        // Manager de notificaciones
+  }), [config, qgsUrl, qgsProjectPath, language, relations, token, t, translations, notificationManager]);
 
+  /**
+   * Efecto para cargar la configuración del proyecto QGIS al montar el componente
+   */
   React.useEffect(() => {
     fetchQgisConfig(qgsUrl, qgsProjectPath, token)
       .then(config => {
         setConfig(config);
       })
       .catch(error => {
+        console.error('Error al cargar configuración QGIS:', error);
         notificationManager.addNotification({
           title: t('ui.qgis.error'),
           text: t('ui.qgis.errorFetchingConfig'),
           level: 'error'
         });
       });
-  }, []);
+  }, [qgsUrl, qgsProjectPath, token, notificationManager, t]);
 
 
-  React.useEffect(() => {
-    if (config) {
-      const layersArray = Object.values(config.layers || {});
-      const relationPromises = [];
-
-      for (const relationName in config.relations || {}) {
-        const relation = config.relations[relationName];
-
-        // Asociamos las capas correctamente
-        relation.referencedLayer = layersArray.find(
-          layer => layer.id === relation.referencedLayerId
-        );
-        relation.referencingLayer = layersArray.find(
-          layer => layer.id === relation.referencingLayerId
-        );
-
-        if (!relation.referencingLayer) {
-          console.warn('No se encontró la capa referenciada:', relation.referencingLayerId);
-          continue; // Salta esta relación si falta la capa
-        }
-
-        // Creamos la promesa del fetch
-        const promise = fetchAllFeatures(
-          qgsUrl,
-          qgsProjectPath,
-          relation.referencingLayer.name,
-          '',
-          500,
-          token
-        ).then(values => {
-          relation.referencingLayerValues = values;
-          return relation;
-        }).catch(error => {
-          console.warn(`Error al cargar features de la capa ${relation.referencingLayer.name}:`, error);
-          // Retornar relación sin valores en caso de error
-          relation.referencingLayerValues = [];
-          return relation;
-        });
-
-        relationPromises.push(promise);
-      }
-
-      Promise.all(relationPromises).then(resolvedRelations => {
-        setRelations(resolvedRelations);
-        setRelationsLoaded(true);
-      });
-    }
-
-  }, [config]);
 
 
   return (
     <QgisConfigContext.Provider value={contextValue}>
-      {/* Renderizar el componente de notificaciones */}
+      {/* Componente de notificaciones */}
       <NotificationsQGS
         notifications={notifications}
-        removeNotification={removeNotification}
+        removeNotification={notificationManager.removeNotification}
       />
-      {/* Renderizar los hijos del proveedor */}
+      
+      {/* Renderizar hijos solo cuando la configuración y relaciones estén cargadas */}
       {config && relationsLoaded && children}
-      {/* Renderizar el componente de carga */}
+      
+      {/* Mostrar indicador de carga mientras se carga la configuración */}
       {!config && !relationsLoaded && qgsUrl && qgsProjectPath && (
-        <LoadingQGS></LoadingQGS>
+        <LoadingQGS />
       )}
-      {/* Renderizar el componente de error */}
+      
+      {/* Mostrar error si faltan parámetros de configuración */}
       {!config && (!qgsUrl || !qgsProjectPath) && (
         <div style={{ padding: '20px', color: '#d32f2f', textAlign: 'center' }}>
           {t('ui.qgis.configurationNotDefined')}
@@ -224,11 +104,11 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
 
 
 QgisConfigProvider.propTypes = {
-  qgsUrl: PropTypes.string.isRequired, // URL del servicio QGIS
-  qgsProjectPath: PropTypes.string.isRequired, //Nombre de proyecto QGIS
-  language: PropTypes.oneOf(['en', 'es']).isRequired, // Idioma ('en' o 'es')
-  token: PropTypes.string, // Token opcional para autenticación
-  children: PropTypes.node.isRequired, // Componentes hijos que usarán el contexto
+  qgsUrl: PropTypes.string.isRequired,        // URL del servicio QGIS Server
+  qgsProjectPath: PropTypes.string.isRequired, // Ruta del archivo de proyecto QGIS
+  language: PropTypes.string.isRequired,     // Código del idioma (ej: 'es', 'en', 'ca', 'fr')
+  token: PropTypes.string,                    // Token de autenticación opcional
+  children: PropTypes.node.isRequired         // Componentes hijos que consumirán el contexto
 };
 
 export default QgisConfigProvider;
