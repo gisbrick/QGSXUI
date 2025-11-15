@@ -10,7 +10,7 @@ export const QgisConfigContext = React.createContext({
   qgsUrl: null, // URL del servicio QGIS
   qgsProjectPath: null, // Path de proyecto QGIS
   relations: [], // Relaciones dentro del proyecto QGIS
-  language: null, // Idioma ('en' o 'es')
+  language: null, // Código del idioma (ej: 'es', 'en', 'ca', 'fr')
   config: null, // Configuración del proyecto QGIS
   loading: false, // Estado de carga
   t: () => '', // Función de traducción

@@ -8,9 +8,11 @@ import { QgisConfigContext } from '../../../QGS/QgisConfigContext';
 import { useUITranslation } from '../../../../hooks/useTranslation';
 import './FeatureAttributesDialog.css';
 
-// Importar traducciones
+// Importar traducciones base
 import enTranslations from '../../../../locales/en/translation.json';
 import esTranslations from '../../../../locales/es/translation.json';
+import { getTranslationsSync } from '../../../../utilities/translationsLoader';
+import { normalizeLanguage } from '../../../../config/languages';
 
 /**
  * Componente para mostrar los atributos de una feature en modo lectura o edición
@@ -35,8 +37,23 @@ const FeatureAttributesDialog = ({
   // TODOS LOS HOOKS DEBEN IR AL PRINCIPIO, ANTES DE CUALQUIER RETURN CONDICIONAL
   const qgisContext = useContext(QgisConfigContext);
   const contextT = qgisContext?.t || tProp;
-  const contextLanguage = qgisContext?.language || language || 'es';
-  const finalLanguage = language || contextLanguage;
+  // CRÍTICO: Usar SOLO el idioma del contexto QGIS, ignorar la prop language
+  // La prop language puede estar desactualizada, pero el contexto siempre tiene el idioma correcto del mapa
+  // Usar useMemo para que se actualice cuando cambie el idioma en el contexto
+  const finalLanguage = useMemo(() => {
+    // Priorizar siempre el contexto sobre la prop, porque el contexto se actualiza cuando cambia el idioma del mapa
+    const lang = qgisContext?.language || language || 'es';
+    console.log('[FeatureAttributesDialog] finalLanguage calculado:', {
+      'qgisContext?.language': qgisContext?.language,
+      'language (prop)': language,
+      'finalLanguage': lang,
+      'qgisContext disponible': !!qgisContext,
+      'qgisContext.t disponible': !!(qgisContext?.t),
+      'qgisContext.translations disponible': !!(qgisContext?.translations),
+      'NOTA': 'Usando qgisContext?.language como prioridad para reflejar el idioma actual del mapa'
+    });
+    return lang;
+  }, [qgisContext?.language, language]);
   
   // Usar props si están disponibles, sino usar contexto
   const config = configProp || qgisContext?.config;
@@ -46,14 +63,32 @@ const FeatureAttributesDialog = ({
   const notificationManager = notificationManagerProp || qgisContext?.notificationManager;
 
   // Crear traducciones - DEBE IR ANTES DE CUALQUIER RETURN
-  const translations = useMemo(() => 
-    finalLanguage === 'es' ? esTranslations : enTranslations,
-    [finalLanguage]
-  );
+  // Reaccionar a cambios en el idioma del contexto
+  // IMPORTANTE: Usar el idioma del contexto QGIS directamente, no finalLanguage que puede estar desactualizado
+  const translations = useMemo(() => {
+    // Priorizar el idioma del contexto QGIS sobre finalLanguage
+    const langToUse = normalizeLanguage(qgisContext?.language || finalLanguage || 'es');
+    const availableTranslations = { es: esTranslations, en: enTranslations };
+    const trans = getTranslationsSync(langToUse, availableTranslations);
+    console.log('[FeatureAttributesDialog] translations seleccionadas:', {
+      'qgisContext?.language': qgisContext?.language,
+      'finalLanguage': finalLanguage,
+      'langToUse': langToUse,
+      'tipo': langToUse === 'es' ? 'esTranslations' : 'enTranslations',
+      'translations disponible': !!trans,
+      'ui.common.save': trans?.ui?.common?.save,
+      'ui.common.cancel': trans?.ui?.common?.cancel
+    });
+    return trans;
+  }, [finalLanguage, qgisContext?.language]);
   const { t: tempT } = useUITranslation(finalLanguage, translations);
   
   // Usar la función de traducción del contexto si está disponible, sino usar la temporal
-  const finalT = contextT || tempT;
+  // Priorizar siempre la función del contexto para que use el idioma correcto
+  // Usar useMemo para que se actualice cuando cambie el idioma o la función de traducción
+  const finalT = useMemo(() => {
+    return contextT || tempT;
+  }, [contextT, tempT, finalLanguage]);
 
   // Extraer el featureId del feature.id (formato: "layerName.featureId")
   const featureId = React.useMemo(() => {
@@ -88,7 +123,7 @@ const FeatureAttributesDialog = ({
     return `${baseTitle}${layerLabel ? ` - ${layerLabel}` : ''}${featureLabel ? ` - ${featureLabel}` : ''}`;
   }, [layerName, feature, featureId, config, readOnly]);
 
-  // Función de traducción
+  // Función de traducción - debe reaccionar a cambios en el idioma
   const translate = React.useCallback(
     (key) => {
       if (typeof finalT === 'function') {
@@ -99,7 +134,7 @@ const FeatureAttributesDialog = ({
       }
       return key;
     },
-    [finalT]
+    [finalT] // Reaccionar a cambios en la función de traducción (que ya incluye el idioma)
   );
 
   // Crear contextValue - DEBE IR ANTES DE CUALQUIER RETURN
@@ -165,11 +200,12 @@ const FeatureAttributesDialog = ({
       }, [values]);
       
       // Obtener la función de traducción directamente del contexto QGIS
-      const qgisContext = useContext(QgisConfigContext);
+      // Usar el contexto del componente padre (FeatureAttributesDialog) que ya tiene acceso a finalLanguage
+      const innerQgisContext = useContext(QgisConfigContext);
       
       // Crear función de traducción con fallbacks apropiados
-      // La función t del contexto no funciona correctamente (devuelve cadenas vacías),
-      // así que accedemos directamente a las traducciones
+      // Función de traducción que prioriza el contexto QGIS y reacciona a cambios de idioma
+      // Usar finalLanguage del closure del componente padre para asegurar que reacciona a cambios
       const translateFunction = React.useMemo(() => {
         // Función helper para buscar en las traducciones anidadas
         const getTranslation = (translations, key) => {
@@ -193,25 +229,87 @@ const FeatureAttributesDialog = ({
           return key;
         };
         
-        // Prioridad: 1) traducciones directas del contexto, 2) función del closure, 3) función que devuelve la clave
-        if (qgisContext.translations) {
-          return (key) => {
-            const value = getTranslation(qgisContext.translations, key);
-            return value;
-          };
-        }
-        if (typeof translate === 'function') {
-          return (key) => {
-            const value = translate(key);
+        // Prioridad: 1) traducciones directas del contexto (usando el idioma correcto), 2) función t del contexto, 3) función del closure, 4) función que devuelve la clave
+        // Usar el contexto interno primero, luego el del closure
+        const contextToUse = innerQgisContext || qgisContext;
+        
+        // Obtener las traducciones correctas según el idioma del contexto
+        // Esto es crítico porque las traducciones deben corresponder al idioma actual del mapa
+        const contextLanguage = contextToUse?.language || finalLanguage || 'es';
+        const availableTranslations = { es: esTranslations, en: enTranslations };
+        const contextTranslations = getTranslationsSync(contextLanguage, availableTranslations);
+        
+        return (key) => {
+          console.log('[FormActionsComponent] translateFunction llamado con key:', key);
+          console.log('[FormActionsComponent] contextToUse:', {
+            'disponible': !!contextToUse,
+            't disponible': !!(contextToUse?.t),
+            'tipo t': typeof contextToUse?.t,
+            'translations disponible': !!(contextToUse?.translations),
+            'language': contextToUse?.language,
+            'contextLanguage': contextLanguage,
+            'innerQgisContext': !!innerQgisContext,
+            'qgisContext (closure)': !!qgisContext,
+            'contextTranslations.ui.common.save': contextTranslations?.ui?.common?.save,
+            'contextTranslations.ui.common.cancel': contextTranslations?.ui?.common?.cancel
+          });
+          
+          // PRIORIDAD 1: Usar las traducciones correctas según el idioma del contexto
+          // Esto asegura que siempre usemos el idioma correcto, incluso si el contexto tiene traducciones desactualizadas
+          const directValue = getTranslation(contextTranslations, key);
+          if (directValue && directValue !== key) {
+            console.log('[FormActionsComponent] Usando contextTranslations directas:', {
+              'key': key,
+              'value': directValue
+            });
+            return directValue;
+          }
+          
+          // PRIORIDAD 2: Intentar con las traducciones del contexto (pueden estar desactualizadas)
+          if (contextToUse?.translations) {
+            const value = getTranslation(contextToUse.translations, key);
+            console.log('[FormActionsComponent] Intentando con contextToUse.translations:', {
+              'key': key,
+              'value': value,
+              'value !== key': value !== key
+            });
+            if (value && value !== key) {
+              return value;
+            }
+          }
+          
+          // PRIORIDAD 3: Intentar con la función t del contexto
+          if (contextToUse?.t && typeof contextToUse.t === 'function') {
+            const value = contextToUse.t(key);
+            console.log('[FormActionsComponent] Intentando con contextToUse.t:', {
+              'key': key,
+              'value': value,
+              'value !== key': value !== key,
+              'value válido': !!(value && value !== '' && value !== null && value !== undefined && value !== key)
+            });
             if (value && value !== '' && value !== null && value !== undefined && value !== key) {
               return value;
             }
-            return key;
-          };
-        }
-        // Fallback: devolver la clave directamente
-        return (key) => key;
-      }, [qgisContext.translations, translate]);
+          }
+          
+          // PRIORIDAD 4: Intentar con la función translate del closure
+          if (typeof translate === 'function') {
+            const value = translate(key);
+            console.log('[FormActionsComponent] Intentando con translate (closure):', {
+              'key': key,
+              'value': value,
+              'value válido': !!(value && value !== '' && value !== null && value !== undefined && value !== key)
+            });
+            if (value && value !== '' && value !== null && value !== undefined && value !== key) {
+              return value;
+            }
+          }
+          
+          console.log('[FormActionsComponent] Fallback: devolviendo key:', key);
+          // Fallback: devolver la clave directamente
+          return key;
+        };
+      }, [innerQgisContext?.translations, innerQgisContext?.t, innerQgisContext?.language, qgisContext?.translations, qgisContext?.t, qgisContext?.language, translate, finalLanguage, esTranslations, enTranslations]);
       
       const [isSaving, setIsSaving] = useState(false);
       
@@ -259,8 +357,22 @@ const FeatureAttributesDialog = ({
         const saveKey = isSaving ? 'ui.common.saving' : 'ui.common.save';
         const cancelKey = 'ui.common.cancel';
         
+        console.log('[FormActionsComponent] actionsElement - antes de traducir:', {
+          'saveKey': saveKey,
+          'cancelKey': cancelKey,
+          'finalLanguage': finalLanguage,
+          'translateFunction disponible': typeof translateFunction === 'function'
+        });
+        
         const saveText = translateFunction(saveKey);
         const cancelText = translateFunction(cancelKey);
+        
+        console.log('[FormActionsComponent] actionsElement - después de traducir:', {
+          'saveKey': saveKey,
+          'saveText': saveText,
+          'cancelKey': cancelKey,
+          'cancelText': cancelText
+        });
         
         return (
           <div className="feature-attributes-dialog__footer-actions">
@@ -270,18 +382,18 @@ const FeatureAttributesDialog = ({
               disabled={!canSave || isSaving}
               className="qgs-form-button qgs-form-button--primary"
             >
-              {saveText || 'Guardar'}
+              {saveText || saveKey}
             </button>
             <button 
               type="button" 
               onClick={() => handleCancelClickRef.current()}
               className="qgs-form-button qgs-form-button--secondary"
             >
-              {cancelText || 'Cancelar'}
+              {cancelText || cancelKey}
             </button>
           </div>
         );
-      }, [canSave, isSaving, translateFunction]);
+      }, [canSave, isSaving, translateFunction, finalLanguage]);
       
       // Usar el callback ref para pasar el elemento al padre
       // Usar una key única basada en canSave e isSaving para comparar
@@ -301,7 +413,7 @@ const FeatureAttributesDialog = ({
     };
 
     return <FormActionsComponent />;
-  }, [readOnly, translate, setFooterActionsCallbackRef]);
+  }, [readOnly, translate, setFooterActionsCallbackRef, finalLanguage, qgisContext?.language, qgisContext?.t, qgisContext?.translations]);
 
   // AHORA SÍ PODEMOS HACER RETURNS CONDICIONALES
   if (!isOpen) {

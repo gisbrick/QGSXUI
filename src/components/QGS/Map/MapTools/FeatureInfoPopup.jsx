@@ -22,14 +22,25 @@ const FeatureInfoPopup = ({
   qgsUrl: qgsUrlProp = null,
   qgsProjectPath: qgsProjectPathProp = null,
   token: tokenProp = null,
-  notificationManager: notificationManagerProp = null
+  notificationManager: notificationManagerProp = null,
+  language: languageProp = null // Prop para el idioma (cuando se renderiza fuera del contexto)
 }) => {
   const qgisContext = React.useContext(QgisConfigContext);
   const contextConfig = qgisContext?.config;
   const contextT = qgisContext?.t;
   // Usar notificationManager de prop primero, luego del contexto
   const notificationManager = notificationManagerProp || qgisContext?.notificationManager;
-  const language = qgisContext?.language || 'es';
+  // CRÍTICO: Priorizar la prop language sobre el contexto, porque cuando se renderiza con createRoot
+  // el contexto puede no estar disponible o tener el idioma incorrecto
+  // La prop language viene directamente de InfoClick que tiene acceso al contexto correcto
+  const language = languageProp || qgisContext?.language || 'es';
+  console.log('[FeatureInfoPopup] Idioma detectado:', {
+    'languageProp': languageProp,
+    'qgisContext?.language': qgisContext?.language,
+    'language final': language,
+    'qgisContext disponible': !!qgisContext,
+    'NOTA': 'Priorizando languageProp porque viene del contexto correcto en InfoClick'
+  });
 
   const translate = React.useCallback(
     (key) => {
@@ -847,8 +858,15 @@ export const renderFeatureInfoPopup = (container, features, map, onClose, config
     qgsUrl = null,
     qgsProjectPath = null,
     token = null,
-    notificationManager = null
+    notificationManager = null,
+    language = 'es' // Idioma del contexto QGIS
   } = options || {};
+  console.log('[renderFeatureInfoPopup] Opciones recibidas:', {
+    'language': language,
+    'qgsUrl': qgsUrl,
+    'qgsProjectPath': qgsProjectPath,
+    'config disponible': !!config
+  });
   const root = createRoot(container);
   root.render(
     <FeatureInfoPopup
@@ -862,6 +880,7 @@ export const renderFeatureInfoPopup = (container, features, map, onClose, config
       qgsProjectPath={qgsProjectPath}
       token={token}
       notificationManager={notificationManager}
+      language={language} // Pasar el idioma al componente
     />
   );
   return root;

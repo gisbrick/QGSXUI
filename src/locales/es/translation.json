@@ -167,7 +167,43 @@
       "error": "Error en la conexión QGIS",
       "errorFetchingConfig": "Error al obtener la configuración QGIS",
       "connected": "Conectado a QGIS",
-      "service": "Servicio QGIS"
+      "service": "Servicio QGIS",
+      "validation": {
+        "required": "Este campo debe rellenarse de manera obligatoria",
+        "requiredWithField": "El campo \"{field}\" debe rellenarse de manera obligatoria",
+        "invalidType": "El tipo de dato introducido no es válido",
+        "invalidTypeWithField": "El campo \"{field}\": El tipo de dato introducido no es válido",
+        "greaterThanNow": "La fecha/hora debe ser posterior a la fecha/hora actual",
+        "greaterThanNowWithField": "El campo \"{field}\": La fecha/hora debe ser posterior a la fecha/hora actual",
+        "smallerThanNow": "La fecha/hora debe ser anterior a la fecha/hora actual",
+        "smallerThanNowWithField": "El campo \"{field}\": La fecha/hora debe ser anterior a la fecha/hora actual",
+        "greaterThanField": "El valor debe ser mayor que el valor del campo \"{field}\"",
+        "greaterEqualThanField": "El valor debe ser mayor o igual que el valor del campo \"{field}\"",
+        "smallerThanField": "El valor debe ser menor que el valor del campo \"{field}\"",
+        "maxLength": "El texto no puede tener más de {max} caracteres",
+        "maxLengthWithField": "El campo \"{field}\": El texto no puede tener más de {max} caracteres",
+        "dependOn": "Este campo solo puede tener valor cuando el campo \"{field}\" cumple la condición requerida",
+        "dni": "El DNI introducido no es válido",
+        "nie": "El NIE introducido no es válido",
+        "cif": "El CIF introducido no es válido",
+        "dniNieCif": "El documento (DNI/NIE/CIF) introducido no es válido",
+        "integerType": "El valor debe ser un número entero",
+        "numberType": "El valor debe ser un número",
+        "dateType": "El valor debe ser una fecha válida",
+        "timeType": "El valor debe ser una hora válida (HH:mm o HH:mm:ss)",
+        "booleanType": "El valor debe ser verdadero o falso",
+        "maxLengthField": "El texto no puede tener más de {length} caracteres",
+        "maxLengthFieldWithField": "El campo \"{field}\": El texto no puede tener más de {length} caracteres",
+        "maxDecimals": "El número no puede tener más de {precision} decimales",
+        "maxDecimalsWithField": "El campo \"{field}\": El número no puede tener más de {precision} decimales",
+        "invalidValue": "El valor introducido no es válido"
+      },
+      "error": {
+        "validationFailed": {
+          "title": "Error de validación",
+          "message": "Por favor, corrige los errores en el formulario antes de guardar"
+        }
+      }
     },
     "map": {
       "loading": "Cargando mapa...",

@@ -162,7 +162,43 @@
       "error": "Error in QGIS connection",
       "errorFetchingConfig": "Error fetching QGIS configuration",
       "connected": "Connected to QGIS",
-      "service": "QGIS Service"
+      "service": "QGIS Service",
+      "validation": {
+        "required": "This field must be filled in mandatory",
+        "requiredWithField": "The field \"{field}\" must be filled in mandatory",
+        "invalidType": "The entered data type is not valid",
+        "invalidTypeWithField": "The field \"{field}\": The entered data type is not valid",
+        "greaterThanNow": "The date/time must be after the current date/time",
+        "greaterThanNowWithField": "The field \"{field}\": The date/time must be after the current date/time",
+        "smallerThanNow": "The date/time must be before the current date/time",
+        "smallerThanNowWithField": "The field \"{field}\": The date/time must be before the current date/time",
+        "greaterThanField": "The value must be greater than the value of field \"{field}\"",
+        "greaterEqualThanField": "The value must be greater than or equal to the value of field \"{field}\"",
+        "smallerThanField": "The value must be less than the value of field \"{field}\"",
+        "maxLength": "The text cannot have more than {max} characters",
+        "maxLengthWithField": "The field \"{field}\": The text cannot have more than {max} characters",
+        "dependOn": "This field can only have a value when field \"{field}\" meets the required condition",
+        "dni": "The entered DNI is not valid",
+        "nie": "The entered NIE is not valid",
+        "cif": "The entered CIF is not valid",
+        "dniNieCif": "The entered document (DNI/NIE/CIF) is not valid",
+        "integerType": "The value must be an integer number",
+        "numberType": "The value must be a number",
+        "dateType": "The value must be a valid date",
+        "timeType": "The value must be a valid time (HH:mm or HH:mm:ss)",
+        "booleanType": "The value must be true or false",
+        "maxLengthField": "The text cannot have more than {length} characters",
+        "maxLengthFieldWithField": "The field \"{field}\": The text cannot have more than {length} characters",
+        "maxDecimals": "The number cannot have more than {precision} decimals",
+        "maxDecimalsWithField": "The field \"{field}\": The number cannot have more than {precision} decimals",
+        "invalidValue": "The entered value is not valid"
+      },
+      "error": {
+        "validationFailed": {
+          "title": "Validation error",
+          "message": "Please correct the errors in the form before saving"
+        }
+      }
     },
     "map": {
       "loading": "Loading map...",

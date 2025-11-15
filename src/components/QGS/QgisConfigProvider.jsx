@@ -4,9 +4,11 @@ import { QgisConfigContext } from './QgisConfigContext';
 import { useUITranslation } from '../../hooks/useTranslation';
 import Spinner from '../UI/Spinner/Spinner';
 
-// Importar traducciones
+// Importar traducciones base (para carga inicial rápida)
 import enTranslations from '../../locales/en/translation.json';
 import esTranslations from '../../locales/es/translation.json';
+import { getTranslationsSync, loadTranslations } from '../../utilities/translationsLoader';
+import { normalizeLanguage, DEFAULT_LANGUAGE } from '../../config/languages';
 import { LoadingQGS, NotificationsQGS } from '../UI_QGS';
 import { fetchQgisConfig } from '../../services/qgisConfigFetcher';
 import { fetchAllFeatures } from '../../services/qgisWFSFetcher';
@@ -20,9 +22,35 @@ import { fetchAllFeatures } from '../../services/qgisWFSFetcher';
 const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children }) => {
 
   const [config, setConfig] = React.useState();
+  const [translations, setTranslations] = React.useState(() => {
+    // Carga inicial síncrona con traducciones base
+    const normalizedLang = normalizeLanguage(language);
+    const availableTranslations = { es: esTranslations, en: enTranslations };
+    return getTranslationsSync(normalizedLang, availableTranslations);
+  });
 
-  // Obtener traducciones según el idioma
-  const translations = language === 'es' ? esTranslations : enTranslations;
+  // Cargar traducciones dinámicamente si el idioma no está en las traducciones base
+  React.useEffect(() => {
+    const normalizedLang = normalizeLanguage(language);
+    const availableTranslations = { es: esTranslations, en: enTranslations };
+    
+    // Si el idioma ya está disponible síncronamente, usarlo
+    if (availableTranslations[normalizedLang]) {
+      setTranslations(availableTranslations[normalizedLang]);
+      return;
+    }
+    
+    // Si no, cargarlo dinámicamente
+    loadTranslations(normalizedLang).then(loadedTranslations => {
+      if (loadedTranslations && Object.keys(loadedTranslations).length > 0) {
+        setTranslations(loadedTranslations);
+      }
+    }).catch(error => {
+      console.error(`Error cargando traducciones para ${normalizedLang}:`, error);
+      // Mantener las traducciones actuales en caso de error
+    });
+  }, [language]);
+
   const { t } = useUITranslation(language, translations);
 
   // Notificación manager
@@ -81,18 +109,29 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
 
 
   // Crear el valor del contexto con la configuración proporcionada (usar useMemo para evitar recreación)
-  const contextValue = React.useMemo(() => ({
-    config, // UConfig
-    qgsUrl, // URL del servicio QGIS
-    qgsProjectPath, // Path de proyecto QGIS
-    language, // Idioma ('en' o 'es')   
-    relations, // Relaciones cargadas del proyecto QGIS
-    token, // Token de autenticación
-    loading: false, // Estado de carga
-    t, // Función de traducción disponible para todos los componentes hijos
-    translations, // Traducciones completas disponibles para casos especiales
-    notificationManager // Manager de notificaciones
-  }), [config, qgsUrl, qgsProjectPath, language, relations, token, t, translations, notificationManager]);
+  const contextValue = React.useMemo(() => {
+    const value = {
+      config, // UConfig
+      qgsUrl, // URL del servicio QGIS
+      qgsProjectPath, // Path de proyecto QGIS
+      language, // Idioma ('en' o 'es')   
+      relations, // Relaciones cargadas del proyecto QGIS
+      token, // Token de autenticación
+      loading: false, // Estado de carga
+      t, // Función de traducción disponible para todos los componentes hijos
+      translations, // Traducciones completas disponibles para casos especiales
+      notificationManager // Manager de notificaciones
+    };
+    console.log('[QgisConfigProvider] contextValue creado:', {
+      'language': value.language,
+      'language prop recibida': language,
+      'translations disponible': !!value.translations,
+      't disponible': typeof value.t === 'function',
+      'ui.common.save': value.translations?.ui?.common?.save,
+      'ui.common.cancel': value.translations?.ui?.common?.cancel
+    });
+    return value;
+  }, [config, qgsUrl, qgsProjectPath, language, relations, token, t, translations, notificationManager]);
 
   React.useEffect(() => {
     fetchQgisConfig(qgsUrl, qgsProjectPath, token)

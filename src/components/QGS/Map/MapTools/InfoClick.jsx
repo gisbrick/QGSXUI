@@ -13,6 +13,13 @@ const InfoClick = ({ active, onActiveChange }) => {
   const { mapInstance, config, qgsUrl, qgsProjectPath, notificationManager, t } = useMap() || {};
   const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
+  // Obtener el idioma del contexto QGIS
+  const language = qgisConfig?.language || 'es';
+  console.log('[InfoClick] Idioma detectado:', {
+    'qgisConfig?.language': qgisConfig?.language,
+    'language final': language,
+    'qgisConfig disponible': !!qgisConfig
+  });
   
   // Referencia para el popup y el root de React
   const popupRef = useRef(null);
@@ -187,7 +194,8 @@ const InfoClick = ({ active, onActiveChange }) => {
             qgsUrl: qgsUrl,
             qgsProjectPath: qgsProjectPath,
             token: qgisConfig?.token || null,
-            notificationManager: notificationManager || qgisConfig?.notificationManager || null
+            notificationManager: notificationManager || qgisConfig?.notificationManager || null,
+            language: language // Pasar el idioma del contexto QGIS
           });
           
           reactRootRef.current = root;

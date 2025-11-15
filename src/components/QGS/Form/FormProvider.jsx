@@ -10,7 +10,7 @@ const FormContext = createContext(null);
 export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = false, onSave: onSaveProp = null, children }) => {
 
   // Obtener configuración QGIS y función de traducción del contexto
-  const { config, t, notificationManager, qgsUrl, qgsProjectPath, token } = useContext(QgisConfigContext);
+  const { config, t, notificationManager, qgsUrl, qgsProjectPath, token, language, translations } = useContext(QgisConfigContext);
   
   // Obtener action handlers personalizables
   const { getHandler } = useActionHandlers();
@@ -132,7 +132,8 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
     
     // Usar el nuevo sistema de validación completo
     // Usar los valores actuales del estado para validaciones comparativas
-    const validation = validateFieldValue(fieldConfig, value, values, layer, t);
+    // Pasar también el idioma y las traducciones para el fallback
+    const validation = validateFieldValue(fieldConfig, value, values, layer, t, language, translations);
     
     if (validation.valid) {
       // Si es válido, limpiar el error
@@ -155,22 +156,28 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
         const fieldAlias = fieldConfig.alias || fieldConfig.name || fieldName;
         let errorMessage = '';
         
-        // Intentar determinar el tipo de error
+        // Intentar determinar el tipo de error usando traducciones
         if (fieldConfig.constraintNotNull && (value === null || value === undefined || value === '')) {
-          errorMessage = `El campo "${fieldAlias}" debe rellenarse de manera obligatoria`;
+          const requiredMsg = t('ui.qgis.validation.required') || 'Este campo debe rellenarse de manera obligatoria';
+          errorMessage = requiredMsg.replace('Este campo', `El campo "${fieldAlias}"`);
         } else if (fieldConfig.typeName) {
           const typeNameUpper = String(fieldConfig.typeName).toUpperCase();
           if (typeNameUpper.includes('INT') || typeNameUpper.includes('LONG')) {
-            errorMessage = `El campo "${fieldAlias}": El valor debe ser un número entero`;
+            const msg = t('ui.qgis.validation.integerType') || 'El valor debe ser un número entero';
+            errorMessage = `El campo "${fieldAlias}": ${msg}`;
           } else if (typeNameUpper.includes('REAL') || typeNameUpper.includes('FLOAT')) {
-            errorMessage = `El campo "${fieldAlias}": El valor debe ser un número`;
+            const msg = t('ui.qgis.validation.numberType') || 'El valor debe ser un número';
+            errorMessage = `El campo "${fieldAlias}": ${msg}`;
           } else if (typeNameUpper.includes('DATE')) {
-            errorMessage = `El campo "${fieldAlias}": El valor debe ser una fecha válida`;
+            const msg = t('ui.qgis.validation.dateType') || 'El valor debe ser una fecha válida';
+            errorMessage = `El campo "${fieldAlias}": ${msg}`;
           } else {
-            errorMessage = `El campo "${fieldAlias}": El valor introducido no es válido`;
+            const invalidMsg = t('ui.qgis.validation.invalidValue') || 'El valor introducido no es válido';
+            errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
           }
         } else {
-          errorMessage = `El campo "${fieldAlias}": El valor introducido no es válido`;
+          const invalidMsg = t('ui.qgis.validation.invalidValue') || 'El valor introducido no es válido';
+          errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
         }
         
         setErrors(prev => {
@@ -180,7 +187,7 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
         });
       }
     }
-  }, [layer, values, config, t]);
+  }, [layer, values, config, t, language]);
 
   // Determina si todos los campos son válidos
   const isValid = Object.values(errors).every(e => !e || e === '');
@@ -198,7 +205,7 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
       if (field.readOnly) return;
       
       const value = values[field.name];
-      const validation = validateFieldValue(field, value, values, layer, t);
+      const validation = validateFieldValue(field, value, values, layer, t, language, translations);
       
       if (!validation.valid && validation.error) {
         newErrors[field.name] = validation.error;
@@ -221,7 +228,22 @@ export const FormProvider = ({ layerName, featureId, readOnly: readOnlyProp = fa
     });
     
     return { valid: !hasErrors, errors: newErrors };
-  }, [layer, values, t]);
+  }, [layer, values, t, language]);
+  
+  // Re-validar todos los campos cuando cambia el idioma para actualizar los mensajes de error
+  React.useEffect(() => {
+    if (layer && layer.fields && Object.keys(errors).length > 0) {
+      // Re-validar todos los campos que tienen errores para actualizar los mensajes
+      const fieldsWithErrors = Object.keys(errors);
+      fieldsWithErrors.forEach(fieldName => {
+        const field = layer.fields.find(f => f.name === fieldName);
+        if (field) {
+          const value = values[fieldName];
+          validateField(fieldName, value);
+        }
+      });
+    }
+  }, [language, t]); // Re-validar cuando cambia el idioma o la función de traducción
 
   // Handler por defecto para guardar
   // Usar useRef para mantener una referencia a los valores actuales
