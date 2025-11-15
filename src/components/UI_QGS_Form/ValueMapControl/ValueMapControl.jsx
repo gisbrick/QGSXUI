@@ -7,12 +7,18 @@ const ValueMapControl = ({
   onChange,
   options = [],
   disabled = false,
+  required = false,
   className = '',
   ...props
 }) => {
   return (
     <div className={`value-map-control ${className}`}>
-      {label && <label className="value-map-control__label">{label}</label>}
+      {label && (
+        <label className="value-map-control__label">
+          {label}
+          {required && <span className="value-map-control__required">*</span>}
+        </label>
+      )}
       <select
         value={value}
         onChange={onChange}

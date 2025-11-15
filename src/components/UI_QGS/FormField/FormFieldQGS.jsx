@@ -289,6 +289,7 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
         checked={checked}
         onChange={(e) => handleChange(e.target.checked ? 1 : 0)}
         disabled={isDisabled}
+        required={isRequired}
       />
     );
   }
@@ -471,6 +472,7 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
         checked={checked}
         onChange={(e) => handleChange(e.target.checked ? 1 : 0)}
         disabled={isDisabled}
+        required={isRequired}
       />
     );
   }
@@ -492,6 +494,7 @@ const FormFieldQGS = ({ layerName, featureId, field_idx, field_name }) => {
             onChange={(e) => handleChange(e.target.value)}
             disabled={isDisabled}
             error={fieldError}
+            required={isRequired}
           />
         </div>
       </BaseControl>

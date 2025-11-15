@@ -11,12 +11,18 @@ const NumberControl = ({
   step = 1,
   disabled = false,
   error,
+  required = false,
   className = '',
   ...props
 }) => {
   return (
     <div className={`number-control ${className}`}>
-      {label && <label className="number-control__label">{label}</label>}
+      {label && (
+        <label className="number-control__label">
+          {label}
+          {required && <span className="number-control__required">*</span>}
+        </label>
+      )}
       <input
         type="number"
         value={value}

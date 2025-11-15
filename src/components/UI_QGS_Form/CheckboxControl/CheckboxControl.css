@@ -29,3 +29,8 @@
 .checkbox-control__text {
   user-select: none;
 }
+
+.checkbox-control__required {
+  color: #dc3545;
+  margin-left: 2px;
+}

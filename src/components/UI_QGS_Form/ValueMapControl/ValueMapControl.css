@@ -31,3 +31,8 @@
   color: #999;
   cursor: not-allowed;
 }
+
+.value-map-control__required {
+  color: #dc3545;
+  margin-left: 2px;
+}

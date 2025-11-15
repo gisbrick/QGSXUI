@@ -6,6 +6,7 @@ const CheckboxControl = ({
   checked = false,
   onChange,
   disabled = false,
+  required = false,
   className = '',
   ...props
 }) => {
@@ -20,7 +21,10 @@ const CheckboxControl = ({
           className="checkbox-control__input"
           {...props}
         />
-        <span className="checkbox-control__text">{label}</span>
+        <span className="checkbox-control__text">
+          {label}
+          {required && <span className="checkbox-control__required">*</span>}
+        </span>
       </label>
     </div>
   );

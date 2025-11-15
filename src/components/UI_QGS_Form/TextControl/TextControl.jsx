@@ -9,6 +9,7 @@ const TextControl = React.memo(({
   type = 'text',
   disabled = false,
   error,
+  required = false,
   className = '',
   ...props
 }) => {
@@ -17,7 +18,12 @@ const TextControl = React.memo(({
   
   return (
     <div className={`text-control ${className}`}>
-      {label && <label className="text-control__label">{label}</label>}
+      {label && (
+        <label className="text-control__label">
+          {label}
+          {required && <span className="text-control__required">*</span>}
+        </label>
+      )}
       <input
         type={type}
         value={inputValue}
