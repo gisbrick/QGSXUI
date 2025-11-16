@@ -11,7 +11,7 @@ import { QgisConfigContext } from '../QgisConfigContext';
  */
 const MapToolbar = () => {
   const mapContext = useMap() || {};
-  const { mapInstance, initialBoundsRef, t, config, startDrawing, startHoleDrawing, finishDrawing, clearCurrentSketch, cancelDrawing, removeLastHole, isDrawing, isDrawingHole, drawMode, holeCount, hasGeometry } = mapContext;
+  const { mapInstance, initialBoundsRef, t, config, startDrawing, startHoleDrawing, finishDrawing, clearCurrentSketch, cancelDrawing, removeLastHole, isDrawing, isDrawingHole, drawMode, holeCount, hasGeometry, canGoBack, canGoForward, goBack, goForward } = mapContext;
   const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
   const [boxZoomActive, setBoxZoomActive] = useState(false);
@@ -24,8 +24,8 @@ const MapToolbar = () => {
   const pendingCancelRef = useRef(null);
 
   useEffect(() => {
-    console.log('[MapToolbar] estado', { drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive });
-  }, [drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive]);
+    console.log('[MapToolbar] estado', { drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive, canGoBack, canGoForward });
+  }, [drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive, canGoBack, canGoForward]);
 
   // Detectar capacidades de añadir por tipo geométrico
   const { canAddPoint, canAddLine, canAddPolygon, hasQueryableLayers } = useMemo(() => {
@@ -83,6 +83,8 @@ const MapToolbar = () => {
     else if (toolKey === 'zoom-out') { const s=!zoomOutActive; setZoomOutActive(s); if (s) deactivateAllTools('zoom-out'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'show-location') { const s=!showLocationActive; setShowLocationActive(s); if (s) deactivateAllTools('show-location'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'info-click') { const s=!infoClickActive; setInfoClickActive(s); if (s) deactivateAllTools('info-click'); if (cancelDrawing) cancelDrawing(); }
+    else if (toolKey === 'nav-back') { goBack && goBack(); }
+    else if (toolKey === 'nav-forward') { goForward && goForward(); }
   };
 
   const handleZoomToExtent = () => { ZoomToExtent.handleZoomToExtent(mapInstance, initialBoundsRef); };
@@ -118,6 +120,9 @@ const MapToolbar = () => {
     { key: 'zoom-in-box', type: 'tool', circular: true, icon: 'fg-zoom-in', title: tr('ui.map.zoomInBox','Zoom a caja','Box zoom') },
     { key: 'zoom-out', type: 'tool', circular: true, icon: 'fg-zoom-out', title: tr('ui.map.zoomOut','Alejar','Zoom out') },
     { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-extent', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
+    // Navegación de extensiones (solo cuando funcional)
+    ...(canGoBack ? [{ key: 'nav-back', type: 'tool', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back') }] : []),
+    ...(canGoForward ? [{ key: 'nav-forward', type: 'tool', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward') }] : []),
     { key: 'show-location', type: 'tool', circular: true, icon: 'fg-location', title: tr('ui.map.showLocation','Mostrar ubicación','Show my location') },
     { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click'), disabled: !hasQueryableLayers },
     measureSelectItem

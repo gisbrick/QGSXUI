@@ -36,8 +36,84 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   useEffect(() => { isDrawingHoleRef.current = isDrawingHole; }, [isDrawingHole]);
   useEffect(() => { hasGeometryRef.current = hasGeometry; }, [hasGeometry]);
 
+  // Historial de navegación (centro/zoom)
+  const viewHistoryRef = useRef([]);
+  const viewIndexRef = useRef(-1);
+  const [canGoBack, setCanGoBack] = useState(false);
+  const [canGoForward, setCanGoForward] = useState(false);
+  const isNavigatingRef = useRef(false);
+
   const qgisConfig = useContext(QgisConfigContext);
   const { config, t, notificationManager, qgsUrl, qgsProjectPath } = qgisConfig || {};
+
+  const updateNavFlags = () => {
+    const len = viewHistoryRef.current.length;
+    const idx = viewIndexRef.current;
+    setCanGoBack(idx > 0);
+    setCanGoForward(idx >= 0 && idx < len - 1);
+  };
+
+  const pushViewToHistory = (center, zoom) => {
+    const last = viewHistoryRef.current[viewIndexRef.current];
+    const c = [center.lat, center.lng];
+    if (last && last.zoom === zoom && Math.abs(last.center[0] - c[0]) < 1e-9 && Math.abs(last.center[1] - c[1]) < 1e-9) {
+      return;
+    }
+    // si hemos navegado atrás y luego se mueve, truncar futuro
+    if (viewIndexRef.current < viewHistoryRef.current.length - 1) {
+      viewHistoryRef.current = viewHistoryRef.current.slice(0, viewIndexRef.current + 1);
+    }
+    viewHistoryRef.current.push({ center: c, zoom });
+    viewIndexRef.current = viewHistoryRef.current.length - 1;
+    updateNavFlags();
+    console.log('[MapProvider] history push', { index: viewIndexRef.current, length: viewHistoryRef.current.length, center: c, zoom });
+  };
+
+  useEffect(() => {
+    if (!mapInstance) return;
+    const init = () => {
+      try {
+        const center = mapInstance.getCenter();
+        const zoom = mapInstance.getZoom();
+        if (viewHistoryRef.current.length === 0) {
+          pushViewToHistory(center, zoom);
+        }
+      } catch (e) {}
+    };
+    init();
+    const onMoveEnd = () => {
+      if (isNavigatingRef.current) return; // no registrar durante navegación programática
+      try { pushViewToHistory(mapInstance.getCenter(), mapInstance.getZoom()); } catch (e) {}
+    };
+    mapInstance.on('moveend', onMoveEnd);
+    return () => { try { mapInstance.off('moveend', onMoveEnd); } catch (e) {} };
+  }, [mapInstance]);
+
+  const goBack = () => {
+    if (!mapInstance) return;
+    const idx = viewIndexRef.current;
+    if (idx <= 0) return;
+    isNavigatingRef.current = true;
+    const target = viewHistoryRef.current[idx - 1];
+    viewIndexRef.current = idx - 1;
+    mapInstance.once('moveend', () => { isNavigatingRef.current = false; updateNavFlags(); });
+    mapInstance.setView({ lat: target.center[0], lng: target.center[1] }, target.zoom, { animate: false });
+    updateNavFlags();
+    console.log('[MapProvider] goBack', { index: viewIndexRef.current, length: viewHistoryRef.current.length });
+  };
+
+  const goForward = () => {
+    if (!mapInstance) return;
+    const idx = viewIndexRef.current;
+    if (idx >= viewHistoryRef.current.length - 1) return;
+    isNavigatingRef.current = true;
+    const target = viewHistoryRef.current[idx + 1];
+    viewIndexRef.current = idx + 1;
+    mapInstance.once('moveend', () => { isNavigatingRef.current = false; updateNavFlags(); });
+    mapInstance.setView({ lat: target.center[0], lng: target.center[1] }, target.zoom, { animate: false });
+    updateNavFlags();
+    console.log('[MapProvider] goForward', { index: viewIndexRef.current, length: viewHistoryRef.current.length });
+  };
 
   const checkCanDrawMultipleForMode = (mode) => {
     try {
@@ -822,6 +898,11 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     drawMode,
     holeCount,
     hasGeometry,
+    // navegación
+    canGoBack,
+    canGoForward,
+    goBack,
+    goForward,
   };
 
   return (
