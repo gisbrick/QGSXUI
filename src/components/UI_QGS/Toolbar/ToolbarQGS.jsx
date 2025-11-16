@@ -16,6 +16,14 @@ const ToolbarQGS = ({
     setInternalSelectedTool(selectedTool);
   }, [selectedTool]);
 
+  const normalizeIcon = (icon) => {
+    if (!icon) return null;
+    if (typeof icon === 'string') {
+      return <i className={icon} />;
+    }
+    return icon; // ya es un nodo React
+  };
+
   const handleToolSelect = (toolKey) => {
     // Si la herramienta ya está seleccionada, la deseleccionamos
     const newSelectedTool = internalSelectedTool === toolKey ? null : toolKey;
@@ -36,7 +44,7 @@ const ToolbarQGS = ({
               circular={itemProps.circular || false}
               onClick={itemProps.onClick || (() => {})}
               disabled={itemProps.disabled || false}
-              icon={itemProps.icon}
+              icon={normalizeIcon(itemProps.icon)}
               title={itemProps.title}
             >
               {itemProps.label}
@@ -52,7 +60,7 @@ const ToolbarQGS = ({
               selected={internalSelectedTool === key}
               onClick={() => handleToolSelect(key)}
               disabled={itemProps.disabled || false}
-              icon={itemProps.icon}
+              icon={normalizeIcon(itemProps.icon)}
               title={itemProps.title}
             >
               {itemProps.label}
@@ -90,7 +98,7 @@ const ToolbarQGS = ({
             <SelectButton
               key={key}
               size={size}
-              icon={itemProps.icon}
+              icon={normalizeIcon(itemProps.icon)}
               placeholder={itemProps.placeholder}
               disabled={itemProps.disabled || false}
               circular={itemProps.circular || false}
@@ -121,7 +129,7 @@ const ToolbarQGS = ({
               }}
               title={itemProps.title}
             >
-              {itemProps.label || itemProps.placeholder || 'Seleccionar...'}
+              {itemProps.hideLabel ? null : (itemProps.label || itemProps.placeholder || 'Seleccionar...')}
             </SelectButton>
           );
 
@@ -158,7 +166,7 @@ ToolbarQGS.propTypes = {
     label: PropTypes.string,
     onClick: PropTypes.func,
     disabled: PropTypes.bool,
-    icon: PropTypes.string,
+    icon: PropTypes.oneOfType([PropTypes.string, PropTypes.node]),
     title: PropTypes.string,
     circular: PropTypes.bool,
     options: PropTypes.array,
@@ -166,18 +174,12 @@ ToolbarQGS.propTypes = {
     onChange: PropTypes.func,
     placeholder: PropTypes.string,
     checked: PropTypes.bool,
-    labelPosition: PropTypes.oneOf(['left', 'right'])
+    labelPosition: PropTypes.oneOf(['left', 'right']),
+    hideLabel: PropTypes.bool
   })),
   size: PropTypes.oneOf(['small', 'medium', 'large']),
   selectedTool: PropTypes.string,
   onToolChange: PropTypes.func
-};
-
-ToolbarQGS.defaultProps = {
-  items: [],
-  size: 'medium',
-  selectedTool: null,
-  onToolChange: () => {}
 };
 
 export default ToolbarQGS;

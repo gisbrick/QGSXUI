@@ -263,6 +263,23 @@
         "error": {
           "missingData": "Faltan datos necesarios para mostrar los atributos"
         }
+      },
+      "editHelp": {
+        "title": "Ayuda de edición",
+        "basic": "Flujo básico",
+        "basic1": "Selecciona la herramienta de dibujar (punto/línea/polígono).",
+        "basic2": "Finaliza con doble clic o haciendo clic a menos de 3 px del último vértice.",
+        "basic3": "Tras finalizar, podrás Guardar o Cancelar. Si hay capas multi, podrás iniciar otra geometría con el siguiente clic.",
+        "vertices": "Edición de vértices",
+        "vertices1": "Arrastra los vértices para moverlos.",
+        "vertices2": "Haz clic en los puntos intermedios para insertar vértices; mantén pulsado para insertar y arrastrar en un solo gesto.",
+        "vertices3": "Para borrar un vértice: Alt+clic o clic derecho sobre el vértice (líneas ≥ 2, polígonos ≥ 3).",
+        "holes": "Agujeros (polígonos)",
+        "holes1": "Pulsa Añadir agujero y dibuja el anillo interior; finaliza con doble clic o cierre por proximidad.",
+        "holes2": "Durante el agujero, los vértices del contorno no se mueven.",
+        "holes3": "Puedes eliminar el último agujero con Eliminar agujero.",
+        "save": "Guardado y atributos",
+        "save1": "Al pulsar Guardar, se abrirá un diálogo para cumplimentar los atributos asociados a la geometría antes de enviarla al servidor."
       }
     },
     "toolbar": {

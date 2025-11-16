@@ -258,6 +258,23 @@
         "error": {
           "missingData": "Missing data required to display attributes"
         }
+      },
+      "editHelp": {
+        "title": "Editing help",
+        "basic": "Basic flow",
+        "basic1": "Select the draw tool (point/line/polygon).",
+        "basic2": "Finish with double click or clicking less than 3 px from the last vertex.",
+        "basic3": "After finishing you can Save or Cancel. If there are multi layers, you can start another geometry with the next click.",
+        "vertices": "Vertex editing",
+        "vertices1": "Drag vertices to move them.",
+        "vertices2": "Click on midpoints to insert vertices; hold to insert and drag in a single gesture.",
+        "vertices3": "To delete a vertex: Alt+click or right click on the vertex (lines ≥ 2, polygons ≥ 3).",
+        "holes": "Holes (polygons)",
+        "holes1": "Click Add hole and draw the inner ring; finish with double click or close by proximity.",
+        "holes2": "During the hole, the outer contour vertices do not move.",
+        "holes3": "You can remove the last hole with Remove hole.",
+        "save": "Saving and attributes",
+        "save1": "When pressing Save, a dialog will open to fill the attributes associated with the geometry before sending to the server."
       }
     },
     "toolbar": {
