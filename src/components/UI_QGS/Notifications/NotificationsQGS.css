@@ -3,7 +3,7 @@
   position: fixed;
   bottom: 20px;
   right: 20px;
-  z-index: 10000; /* Por encima de modales y diálogos */
+  z-index: 999999 !important; /* Siempre por encima de todo, incluyendo diálogos y modales */
   display: flex;
   flex-direction: column;
   gap: 8px;
@@ -11,9 +11,11 @@
   pointer-events: none; /* Permite que los clicks pasen a través del contenedor */
 }
 
-/* Hacer que cada notificación individual sea clickeable */
+/* Hacer que cada notificación individual sea clickeable y asegurar z-index alto */
 .notifications-qgs > * {
   pointer-events: auto;
+  position: relative;
+  z-index: 999999 !important; /* Asegurar que cada mensaje individual también esté por encima */
 }
 
 /* Animación opcional para entrada de notificaciones */

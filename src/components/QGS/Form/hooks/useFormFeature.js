@@ -48,7 +48,14 @@ export const useFormFeature = ({
     setLayer(foundLayer);
 
     if (foundLayer) {
-      if (featureId) {
+      // Detectar si es un ID temporal (para nuevas features)
+      const isTemporaryId = featureId && (
+        featureId.toString().toLowerCase() === 'temp' ||
+        featureId.toString().endsWith('.temp') ||
+        featureId.toString().includes('.temp.')
+      );
+
+      if (featureId && !isTemporaryId) {
         // Solo cargar la feature si no está ya cargada o si cambió el featureId
         // Esto evita resetear los valores cuando el usuario está editando
         const currentFeatureId = feature?.id ? feature.id.split('.')[1] : null;
@@ -97,8 +104,8 @@ export const useFormFeature = ({
           fetchFeature();
         }
       } else {
-        // Si no hay featureId, es una feature nueva
-        if (!feature) {
+        // Si no hay featureId o es temporal, es una feature nueva
+        if (!feature || isTemporaryId) {
           setFeature(null);
           setIsNewFeature(true);
         }

@@ -760,8 +760,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     clearEditHandles();
     try {
       const container = mapInstance.getContainer();
+      container.classList.add('leaflet-drawing');
       container.style.setProperty('cursor', 'crosshair', 'important');
-      if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
+      // Permitir dragging del mapa durante el dibujo para poder navegar mientras se dibuja
+      // if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
       if (mapInstance.doubleClickZoom && mapInstance.doubleClickZoom.enabled()) { mapInstance.doubleClickZoom.disable(); }
       setTimeout(() => { container.style.setProperty('cursor', 'crosshair', 'important'); }, 0);
     } catch (e) {}
@@ -1007,8 +1009,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     }
     try {
       const container = mapInstance.getContainer();
+      container.classList.add('leaflet-drawing');
       container.style.setProperty('cursor', 'crosshair', 'important');
-      if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
+      // Permitir dragging del mapa durante el dibujo para poder navegar mientras se dibuja
+      // if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
       if (mapInstance.doubleClickZoom && mapInstance.doubleClickZoom.enabled()) { mapInstance.doubleClickZoom.disable(); }
       setTimeout(() => { container.style.setProperty('cursor', 'crosshair', 'important'); }, 0);
     } catch (e) {}
@@ -1049,9 +1053,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       setHasGeometry(true);
       try {
         const container = mapInstance.getContainer();
-        // Mantener modo dibujo: cursor crosshair y dragging desactivado para arrancar nuevo polígono si procede
+        // Mantener modo dibujo: cursor crosshair (permitir dragging para poder navegar mientras se dibuja)
         container.style.setProperty('cursor', 'crosshair', 'important');
-        if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
+        // Permitir dragging del mapa durante el dibujo para poder navegar mientras se dibuja
+        // if (mapInstance.dragging && mapInstance.dragging.enabled()) { mapInstance.dragging.disable(); }
         if (mapInstance.doubleClickZoom && mapInstance.doubleClickZoom.enabled()) { mapInstance.doubleClickZoom.disable(); }
       } catch (e) {}
       if (previewLayerRef.current) previewLayerRef.current.clearLayers();
@@ -1150,6 +1155,7 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     }
     try {
       const container = mapInstance.getContainer();
+      container.classList.remove('leaflet-drawing');
       container.style.removeProperty('cursor');
       if (mapInstance.dragging && !mapInstance.dragging.enabled()) { mapInstance.dragging.enable(); }
       if (mapInstance.doubleClickZoom && !mapInstance.doubleClickZoom.enabled()) { mapInstance.doubleClickZoom.enable(); }

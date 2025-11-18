@@ -611,6 +611,7 @@ export async function updateFeature(qgsUrl, qgsProjectPath, feature, properties,
       return response;
     }
 
+
     // Si hay totalUpdated y es mayor que 0, fue exitoso
     if (totalUpdated && parseInt(totalUpdated.textContent) > 0) {
       return response;
@@ -637,5 +638,388 @@ export async function updateFeature(qgsUrl, qgsProjectPath, feature, properties,
   });
 }
 
+const DEFAULT_SOURCE_CRS = 'EPSG:4326';
 
+function normalizeAuthId(authId) {
+  if (!authId || typeof authId !== 'string') {
+    return null;
+  }
+  return authId.trim().toUpperCase();
+}
 
+function buildSrsName(authId = DEFAULT_SOURCE_CRS) {
+  const normalized = normalizeAuthId(authId) || DEFAULT_SOURCE_CRS;
+  if (normalized === 'CRS:84') {
+    return 'http://www.opengis.net/def/crs/CRS/0/84';
+  }
+  const [authority, code] = normalized.split(':');
+  if (!authority || !code) {
+    return 'http://www.opengis.net/def/crs/EPSG/0/4326';
+  }
+  return `http://www.opengis.net/def/crs/${authority}/0/${code}`;
+}
+
+function formatCoordinatePair(coord, axisOrder = 'lonlat') {
+  if (!Array.isArray(coord) || coord.length < 2) {
+    return '';
+  }
+  const [lng, lat] = coord;
+  if (axisOrder === 'latlon') {
+    return `${lat},${lng}`;
+  }
+  return `${lng},${lat}`;
+}
+
+const GEOMETRY_BASE_TYPES = [
+  // Priorizar coincidencias exactas o más específicas primero
+  { matcher: (value) => value === 'POINT' || value === 'MULTIPOINT' || (value.includes('POINT') && !value.includes('LINE') && !value.includes('POLYGON')), type: 'POINT' },
+  { matcher: (value) => value === 'POLYGON' || value === 'MULTIPOLYGON' || (value.includes('POLYGON') && !value.includes('POINT') && !value.includes('LINE')), type: 'POLYGON' },
+  { matcher: (value) => value === 'LINESTRING' || value === 'MULTILINESTRING' || value.includes('LINE') || value.includes('CURVE'), type: 'LINESTRING' },
+  { matcher: (value) => value.includes('SURFACE'), type: 'POLYGON' }
+];
+
+function cloneGeometry(geometry) {
+  return JSON.parse(JSON.stringify(geometry));
+}
+
+function getLayerGeometryInfo(layerConfig) {
+  // Priorizar wkbType_name original, luego otros campos
+  // Si wkbType_name es "LineGeometry" pero debería ser "Point", 
+  // intentar detectar el tipo correcto basándose en otros indicadores
+  const rawType = (layerConfig?.wkbType_name ||
+    layerConfig?.geometryType ||
+    layerConfig?.geometryTypeName ||
+    layerConfig?.type ||
+    '').toString().toUpperCase();
+
+  if (!rawType) {
+    return { baseType: null, isMulti: false };
+  }
+
+  // Si el tipo es "LineGeometry" (genérico), intentar detectar el tipo real
+  // basándose en el nombre de la capa o en el wkbType numérico
+  let typeToUse = rawType;
+  if (rawType === 'LINEGEOMETRY' || rawType === 'GEOMETRY') {
+    // Intentar inferir el tipo desde el nombre de la capa o wkbType
+    const layerName = (layerConfig?.name || '').toLowerCase();
+    const wkbType = layerConfig?.wkbType;
+    
+    // wkbType: 1=Point, 2=LineString, 3=Polygon, etc.
+    if (wkbType === 1 || layerName.includes('punto') || layerName.includes('point')) {
+      typeToUse = 'POINT';
+    } else if (wkbType === 2 || layerName.includes('linea') || layerName.includes('line')) {
+      typeToUse = 'LINESTRING';
+    } else if (wkbType === 3 || layerName.includes('poligono') || layerName.includes('polygon')) {
+      typeToUse = 'POLYGON';
+    }
+  }
+
+  const base = GEOMETRY_BASE_TYPES.find(entry => entry.matcher(typeToUse));
+  const baseType = base ? base.type : null;
+  const isMulti = typeToUse.includes('MULTI') || rawType.includes('MULTI');
+  return { baseType, isMulti };
+}
+
+function wrapGeometryInMulti(geometry) {
+  if (!geometry) return geometry;
+  const type = geometry.type;
+  if (!type) return geometry;
+  if (type.startsWith('Multi')) return geometry;
+  if (type === 'Point') {
+    return { type: 'MultiPoint', coordinates: [geometry.coordinates] };
+  }
+  if (type === 'LineString') {
+    return { type: 'MultiLineString', coordinates: [geometry.coordinates] };
+  }
+  if (type === 'Polygon') {
+    return { type: 'MultiPolygon', coordinates: [geometry.coordinates] };
+  }
+  return geometry;
+}
+
+function unwrapMultiGeometry(geometry) {
+  if (!geometry || !geometry.type || !geometry.type.startsWith('Multi')) {
+    return geometry;
+  }
+
+  const { coordinates } = geometry;
+  if (!Array.isArray(coordinates) || coordinates.length !== 1) {
+    throw new Error('La capa espera geometrías simples, pero se ha dibujado una geometría múltiple.');
+  }
+
+  const innerCoords = coordinates[0];
+  if (geometry.type === 'MultiPoint') {
+    return { type: 'Point', coordinates: innerCoords };
+  }
+  if (geometry.type === 'MultiLineString') {
+    return { type: 'LineString', coordinates: innerCoords };
+  }
+  if (geometry.type === 'MultiPolygon') {
+    return { type: 'Polygon', coordinates: innerCoords };
+  }
+  return geometry;
+}
+
+function ensureRingClosed(ring) {
+  if (!Array.isArray(ring) || ring.length === 0) {
+    return ring || [];
+  }
+  const first = ring[0];
+  const last = ring[ring.length - 1];
+  if (!first || !last) return ring;
+  if (Math.abs(first[0] - last[0]) < 1e-12 && Math.abs(first[1] - last[1]) < 1e-12) {
+    return ring;
+  }
+  return [...ring, [...first]];
+}
+
+function coordsToCoordinateString(coords, close = false, axisOrder = 'lonlat') {
+  if (!Array.isArray(coords)) return '';
+  const processed = close ? ensureRingClosed(coords) : coords;
+  return processed.map((coord) => formatCoordinatePair(coord, axisOrder)).join(' ');
+}
+
+function polygonToGml(rings, srsName, axisOrder) {
+  if (!Array.isArray(rings) || rings.length === 0) {
+    throw new Error('La geometría de polígono no contiene anillos válidos.');
+  }
+  const [outer, ...inners] = rings;
+  
+  // Asegurar que outer es un array de coordenadas [x, y]
+  if (!Array.isArray(outer) || outer.length === 0) {
+    throw new Error('El anillo exterior del polígono no es válido.');
+  }
+  
+  // Validar estructura: outer debe ser un array de coordenadas [[x,y], [x,y], ...]
+  if (outer.length > 0 && !Array.isArray(outer[0])) {
+    throw new Error('El anillo exterior del polígono no tiene la estructura de coordenadas correcta.');
+  }
+  
+  // Validar que cada coordenada tiene 2 elementos [x, y] o [lng, lat]
+  if (outer.length > 0 && (!Array.isArray(outer[0]) || outer[0].length < 2)) {
+    throw new Error('Las coordenadas del anillo exterior no son válidas.');
+  }
+  
+  // Formatear coordenadas del anillo exterior con el axisOrder correcto
+  const outerCoords = coordsToCoordinateString(outer, true, axisOrder);
+  
+  let gml = `<gml:Polygon srsName="${srsName}">`;
+  gml += `<gml:outerBoundaryIs><gml:LinearRing><gml:coordinates decimal="." cs="," ts=" ">${outerCoords}</gml:coordinates></gml:LinearRing></gml:outerBoundaryIs>`;
+  inners.forEach(hole => {
+    if (Array.isArray(hole) && hole.length > 0 && Array.isArray(hole[0]) && hole[0].length >= 2) {
+      const holeCoords = coordsToCoordinateString(hole, true, axisOrder);
+      gml += `<gml:innerBoundaryIs><gml:LinearRing><gml:coordinates decimal="." cs="," ts=" ">${holeCoords}</gml:coordinates></gml:LinearRing></gml:innerBoundaryIs>`;
+    }
+  });
+  gml += '</gml:Polygon>';
+  return gml;
+}
+
+function geometryToGml(geometry, options = {}) {
+  if (!geometry || !geometry.type) {
+    throw new Error('No se ha proporcionado una geometría válida.');
+  }
+  const { srsName = buildSrsName(DEFAULT_SOURCE_CRS), axisOrder = 'lonlat' } = options;
+  const type = geometry.type.toUpperCase();
+  if (type === 'POINT') {
+    const coord = geometry.coordinates;
+    return `<gml:Point srsName="${srsName}"><gml:coordinates decimal="." cs="," ts=" ">${formatCoordinatePair(coord, axisOrder)}</gml:coordinates></gml:Point>`;
+  }
+  if (type === 'MULTIPOINT') {
+    const parts = (geometry.coordinates || []).map(coord =>
+      `<gml:pointMember><gml:Point srsName="${srsName}"><gml:coordinates decimal="." cs="," ts=" ">${formatCoordinatePair(coord, axisOrder)}</gml:coordinates></gml:Point></gml:pointMember>`
+    ).join('');
+    return `<gml:MultiPoint srsName="${srsName}">${parts}</gml:MultiPoint>`;
+  }
+  if (type === 'LINESTRING') {
+    return `<gml:LineString srsName="${srsName}"><gml:coordinates decimal="." cs="," ts=" ">${coordsToCoordinateString(geometry.coordinates, false, axisOrder)}</gml:coordinates></gml:LineString>`;
+  }
+  if (type === 'MULTILINESTRING') {
+    const members = (geometry.coordinates || []).map(line =>
+      `<gml:lineStringMember><gml:LineString srsName="${srsName}"><gml:coordinates decimal="." cs="," ts=" ">${coordsToCoordinateString(line, false, axisOrder)}</gml:coordinates></gml:LineString></gml:lineStringMember>`
+    ).join('');
+    return `<gml:MultiLineString srsName="${srsName}">${members}</gml:MultiLineString>`;
+  }
+  if (type === 'POLYGON') {
+    return polygonToGml(geometry.coordinates || [], srsName, axisOrder);
+  }
+  if (type === 'MULTIPOLYGON') {
+    // MultiPolygon: coordinates es un array de polígonos
+    // Cada polígono es un array de rings: [[ring1], [ring2], ...]
+    // Cada ring es un array de coordenadas: [[x,y], [x,y], ...]
+    // IMPORTANTE: Para MultiPolygon, necesitamos invertir el axisOrder
+    // Si axisOrder es 'latlon', usamos 'lonlat' y viceversa
+    const invertedAxisOrder = axisOrder === 'latlon' ? 'lonlat' : 'latlon';
+    const members = (geometry.coordinates || []).map((poly) => {
+      // Validar que poly es un array de rings
+      if (!Array.isArray(poly) || poly.length === 0) {
+        return '';
+      }
+      // Validar que el primer elemento es un ring (array de coordenadas)
+      if (!Array.isArray(poly[0]) || poly[0].length === 0 || !Array.isArray(poly[0][0])) {
+        return '';
+      }
+      return `<gml:polygonMember>${polygonToGml(poly, srsName, invertedAxisOrder)}</gml:polygonMember>`;
+    }).filter(m => m !== '').join('');
+    return `<gml:MultiPolygon srsName="${srsName}">${members}</gml:MultiPolygon>`;
+  }
+  throw new Error(`Tipo de geometría no soportado: ${geometry.type}`);
+}
+
+function buildInsertPropertiesXml(properties) {
+  if (!properties || typeof properties !== 'object') {
+    return '';
+  }
+  let xml = '';
+  Object.entries(properties).forEach(([key, value]) => {
+    if (value === undefined || value === null) {
+      return;
+    }
+    const safeKey = key.replace(/\s+/g, '_');
+    const escapedValue = escapeString(value);
+    if (escapedValue === '') {
+      xml += `<qgs:${safeKey}/>`;
+    } else {
+      xml += `<qgs:${safeKey}>${escapedValue}</qgs:${safeKey}>`;
+    }
+  });
+  return xml;
+}
+
+function buildInsertTransactionXml(layerName, geometryGml, propertiesXml) {
+  const safeLayerName = layerName.replace(/\s+/g, '_');
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<wfs:Transaction service="WFS" version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/wfs" updateSequence="0" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-capabilities.xsd" xmlns:gml="http://www.opengis.net/gml" xmlns:ows="http://www.opengis.net/ows" xmlns:qgs="http://www.qgis.org/gml">
+  <wfs:Insert idgen="GenerateNew">
+    <qgs:${safeLayerName}>
+      <qgs:geometry>${geometryGml}</qgs:geometry>
+      ${propertiesXml}
+    </qgs:${safeLayerName}>
+  </wfs:Insert>
+</wfs:Transaction>`;
+}
+
+export async function insertFeatureWithGeometry(
+  qgsUrl,
+  qgsProjectPath,
+  layerName,
+  geometry,
+  properties = {},
+  token = null,
+  layerConfig = null
+) {
+  if (!qgsUrl || !qgsProjectPath) {
+    throw new Error('No se han configurado los parámetros de conexión con QGIS Server.');
+  }
+  if (!layerName) {
+    throw new Error('Debe especificarse una capa para insertar la geometría.');
+  }
+  if (!geometry) {
+    throw new Error('No hay geometría para guardar.');
+  }
+
+  const geometrySnapshot = cloneGeometry(geometry);
+  const { baseType, isMulti } = getLayerGeometryInfo(layerConfig);
+  let normalizedGeometry = geometrySnapshot;
+
+  if (isMulti) {
+    normalizedGeometry = wrapGeometryInMulti(normalizedGeometry);
+  } else if (normalizedGeometry?.type && normalizedGeometry.type.toUpperCase().startsWith('MULTI')) {
+    normalizedGeometry = unwrapMultiGeometry(normalizedGeometry);
+  }
+
+  // Validar que el tipo de geometría coincida con el esperado por la capa
+  // Solo validamos si podemos determinar con certeza el tipo de la capa
+  // Si no hay tipo claro, confiamos en que el toolbar ya filtró las capas correctas
+  if (baseType && normalizedGeometry?.type) {
+    const geometryTypeUpper = normalizedGeometry.type.toUpperCase();
+    const baseTypeUpper = baseType.toUpperCase();
+    
+    // Mapeo de tipos base a tipos de geometría permitidos
+    const allowedTypes = {
+      'POINT': ['POINT', 'MULTIPOINT'],
+      'LINESTRING': ['LINESTRING', 'MULTILINESTRING'],
+      'POLYGON': ['POLYGON', 'MULTIPOLYGON']
+    };
+    
+    const allowed = allowedTypes[baseTypeUpper];
+    if (allowed && !allowed.includes(geometryTypeUpper)) {
+      // Si la validación falla, pero no tenemos certeza del tipo de capa (por ejemplo, si el rawType
+      // contiene palabras ambiguas), permitimos la inserción ya que el toolbar ya filtró las capas
+      const rawType = (layerConfig?.wkbType_name ||
+        layerConfig?.geometryType ||
+        layerConfig?.geometryTypeName ||
+        layerConfig?.type ||
+        '').toString().toUpperCase();
+      
+      // Si el rawType es ambiguo o no coincide claramente con el baseType detectado,
+      // confiamos en que el toolbar filtró correctamente y permitimos la inserción
+      const isAmbiguous = rawType && (
+        (baseTypeUpper === 'LINESTRING' && (rawType.includes('POINT') || !rawType.includes('LINE'))) ||
+        (baseTypeUpper === 'POINT' && rawType.includes('LINE')) ||
+        (baseTypeUpper === 'POLYGON' && (rawType.includes('POINT') || rawType.includes('LINE')))
+      );
+      
+      if (!isAmbiguous) {
+        throw new Error(`La capa espera geometrías de tipo ${baseType}, pero se ha proporcionado ${normalizedGeometry.type}.`);
+      }
+      // Si es ambiguo, permitimos la inserción (el toolbar ya validó que la capa es compatible)
+    }
+  }
+
+  // Siempre enviamos en EPSG:4326 tal como se dibuja en el mapa (Leaflet)
+  // WFS 1.1 + EPSG:4326 requiere orden lat,lon en el GML
+  const targetSrsName = buildSrsName(DEFAULT_SOURCE_CRS);
+  const targetAxisOrder = 'latlon';
+
+  const geometryGml = geometryToGml(normalizedGeometry, { srsName: targetSrsName, axisOrder: targetAxisOrder });
+  const propertiesXml = buildInsertPropertiesXml(properties);
+  const xml = buildInsertTransactionXml(layerName, geometryGml, propertiesXml);
+
+  const params = new URLSearchParams({
+    SERVICE: 'WFS',
+    VERSION: '1.1.0',
+    REQUEST: 'Transaction',
+    MAP: qgsProjectPath,
+    ...(token ? { TOKEN: token } : {})
+  });
+
+  const headers = {
+    'Content-Type': 'text/xml',
+    'Accept': 'application/xml, text/xml, */*'
+  };
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${qgsUrl}?${params.toString()}`, {
+    method: 'POST',
+    headers,
+    body: xml
+  });
+
+  const responseText = await response.text();
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(responseText, 'text/xml');
+
+  if (!response.ok) {
+    const exceptionReport = xmlDoc.querySelector('ServiceException, ServiceExceptionReport ServiceException');
+    if (exceptionReport) {
+      throw new Error(exceptionReport.textContent || 'Error desconocido del servidor WFS');
+    }
+    throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
+  }
+
+  const exceptionReport = xmlDoc.querySelector('ServiceException, ServiceExceptionReport ServiceException');
+  if (exceptionReport) {
+    throw new Error(exceptionReport.textContent || 'Error en la transacción WFS.');
+  }
+
+  const insertedFeature = xmlDoc.querySelector('ogc\\:FeatureId, FeatureId, wfs\\:FeatureId');
+  const fid = insertedFeature?.getAttribute('fid') || insertedFeature?.getAttribute('gml:id') || null;
+
+  return {
+    fid,
+    rawResponse: responseText
+  };
+}

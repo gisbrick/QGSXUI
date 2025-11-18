@@ -116,6 +116,7 @@
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-toast: 1080;
+  --z-notification: 99999; /* Siempre por encima de todo, incluyendo diálogos */
 }
 
 /* Reset básico para componentes UI */

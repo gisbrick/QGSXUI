@@ -94,9 +94,15 @@
 /* Toast container */
 .toast-container {
   position: fixed;
-  z-index: var(--z-toast);
+  z-index: 999999 !important; /* Siempre por encima de todo, incluyendo diálogos y modales */
   pointer-events: none;
   padding: var(--spacing-lg);
+}
+
+/* Asegurar que cada toast individual también tenga z-index alto */
+.toast-container .toast {
+  position: relative;
+  z-index: 999999 !important;
 }
 
 .toast-container--top-right {

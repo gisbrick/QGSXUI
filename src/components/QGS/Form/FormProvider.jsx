@@ -130,8 +130,10 @@ export const FormProvider = ({
     getHandler
   });
 
-  // Determinar si se puede guardar (hay cambios y todo está válido)
-  const canSave = isDirty && isValid;
+  // Determinar si se puede guardar
+  // Para nuevas features: solo requiere que sea válido (sin necesidad de cambios)
+  // Para features existentes: requiere cambios y que sea válido
+  const canSave = isNewFeature ? isValid : (isDirty && isValid);
 
   /**
    * Valor del contexto que se proporciona a los componentes hijos

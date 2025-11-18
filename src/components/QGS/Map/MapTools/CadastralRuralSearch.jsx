@@ -30,6 +30,7 @@ const CadastralRuralSearch = () => {
   const [isSearching, setIsSearching] = useState(false);
   const [results, setResults] = useState([]);
   const [showResults, setShowResults] = useState(false);
+  const [error, setError] = useState(null);
   const resultsRef = useRef(null);
   const markerRef = useRef(null);
   const geometryLayerRef = useRef(null);
@@ -480,14 +481,21 @@ const CadastralRuralSearch = () => {
       if (parcels && parcels.length > 0) {
         setResults(parcels);
         setShowResults(true);
+        setError(null);
       } else {
         setResults([]);
         setShowResults(true);
+        setError(tr('ui.map.cadastralRuralSearch.notFound', 
+          'No se encontró ninguna parcela con ese número de polígono y parcela', 
+          'No parcel found with that polygon and parcel number'));
       }
     } catch (error) {
       console.error('[CadastralRuralSearch] Error en búsqueda:', error);
       setResults([]);
       setShowResults(false);
+      setError(tr('ui.map.cadastralRuralSearch.searchError', 
+        'Error al buscar la parcela', 
+        'Error searching for parcel'));
     } finally {
       setIsSearching(false);
       isSearchingRef.current = false;
@@ -512,6 +520,7 @@ const CadastralRuralSearch = () => {
     } else {
       setResults([]);
       setShowResults(false);
+      setError(null);
     }
   }, [debouncedSearchValue]);
 
@@ -686,6 +695,7 @@ const CadastralRuralSearch = () => {
     skipNextSearchRef.current = false;
     const formatted = formatPolygonParcel(e.target.value);
     setSearchValue(formatted);
+    setError(null);
   };
 
   const handleClear = () => {
@@ -693,6 +703,7 @@ const CadastralRuralSearch = () => {
     setSearchValue('');
     setResults([]);
     setShowResults(false);
+    setError(null);
     if (markerRef.current && mapInstance) {
       mapInstance.removeLayer(markerRef.current);
       markerRef.current = null;
@@ -712,6 +723,12 @@ const CadastralRuralSearch = () => {
         disabled={isSearching}
         onClear={handleClear}
       />
+      
+      {error && searchValue.trim().length > 0 && (
+        <div className="cadastral-rural-search-error">
+          {error}
+        </div>
+      )}
       
       {isSearching && (
         <div className="cadastral-rural-search-loading">
@@ -751,11 +768,6 @@ const CadastralRuralSearch = () => {
         </div>
       )}
       
-      {showResults && results.length === 0 && !isSearching && (
-        <div className="cadastral-rural-search-no-results">
-          {tr('ui.map.cadastralRuralSearch.noResults', 'Sin resultados', 'No results')}
-        </div>
-      )}
     </div>
   );
 };

@@ -82,6 +82,8 @@
   max-height: 0;
   overflow: hidden;
   transition: opacity 0.2s ease, visibility 0.2s ease, max-height 0.2s ease;
+  /* Asegurar que el contenido desplegable esté por encima de la toolbar */
+  z-index: 1001;
 }
 
 .map-search-dropdown__content--expanded {

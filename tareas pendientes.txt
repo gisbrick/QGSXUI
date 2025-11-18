@@ -1,0 +1,31 @@
+Los Message se sienen que mostrar siempre por encima de cualquier elemento. Algunos mensajes los veo ocultos por debajo de diálogos.
+
+Al guardar los atributos de una nueva feature, cuando el id sea nulo (ojo, no al actualizar, cuando tenemos un id de feature), el botón de guardar no debe aparecer desactivado por defecto, a espera de que se detecten cambios. Tiene que estar activo.
+
+El buscador por polígono-parcela, no muestra ningún aviso cuando no encuentra nada. Que muestre un aviso, como hace la búsqueda por refcat, que dice "No se encontró ninguna parcela con esa referencia catastral", pero adaptado "No se encontró ninguna parcela con ese número de polígono y parcela"
+
+Cuando estamos dibujando una geometría, hay que permitir hacer drag del mapa, ya que podemos estar a una escala en la que no veamos todo el ámbito que tendrá la geometría que queremos dibujar
+
+
+Cuando se guarde una feature por primera vez, como mantenemos el formulario de eidción de atrinbnutos, hay que recargar los atributos tras guardarla, de modo que tengamos el ID con el que se ha guardado, por si queremos hacer una actualziación
+
+
+El div de fondo de la toolbar del mapa impide interactuar sobre el mapa, y que si hacemos click, drag, etc sobre el contenedor de las tolos, se dispare igualmente un clic, drag, etc sobre el mapa
+
+
+Si tenemos varios buscadores, y mostramos la lupa para desplegar los buscadores, vamos a permitir que la toolbar del mapa llegue hasta la lupa del buscador, antes de que los botones salten a la siguiente línea.
+
+
+
+
+
+
+
+
+
+Revisar el cursor al dibujar, ya que se cambia a pointer. Tiene que mantenerse el crosshair aunque permitamos hacer drag del mapa
+
+Revisa como se centra el mapa tras la búsqueda de portalero, ya que a veces no centra el mapa con el portal localizado
+
+
+

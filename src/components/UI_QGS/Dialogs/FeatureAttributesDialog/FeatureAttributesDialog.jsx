@@ -421,7 +421,7 @@ const FeatureAttributesDialog = ({
   }
 
   // Validar que tenemos los datos necesarios
-  if (!layerName || !feature || !featureId) {
+  if (!layerName || !feature) {
     return (
       <Modal
         isOpen={isOpen}

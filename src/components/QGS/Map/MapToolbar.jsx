@@ -1,11 +1,13 @@
-import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import React, { useState, useMemo, useContext, useRef, useEffect, useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useMap } from './MapProvider';
-import { ToolbarQGS } from '../../UI_QGS';
+import { ToolbarQGS, FeatureAttributesDialog } from '../../UI_QGS';
 import { Button } from '../../UI';
 import Modal from '../../UI/Modal/Modal';
 import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick, BookmarksManager } from './MapTools';
 import { QgisConfigContext } from '../QgisConfigContext';
+import { ActionHandlersProvider } from '../../../contexts/ActionHandlersContext';
+import { insertFeatureWithGeometry, fetchFeatureById } from '../../../services/qgisWFSFetcher';
 
 /**
  * Componente de toolbar para el mapa
@@ -18,10 +20,13 @@ const MapToolbar = () => {
     initialBoundsRef,
     t,
     config,
+    notificationManager,
+    qgsUrl,
+    qgsProjectPath,
+    refreshWMSLayer,
     startDrawing,
     startHoleDrawing,
     finishDrawing,
-    clearCurrentSketch,
     cancelDrawing,
     removeLastHole,
     isDrawing,
@@ -46,7 +51,20 @@ const MapToolbar = () => {
     gpsTrackPoints
   } = mapContext;
   const qgisConfig = useContext(QgisConfigContext);
+  const token = qgisConfig?.token || null;
+  const uiLanguage = qgisConfig?.language || 'es';
   const translate = typeof t === 'function' ? t : (key) => key;
+  const tr = useCallback(
+    (key, es, en) => {
+      const value = translate(key);
+      if (value && value !== key) {
+        return value;
+      }
+      const lang = (qgisConfig?.language || 'es').toLowerCase();
+      return lang.startsWith('en') ? (en || es || key) : (es || en || key);
+    },
+    [translate, qgisConfig?.language]
+  );
   const [boxZoomActive, setBoxZoomActive] = useState(false);
   const [zoomOutActive, setZoomOutActive] = useState(false);
   const [measureLineActive, setMeasureLineActive] = useState(false);
@@ -55,35 +73,363 @@ const MapToolbar = () => {
   const [infoClickActive, setInfoClickActive] = useState(false);
   const [showEditHelp, setShowEditHelp] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [layerSelectionState, setLayerSelectionState] = useState(null);
+  const [attributeDialogState, setAttributeDialogState] = useState(null);
   const pendingCancelRef = useRef(null);
 
-  useEffect(() => {
-    console.log('[MapToolbar] estado', { drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive, canGoBack, canGoForward });
-  }, [drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, measureLineActive, measureAreaActive, canGoBack, canGoForward]);
+  const notify = useCallback(
+    (level, title, text) => {
+      if (notificationManager?.addNotification) {
+        notificationManager.addNotification({ title, text, level });
+        return;
+      }
+      if (level === 'error') {
+        console.error(title, text);
+      } else {
+        console.log(title, text);
+      }
+    },
+    [notificationManager]
+  );
 
-  // Detectar capacidades de añadir por tipo geométrico
-  const { canAddPoint, canAddLine, canAddPolygon, hasQueryableLayers } = useMemo(() => {
-    const result = { canAddPoint: false, canAddLine: false, canAddPolygon: false, hasQueryableLayers: false };
-    if (!config?.layers) return result;
-    Object.values(config.layers).forEach(layer => {
+  const { insertableLayersByMode, hasQueryableLayers } = useMemo(() => {
+    const insertable = {
+      point: [],
+      line: [],
+      polygon: []
+    };
+    let queryable = false;
+
+    if (!config?.layers) {
+      return { insertableLayersByMode: insertable, hasQueryableLayers: false };
+    }
+
+    Object.entries(config.layers).forEach(([layerName, layer]) => {
       const caps = layer.WFSCapabilities || {};
-      const canInsert = !!caps.allowInsert;
-      const canQuery = !!caps.allowQuery;
-      if (canQuery) result.hasQueryableLayers = true;
-      if (!canInsert) return;
-      const typeName = (layer.geometryType || layer.geometryTypeName || layer.type || '').toString().toUpperCase();
-      if (typeName.includes('POINT')) result.canAddPoint = true;
-      if (typeName.includes('LINE')) result.canAddLine = true;
-      if (typeName.includes('POLYGON')) result.canAddPolygon = true;
-      if (!typeName) {
-        const name = (layer.name || '').toString().toLowerCase();
-        if (name.includes('punto') || name.includes('point')) result.canAddPoint = true;
-        if (name.includes('linea') || name.includes('line')) result.canAddLine = true;
-        if (name.includes('poligono') || name.includes('polygon')) result.canAddPolygon = true;
+      if (caps.allowQuery) {
+        queryable = true;
+      }
+      if (!caps.allowInsert) {
+        return;
+      }
+
+      const typeReference = (layer.wkbType_name ||
+        layer.geometryType ||
+        layer.geometryTypeName ||
+        layer.type ||
+        '').toString().toUpperCase();
+
+      const allowsMulti = Boolean(layer?.wkbType_name?.toLowerCase().includes('multi'));
+
+      const label = layer.title || layer.displayName || layer.name || layerName;
+      const entry = {
+        name: layerName,
+        label,
+        layer,
+        allowsMulti
+      };
+
+      const normalizedName = (layer.name || layerName || '').toString().toLowerCase();
+
+      if (typeReference.includes('POINT') || normalizedName.includes('punto') || normalizedName.includes('point')) {
+        insertable.point.push(entry);
+      }
+      if (
+        typeReference.includes('LINE') ||
+        typeReference.includes('CURVE') ||
+        normalizedName.includes('linea') ||
+        normalizedName.includes('line')
+      ) {
+        insertable.line.push(entry);
+      }
+      if (
+        typeReference.includes('POLYGON') ||
+        typeReference.includes('SURFACE') ||
+        normalizedName.includes('poligono') ||
+        normalizedName.includes('polygon')
+      ) {
+        insertable.polygon.push(entry);
       }
     });
-    return result;
+
+    return {
+      insertableLayersByMode: insertable,
+      hasQueryableLayers: queryable
+    };
   }, [config]);
+
+  const getLayersForMode = useCallback(
+    (mode, requireMulti = false) => {
+      let candidates = [];
+      if (mode === 'point') candidates = insertableLayersByMode.point;
+      if (mode === 'line') candidates = insertableLayersByMode.line;
+      if (mode === 'polygon') candidates = insertableLayersByMode.polygon;
+      if (requireMulti) {
+        return candidates.filter((layer) => layer.allowsMulti);
+      }
+      return candidates;
+    },
+    [insertableLayersByMode]
+  );
+
+  const handleLayerSelectionClose = useCallback(() => {
+    setLayerSelectionState(null);
+  }, []);
+
+  const openAttributesDialog = useCallback((layerEntry, geometrySnapshot, mode) => {
+    if (!layerEntry || !geometrySnapshot) return;
+    setAttributeDialogState({
+      layerName: layerEntry.name,
+      layerLabel: layerEntry.label,
+      layerConfig: layerEntry.layer,
+      geometry: geometrySnapshot,
+      drawMode: mode,
+      key: Date.now(),
+      feature: {
+        id: `${layerEntry.name}.temp`,
+        properties: {}
+      }
+    });
+  }, []);
+
+  const handleAttributeDialogClose = useCallback(() => {
+    if (attributeDialogState?.savedFeature) {
+      // Forzar refresco del mapa para evitar caches (igual que en el borrado)
+      if (mapInstance) {
+        try {
+          // Actualizar el cache busting para forzar la recarga de tiles
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.options) {
+            mapInstance.wmsLayer.options.cacheBust = Date.now();
+          }
+          // Redibujar todos los tiles visibles
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.redraw) {
+            mapInstance.wmsLayer.redraw();
+          }
+          // Invalidar el tamaño del mapa para forzar actualización
+          if (mapInstance.invalidateSize) {
+            mapInstance.invalidateSize();
+          }
+        } catch (err) {
+          console.warn('No se pudo forzar el refresco del mapa al cerrar el diálogo:', err);
+        }
+      }
+
+      if (refreshWMSLayer) {
+        try {
+          refreshWMSLayer();
+        } catch (err) {
+          console.warn('No se pudo refrescar la capa WMS al cerrar el diálogo de atributos:', err);
+        }
+      }
+    }
+    setAttributeDialogState(null);
+  }, [attributeDialogState, mapInstance, refreshWMSLayer]);
+
+  const handleLayerSelect = useCallback((layerEntry) => {
+    if (!layerSelectionState || !layerEntry) return;
+    openAttributesDialog(layerEntry, layerSelectionState.geometry, layerSelectionState.drawMode);
+    setLayerSelectionState(null);
+  }, [layerSelectionState, openAttributesDialog]);
+
+  const handleSaveDrawing = useCallback(() => {
+    if (!finishDrawing || !drawMode) {
+      return;
+    }
+
+    const geometry = finishDrawing();
+
+    if (!geometry) {
+      notify(
+        'warning',
+        tr('ui.map.draw.save.incomplete.title', 'Geometría incompleta', 'Incomplete geometry'),
+        tr('ui.map.draw.save.incomplete.message', 'Dibuja una geometría válida antes de guardar.', 'Draw a valid geometry before saving.')
+      );
+      return;
+    }
+
+    const geometrySnapshot = JSON.parse(JSON.stringify(geometry));
+    const geometryType = (geometrySnapshot?.type || '').toUpperCase();
+    const requiresMulti = geometryType.startsWith('MULTI');
+    const availableLayers = getLayersForMode(drawMode, requiresMulti);
+
+    if (!availableLayers || availableLayers.length === 0) {
+      const messageKey = requiresMulti
+          ? 'ui.map.draw.save.noMultiLayers.message'
+          : 'ui.map.draw.save.noLayers.message';
+      notify(
+        'warning',
+        tr('ui.map.draw.save.noLayers.title', 'Sin capas configuradas', 'No configured layers'),
+        tr(
+          messageKey,
+          requiresMulti
+            ? 'No hay capas que admitan geometrías múltiples para este tipo.'
+            : 'No hay capas que permitan insertar este tipo de geometría.',
+          requiresMulti
+            ? 'There are no layers that accept multi geometries for this type.'
+            : 'There are no layers that allow inserting this geometry type.'
+        )
+      );
+      return;
+    }
+
+    if (availableLayers.length === 1) {
+      openAttributesDialog(availableLayers[0], geometrySnapshot, drawMode);
+      return;
+    }
+
+    setLayerSelectionState({
+      geometry: geometrySnapshot,
+      drawMode,
+      layers: availableLayers
+    });
+  }, [drawMode, finishDrawing, getLayersForMode, notify, openAttributesDialog]);
+
+  const handleAttributeSave = useCallback(async (formValues) => {
+    if (!attributeDialogState) {
+      throw new Error('No hay geometría pendiente de guardar.');
+    }
+
+    if (!qgsUrl || !qgsProjectPath) {
+      throw new Error('No se ha configurado la conexión con QGIS Server.');
+    }
+
+    const { layerName, geometry, layerConfig } = attributeDialogState;
+
+    try {
+      const result = await insertFeatureWithGeometry(
+        qgsUrl,
+        qgsProjectPath,
+        layerName,
+        geometry,
+        formValues,
+        token,
+        layerConfig
+      );
+
+      notify(
+        'success',
+        tr('ui.map.draw.save.success.title', 'Geometría guardada', 'Geometry saved'),
+        result?.fid
+          ? tr('ui.map.draw.save.success.messageWithId', `Se ha creado el elemento ${result.fid}.`, `Feature ${result.fid} created.`)
+          : tr('ui.map.draw.save.success.message', 'El elemento se ha guardado correctamente.', 'The feature was saved successfully.')
+      );
+
+      // Recargar la feature desde el servidor para obtener el ID real y todos los atributos actualizados
+      let reloadedFeature = null;
+      if (result?.fid && layerName) {
+        try {
+          reloadedFeature = await fetchFeatureById(
+            qgsUrl,
+            qgsProjectPath,
+            layerName,
+            result.fid,
+            token
+          );
+        } catch (error) {
+          console.warn('[MapToolbar] No se pudo recargar la feature después de guardar:', error);
+          // Si falla la recarga, usar los datos que tenemos
+          reloadedFeature = {
+            id: result?.fid ? `${layerName}.${result.fid}` : null,
+            properties: formValues
+          };
+        }
+      }
+
+      // Actualizar el estado del diálogo con la feature recargada (o con los datos disponibles si falló la recarga)
+      setAttributeDialogState((prev) =>
+        prev
+          ? {
+              ...prev,
+              feature: reloadedFeature || {
+                id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.feature?.id || null,
+                properties: reloadedFeature?.properties || formValues
+              },
+              savedFeature: reloadedFeature || {
+                id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.savedFeature?.id || prev.feature?.id || null,
+                properties: reloadedFeature?.properties || formValues
+              },
+              geometry: geometry
+            }
+          : prev
+      );
+
+      if (cancelDrawing) {
+        try {
+          cancelDrawing();
+        } catch (err) {
+          console.warn('No se pudo limpiar la geometría temporal tras el guardado:', err);
+        }
+      }
+
+      // Forzar refresco del mapa para evitar caches (igual que en el borrado)
+      if (mapInstance) {
+        try {
+          // Actualizar el cache busting para forzar la recarga de tiles
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.options) {
+            mapInstance.wmsLayer.options.cacheBust = Date.now();
+          }
+          // Redibujar todos los tiles visibles
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.redraw) {
+            mapInstance.wmsLayer.redraw();
+          }
+          // Invalidar el tamaño del mapa para forzar actualización
+          if (mapInstance.invalidateSize) {
+            mapInstance.invalidateSize();
+          }
+        } catch (err) {
+          console.warn('No se pudo forzar el refresco del mapa:', err);
+        }
+      }
+
+      if (refreshWMSLayer) {
+        try {
+          refreshWMSLayer();
+        } catch (err) {
+          console.warn('No se pudo refrescar la capa WMS:', err);
+        }
+      }
+      return result;
+    } catch (error) {
+      notify(
+        'error',
+        tr('ui.map.draw.save.error.title', 'Error al guardar', 'Error saving geometry'),
+        error?.message || tr('ui.map.draw.save.error.message', 'No se pudo guardar la geometría.', 'The geometry could not be saved.')
+      );
+      throw error;
+    }
+  }, [attributeDialogState, cancelDrawing, notify, qgsProjectPath, qgsUrl, refreshWMSLayer, token, tr]);
+
+  const attributeDialogHandlers = useMemo(() => {
+    if (!attributeDialogState) {
+      return null;
+    }
+    return {
+      form: {
+        onSave: handleAttributeSave
+      }
+    };
+  }, [attributeDialogState, handleAttributeSave]);
+
+  const attributeDialogFeature = useMemo(() => {
+    if (!attributeDialogState) {
+      return null;
+    }
+    if (attributeDialogState.feature) {
+      return attributeDialogState.feature;
+    }
+    if (attributeDialogState.savedFeature) {
+      return attributeDialogState.savedFeature;
+    }
+    return {
+      id: null,
+      properties: {}
+    };
+  }, [attributeDialogState]);
+
+  // Detectar capacidades de añadir por tipo geométrico y capas disponibles
+  const canAddPoint = insertableLayersByMode.point.length > 0;
+  const canAddLine = insertableLayersByMode.line.length > 0;
+  const canAddPolygon = insertableLayersByMode.polygon.length > 0;
 
   const hasEditableTools = canAddPoint || canAddLine || canAddPolygon;
 
@@ -101,7 +447,6 @@ const MapToolbar = () => {
   };
 
   const handleToolChange = (toolKey) => {
-    console.log('[MapToolbar] onToolChange', { toolKey, drawMode, isDrawing, isDrawingHole, infoClickActive });
     if (!toolKey) {
       deactivateAllTools();
       clearPendingCancel();
@@ -134,8 +479,6 @@ const MapToolbar = () => {
   };
 
   const handleZoomToExtent = () => { ZoomToExtent.handleZoomToExtent(mapInstance, initialBoundsRef); };
-
-  const tr = (key, es, en) => { const v = translate(key); if (v && v !== key) return v; const lang=(qgisConfig?.language||'es').toLowerCase(); return lang.startsWith('en')?(en||es||key):(es||en||key); };
 
   const measureSelectItem = {
     key: 'measure-select',
@@ -245,11 +588,15 @@ const MapToolbar = () => {
         toolbarItems.push({ key: 'poly-remove-hole', type: 'action', circular: true, icon: 'fas fa-minus-circle', title: tr('ui.map.removeHole','Eliminar agujero','Remove hole'), onClick: () => removeLastHole && removeLastHole() });
       }
     }
-    toolbarItems.push({ key: 'draw-save', type: 'action', circular: true, icon: 'fas fa-save', title: tr('ui.map.saveDrawing','Guardar dibujo','Save drawing'), onClick: () => {
-      const geom = finishDrawing && finishDrawing();
-      console.log('[MapToolbar] Guardar dibujo', { drawMode, isDrawing, isDrawingHole, holeCount, hasGeometry, geom });
-    }});
-    toolbarItems.push({ key: 'draw-cancel', type: 'action', circular: true, icon: 'fas fa-times', title: tr('ui.map.cancelDrawing','Cancelar dibujo','Cancel drawing'), onClick: () => { console.log('[MapToolbar] Cancelar dibujo'); cancelDrawing && cancelDrawing(); } });
+    toolbarItems.push({
+      key: 'draw-save',
+      type: 'action',
+      circular: true,
+      icon: 'fas fa-save',
+      title: tr('ui.map.saveDrawing', 'Guardar dibujo', 'Save drawing'),
+      onClick: handleSaveDrawing
+    });
+    toolbarItems.push({ key: 'draw-cancel', type: 'action', circular: true, icon: 'fas fa-times', title: tr('ui.map.cancelDrawing','Cancelar dibujo','Cancel drawing'), onClick: () => { cancelDrawing && cancelDrawing(); } });
   }
 
   // Botón de ayuda solo si hay herramientas editables
@@ -271,9 +618,9 @@ const MapToolbar = () => {
       <ToolbarQGS items={toolbarItems} size="medium" selectedTool={selectedTool} onToolChange={handleToolChange} />
 
       {createPortal(
-        <Modal 
-          isOpen={showEditHelp} 
-          onClose={() => setShowEditHelp(false)} 
+        <Modal
+          isOpen={showEditHelp}
+          onClose={() => setShowEditHelp(false)}
           size="medium"
           title={tr('ui.map.editHelp.title','Ayuda de edición','Editing help')}
         >
@@ -303,6 +650,79 @@ const MapToolbar = () => {
           </div>
         </Modal>,
         document.body
+      )}
+
+      {layerSelectionState && (
+        <Modal
+          isOpen={true}
+          onClose={handleLayerSelectionClose}
+          title={tr('ui.map.draw.save.selectLayerTitle', 'Selecciona la capa', 'Select layer')}
+          size="medium"
+          lang={uiLanguage}
+        >
+          <div className="map-layer-selection-modal">
+            <p>
+              {tr(
+                'ui.map.draw.save.selectLayerMessage',
+                'Selecciona la capa donde quieres guardar la geometría recién dibujada.',
+                'Choose the layer where you want to store the newly drawn geometry.'
+              )}
+            </p>
+            <div style={{ display: 'flex', flexDirection: 'column', gap: 8, marginTop: 12 }}>
+              {layerSelectionState.layers.map((layer) => (
+                <button
+                  key={layer.name}
+                  type="button"
+                  onClick={() => handleLayerSelect(layer)}
+                  style={{
+                    padding: '10px 12px',
+                    borderRadius: 8,
+                    border: '1px solid #d1d5db',
+                    background: '#fff',
+                    textAlign: 'left',
+                    cursor: 'pointer',
+                    fontSize: 14
+                  }}
+                >
+                  {layer.label}
+                </button>
+              ))}
+            </div>
+            <div style={{ marginTop: 16, textAlign: 'right' }}>
+              <button
+                type="button"
+                onClick={handleLayerSelectionClose}
+                className="qgs-form-button qgs-form-button--secondary"
+              >
+                {tr('ui.common.cancel', 'Cancelar', 'Cancel')}
+              </button>
+            </div>
+          </div>
+        </Modal>
+      )}
+
+      {attributeDialogState && attributeDialogFeature && (
+        attributeDialogHandlers ? (
+          <ActionHandlersProvider handlers={attributeDialogHandlers}>
+            <FeatureAttributesDialog
+              isOpen={true}
+              onClose={handleAttributeDialogClose}
+              layerName={attributeDialogState.layerName}
+              feature={attributeDialogFeature}
+              readOnly={false}
+              language={uiLanguage}
+            />
+          </ActionHandlersProvider>
+        ) : (
+          <FeatureAttributesDialog
+            isOpen={true}
+            onClose={handleAttributeDialogClose}
+            layerName={attributeDialogState.layerName}
+            feature={attributeDialogFeature}
+            readOnly={false}
+            language={uiLanguage}
+          />
+        )
       )}
 
       <BookmarksManager isOpen={showBookmarks} onClose={() => setShowBookmarks(false)} />

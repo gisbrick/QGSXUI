@@ -12,6 +12,8 @@
   display: flex;
   flex-direction: column;
   gap: var(--spacing-xs);
+  /* Asegurar que los mensajes siempre tengan z-index alto para estar por encima de diálogos */
+  z-index: 999999 !important;
 }
 
 .ui-message--info {

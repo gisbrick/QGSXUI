@@ -46,7 +46,7 @@ const MapSearchContainer = ({ children }) => {
   };
 
   return (
-    <div className="map-search-container">
+    <div className={`map-search-container ${hasMultipleSearchers && !isExpanded ? 'map-search-container--collapsed' : ''}`}>
       {hasMultipleSearchers ? (
         <div className="map-search-dropdown" ref={dropdownRef}>
           <button

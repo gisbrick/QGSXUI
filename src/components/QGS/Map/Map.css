@@ -75,6 +75,16 @@
   cursor: grabbing;
 }
 
+/* Forzar cursor crosshair durante el dibujo, incluso durante el drag */
+.map-content .leaflet-container.leaflet-drawing {
+  cursor: crosshair !important;
+}
+
+.map-content .leaflet-container.leaflet-drawing.leaflet-dragging,
+.map-content .leaflet-container.leaflet-drawing:active {
+  cursor: crosshair !important;
+}
+
 /* Estilos para los controles del mapa (estilo Leaflet) */
 .map-sidebar .map-controls.leaflet-bar {
   box-shadow: 0 1px 5px rgba(0, 0, 0, 0.65);
@@ -181,11 +191,17 @@
 }
 
 .map-toolbar-container .map-toolbar {
-  pointer-events: auto;
+  /* Permitir que los eventos pasen a través del contenedor de la toolbar */
+  pointer-events: none;
   padding-left: 0;
   width: fit-content;
   max-width: 100%;
   background: transparent !important;
+}
+
+/* Todos los elementos hijos directos de .map-toolbar deben capturar eventos */
+.map-toolbar-container .map-toolbar > * {
+  pointer-events: auto;
 }
 
 .map-toolbar-container .map-toolbar .toolbar-qgs {
@@ -195,18 +211,31 @@
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+  /* Permitir que los eventos pasen a través del fondo de la toolbar */
+  pointer-events: none;
+}
+
+/* Los elementos interactivos dentro de la toolbar deben capturar eventos */
+.map-toolbar-container .map-toolbar .toolbar-qgs > *,
+.map-toolbar-container .map-toolbar .toolbar-qgs button,
+.map-toolbar-container .map-toolbar .toolbar-qgs .toolbar-qgs__group,
+.map-toolbar-container .map-toolbar .toolbar-qgs .toolbar-qgs__separator {
+  pointer-events: auto;
 }
 
 /* Cuando hay contenedor de búsqueda visible, ajustar la toolbar para evitar superposiciones */
 /* Usamos :has() para detectar la presencia del contenedor de búsqueda */
+/* Cuando el contenedor de búsqueda está colapsado O expandido, solo reservar espacio para la lupa */
+/* El contenido desplegable se mostrará sobre la toolbar con z-index más alto */
 .map-content:has(.map-search-container) .map-toolbar-container {
-  /* Calcular el espacio disponible: ancho total - espacio izquierdo - espacio derecho (búsqueda) */
-  max-width: calc(100% - 60px - 320px); /* 60px izquierda + ~320px para búsqueda (300px + padding) */
+  /* Calcular el espacio disponible: ancho total - espacio izquierdo - espacio derecho (solo lupa) */
+  /* El contenido desplegable se mostrará sobre la toolbar, no desplazará los botones */
+  max-width: calc(100% - 60px - 60px); /* 60px izquierda + ~60px para la lupa (40px botón + padding) */
   right: auto;
 }
 
 .map-content:has(.map-search-container) .map-toolbar-container.no-controls {
-  max-width: calc(100% - 10px - 320px); /* 10px izquierda + ~320px para búsqueda */
+  max-width: calc(100% - 10px - 60px); /* 10px izquierda + ~60px para la lupa */
 }
 
 /* Permitir que la toolbar se ajuste a múltiples líneas cuando hay búsqueda visible */
@@ -216,13 +245,14 @@
 }
 
 /* Fallback para navegadores que no soportan :has() - usar clase manual si es necesario */
+/* El contenido desplegable se mostrará sobre la toolbar, solo reservar espacio para la lupa */
 .map-content.has-search .map-toolbar-container {
-  max-width: calc(100% - 60px - 320px);
+  max-width: calc(100% - 60px - 60px);
   right: auto;
 }
 
 .map-content.has-search .map-toolbar-container.no-controls {
-  max-width: calc(100% - 10px - 320px);
+  max-width: calc(100% - 10px - 60px);
 }
 
 .map-content.has-search .map-toolbar-container .map-toolbar .toolbar-qgs {
