@@ -173,6 +173,7 @@
   left: 60px; /* Dejar espacio para los controles de zoom de Leaflet (normalmente ~50px de ancho) */
   z-index: 1000;
   pointer-events: none;
+  max-width: calc(100% - 20px); /* Asegurar que no se salga del contenedor */
 }
 
 .map-toolbar-container.no-controls {
@@ -183,13 +184,48 @@
   pointer-events: auto;
   padding-left: 0;
   width: fit-content;
+  max-width: 100%;
   background: transparent !important;
 }
 
 .map-toolbar-container .map-toolbar .toolbar-qgs {
   width: auto !important;
+  max-width: 100%;
   background: transparent !important;
   border: none !important;
   box-shadow: none !important;
   padding: 0 !important;
+}
+
+/* Cuando hay contenedor de búsqueda visible, ajustar la toolbar para evitar superposiciones */
+/* Usamos :has() para detectar la presencia del contenedor de búsqueda */
+.map-content:has(.map-search-container) .map-toolbar-container {
+  /* Calcular el espacio disponible: ancho total - espacio izquierdo - espacio derecho (búsqueda) */
+  max-width: calc(100% - 60px - 320px); /* 60px izquierda + ~320px para búsqueda (300px + padding) */
+  right: auto;
+}
+
+.map-content:has(.map-search-container) .map-toolbar-container.no-controls {
+  max-width: calc(100% - 10px - 320px); /* 10px izquierda + ~320px para búsqueda */
+}
+
+/* Permitir que la toolbar se ajuste a múltiples líneas cuando hay búsqueda visible */
+.map-content:has(.map-search-container) .map-toolbar-container .map-toolbar .toolbar-qgs {
+  flex-wrap: wrap !important;
+  max-width: 100%;
+}
+
+/* Fallback para navegadores que no soportan :has() - usar clase manual si es necesario */
+.map-content.has-search .map-toolbar-container {
+  max-width: calc(100% - 60px - 320px);
+  right: auto;
+}
+
+.map-content.has-search .map-toolbar-container.no-controls {
+  max-width: calc(100% - 10px - 320px);
+}
+
+.map-content.has-search .map-toolbar-container .map-toolbar .toolbar-qgs {
+  flex-wrap: wrap !important;
+  max-width: 100%;
 }

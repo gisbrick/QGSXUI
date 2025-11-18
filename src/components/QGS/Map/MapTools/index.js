@@ -5,4 +5,8 @@ export { default as MeasureLine } from './MeasureLine';
 export { default as MeasureArea } from './MeasureArea';
 export { default as ShowLocation } from './ShowLocation';
 export { default as InfoClick } from './InfoClick';
+export { default as BookmarksManager } from './BookmarksManager';
+export { default as AddressSearch } from './AddressSearch';
+export { default as CadastralRuralSearch } from './CadastralRuralSearch';
+export { default as CadastralReferenceSearch } from './CadastralReferenceSearch';
 

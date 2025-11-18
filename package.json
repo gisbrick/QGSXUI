@@ -16,6 +16,7 @@
   "dependencies": {
     "@fortawesome/fontawesome-free": "^7.0.0",
     "font-gis": "^1.0.6",
+    "html2canvas": "^1.4.1",
     "i18next": "^25.2.1",
     "proj4": "^2.9.0",
     "react": "^18.2.0",

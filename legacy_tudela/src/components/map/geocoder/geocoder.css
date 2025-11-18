@@ -1,0 +1,17 @@
+.geocoder {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    z-index: 1000;
+    display: "flex";
+    flex-direction: "column";
+    gap: "10px";
+    align-items: "center"
+}
+
+/*Estilos que aplicaremos a los iconos */
+.geocoder i {
+    font-size: 18px;
+    /* Cambiar el tamaño */
+    color: black;
+}

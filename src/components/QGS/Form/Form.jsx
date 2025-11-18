@@ -24,7 +24,7 @@ const Form = ({ layerName, featureId, readOnly = false, onSave = null, hideActio
 
   return (
     <FormProvider layerName={layerName} featureId={featureId} readOnly={readOnly} onSave={onSave}>
-      <Form_ hideActions={hideActions} />
+      <Form_ layerName={layerName} featureId={featureId} hideActions={hideActions} />
       {renderActions && renderActions()}
     </FormProvider>
 
@@ -90,7 +90,7 @@ const Form_ = ({layerName, featureId, hideActions = false }) => {
 
   return (
     <form onSubmit={onSubmit} className="qgs-form">    
-      {layer && <FormLayoutQGS></FormLayoutQGS>}
+      {layer && <FormLayoutQGS layerName={layerName} featureId={featureId} />}
       {/* Iteramos por cada campo definido en la configuración */}
       {/*layer && layer.fields.map(field => (
         <div key={field.name}>

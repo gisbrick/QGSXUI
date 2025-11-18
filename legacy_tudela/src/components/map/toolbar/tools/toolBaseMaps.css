@@ -1,0 +1,7 @@
+.selectedBaseMap{
+    border: 2px solid blue;
+}
+
+.baseMap{
+    cursor: pointer;
+}

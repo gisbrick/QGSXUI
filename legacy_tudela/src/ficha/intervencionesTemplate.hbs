@@ -1,0 +1,110 @@
+<h1>Ficha de Intervención Arqueológica</h1>
+
+<div class="section">
+    <p class="data">Nº INTERVENCIÓN: <span>{{numero_int}}</span></p>
+    <p class="data">DENOMINACIÓN INTERVENCIÓN: <span>{{denominacion}}</span></p>
+    <p class="data">N DE SIGLA: <span>{{n_sigla}}</span></p>
+    <p class="data">DIRECCIÓN POSTAL: <span>{{direccion}}</span></p>
+    <p class="data">PARCELAS CATASTRALES:</p>
+    <ul>
+        {{#each parcelas}}
+        <li>Nº Parcela: {{this.num_parcela}} | Cod. Municipio: {{this.cod_muni}} | Cod. Polígono: {{this.cod_poligono}}
+        </li>
+        {{/each}}
+    </ul>
+</div>
+
+<div class="section">
+    <p class="data">TIPOS DE ACTUACIONES:
+        {{#each tipo_actuacion}}
+        <span>{{this}}, </span>
+        {{/each}}
+    </p>
+    <p class="data">FECHA DE LA ACTUACIÓN: <span>{{fecha}}</span></p>
+</div>
+
+<div class="section">
+    <p class="data">CONTEXTOS CULTURALES:</p>
+    <ul>
+        {{#each context_cult}}
+        <li>{{this}}
+        </li>
+        {{/each}}
+    </ul>
+</div>
+
+<div class="section">
+    <p class="data">DATOS ADMINISTRATIVOS:</p>
+    <ul>
+        <li>Dirección: {{direccion}}</li>
+        <li>Promotor: {{promotor}}</li>
+    </ul>
+</div>
+
+<div class="section">
+    <p class="data">DESCRIPCIÓN DE LOS RESTOS APARECIDOS:</p>
+    <p>{{descrip_restos}}</p>
+</div>
+
+<div class="section">
+    <p class="data">TIPOS DE RESTOS POR FASES CULTURALES:</p>
+    <ul>
+        {{#each restos}}
+        <li>{{this.tipo}}: {{this.subtipo}} ({{this.fase}})
+            <ul>
+                <li>
+                    {{#if conservados}}
+                    Se conservan restos
+                    {{#if insitu}}
+                    insitu
+                    {{#if visibles}}
+                    y son visibles
+                    {{#if visitables}}
+                    y son visitables
+                    {{/if}}
+                    {{^}}
+                    y no son visitables
+                    {{/if}}
+                    {{^}}
+                    y no son visibles
+                    {{/if}}
+                    {{^}}
+                    No se conservan restos
+                    {{/if}}
+                </li>
+            </ul>
+        </li>
+        {{/each}}
+    </ul>
+</div>
+
+<div class="section">
+    <p class="data">UBICACIÓN DE LOS MATERIALES:</p>
+    <ul>
+        <li>Depósito permanente: {{ubi_mat_dep_perm}}</li>
+        <li>Depósito temporal: {{ubi_mat_dep_tempo}}</li>
+        <li>Falta por depositar: {{ubi_mat_falta_depos}}</li>
+    </ul>
+</div>
+
+<div class="section">
+    <p class="data">Imágenes de la Intervención:</p>
+    <div class="slideshow-container">
+
+        <div class="mySlides fade">
+            <img src="../../public/data/media/intervencion 1/ROLLO1-32.JPG" style="width:100%">
+        </div>
+
+        <div class="mySlides fade">
+            <img src="../../public/data/media/intervencion 1/ROLLO1-33.JPG" style="width:100%">
+        </div>
+
+        <div class="mySlides fade">
+            <img src="../../public/data/media/intervencion 1/ROLLO1-34.JPG" style="width:100%">
+        </div>
+
+        <a class="prev" onclick="plusSlides(-1)">❮</a>
+        <a class="next" onclick="plusSlides(1)">❯</a>
+
+    </div>
+</div>

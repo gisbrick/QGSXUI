@@ -1,0 +1,111 @@
+/* Contenedor de búsqueda del mapa */
+.map-search-container {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1000;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 8px;
+}
+
+.map-search-container__content {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  pointer-events: auto;
+  min-width: 0;
+}
+
+/* Permitir interacción en los componentes hijos */
+.map-search-container__content > * {
+  pointer-events: auto;
+}
+
+/* Desplegable de buscadores */
+.map-search-dropdown {
+  position: relative;
+  pointer-events: auto;
+}
+
+.map-search-dropdown__toggle {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  border: 2px solid var(--color-border, #e0e0e0);
+  background: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  transition: all 0.2s ease;
+  position: relative;
+  z-index: 1001;
+}
+
+.map-search-dropdown__toggle:hover {
+  background: var(--color-hover, rgba(0, 0, 0, 0.04));
+  border-color: var(--color-primary, #1976d2);
+}
+
+.map-search-dropdown__toggle--expanded {
+  background: var(--color-primary, #1976d2);
+  border-color: var(--color-primary, #1976d2);
+  color: #fff;
+}
+
+.map-search-dropdown__icon {
+  font-size: 18px;
+  color: var(--color-text-primary, #212121);
+  transition: color 0.2s ease;
+}
+
+.map-search-dropdown__toggle--expanded .map-search-dropdown__icon {
+  color: #fff;
+}
+
+.map-search-dropdown__content {
+  position: absolute;
+  top: calc(100% + 8px);
+  right: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 300px;
+  background: transparent;
+  pointer-events: none;
+  opacity: 0;
+  visibility: hidden;
+  max-height: 0;
+  overflow: hidden;
+  transition: opacity 0.2s ease, visibility 0.2s ease, max-height 0.2s ease;
+}
+
+.map-search-dropdown__content--expanded {
+  pointer-events: auto;
+  opacity: 1;
+  visibility: visible;
+  max-height: none;
+  overflow: visible;
+  animation: slideDown 0.2s ease;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Permitir interacción en los componentes hijos del desplegable */
+.map-search-dropdown__content > * {
+  pointer-events: auto;
+}
+

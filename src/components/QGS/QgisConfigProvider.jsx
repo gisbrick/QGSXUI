@@ -66,7 +66,7 @@ const QgisConfigProvider = ({ qgsUrl, qgsProjectPath, language, token, children 
       .catch(error => {
         console.error('Error al cargar configuración QGIS:', error);
         notificationManager.addNotification({
-          title: t('ui.qgis.error'),
+          title: t('ui.qgis.errorLabel'),
           text: t('ui.qgis.errorFetchingConfig'),
           level: 'error'
         });

@@ -268,6 +268,10 @@ const MapContainer = ({
       if (mapInstanceRef) {
         mapInstanceRef.current = map;
       }
+      // Exponer temporalmente el mapa para depuración manual
+      if (typeof window !== 'undefined') {
+        window.map = map;
+      }
 
       if (onMapReady) {
         onMapReady(map);

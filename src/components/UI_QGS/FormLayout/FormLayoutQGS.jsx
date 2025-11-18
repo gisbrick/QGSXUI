@@ -148,7 +148,7 @@ const FormLayoutQGS = ({ layerName, featureId }) => {
           <FormFieldQGS
             layerName={layerName}
             featureId={featureId}
-            field_idx={field.idx}
+            field_idx={typeof field.idx === 'string' ? parseInt(field.idx, 10) : (field.idx || 0)}
             field_name={field.name}
           />
         </div>

@@ -15,6 +15,16 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const drawLayerRef = useRef(null);
   const previewLayerRef = useRef(null);
   const editHandlesLayerRef = useRef(null);
+  const pendingExternalGeometryRef = useRef(null);
+  const pendingExternalModeRef = useRef(null);
+  const [gpsLocation, setGpsLocation] = useState(null);
+  const gpsLocationRef = useRef(null);
+  const [gpsActive, setGpsActive] = useState(false);
+  const gpsTrackRef = useRef({ active: false, type: null, points: [], paused: false });
+  const [isGpsTrackRecording, setIsGpsTrackRecording] = useState(false);
+  const [isGpsTrackPaused, setIsGpsTrackPaused] = useState(false);
+  const [gpsTrackType, setGpsTrackType] = useState(null);
+  const [gpsTrackPoints, setGpsTrackPoints] = useState(0);
 
   const drawPointsRef = useRef([]);
   const holesRef = useRef([]);
@@ -146,19 +156,18 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     const name = vertexPaneNameRef.current;
     const exists = !!mapInstance.getPane(name);
     if (!exists) {
-      console.log('[MapProvider] Creando pane de vértices:', name);
-      mapInstance.createPane(name);
+      const overlayPane = mapInstance.getPane('overlayPane') || undefined;
+      mapInstance.createPane(name, overlayPane);
       const paneEl = mapInstance.getPane(name);
       if (paneEl) {
         paneEl.style.zIndex = 700;
         paneEl.style.pointerEvents = 'auto';
-        console.log('[MapProvider] Pane creado:', { name, zIndex: paneEl.style.zIndex });
-      } else {
-        console.warn('[MapProvider] No se pudo obtener el elemento del pane tras crearlo:', name);
       }
     } else {
       const paneEl = mapInstance.getPane(name);
-      console.log('[MapProvider] Pane de vértices ya existe:', { name, zIndex: paneEl?.style?.zIndex });
+      if (paneEl && !paneEl.style.pointerEvents) {
+        paneEl.style.pointerEvents = 'auto';
+      }
     }
     return vertexPaneNameRef.current;
   };
@@ -435,11 +444,304 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     }
   };
 
+  const ensureDrawingLayers = () => {
+    if (!mapInstance || !window.L) return;
+    if (!multiLayerRef.current) {
+      multiLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+    }
+    if (!drawLayerRef.current) {
+      drawLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+    }
+    if (!previewLayerRef.current) {
+      previewLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+    }
+  };
+
+  const setPendingExternalGeometry = (geometry, mode) => {
+    pendingExternalGeometryRef.current = geometry || null;
+    pendingExternalModeRef.current = mode || null;
+  };
+
+  const normalizeGeometryForMode = (geometry, mode) => {
+    if (!geometry || !geometry.type) return null;
+    const type = geometry.type.toLowerCase();
+    const coords = geometry.coordinates;
+    if (!coords) return null;
+
+    const toLngLat = (coord) =>
+      Array.isArray(coord) && coord.length >= 2 ? [parseFloat(coord[0]), parseFloat(coord[1])] : null;
+
+    if (mode === 'point') {
+      if (type === 'point') {
+        const pt = toLngLat(coords);
+        return pt ? { point: pt } : null;
+      }
+      if (type === 'multipoint' && Array.isArray(coords) && coords.length) {
+        const pt = toLngLat(coords[0]);
+        return pt ? { point: pt } : null;
+      }
+      if (type === 'linestring' && Array.isArray(coords) && coords.length) {
+        const pt = toLngLat(coords[0]);
+        return pt ? { point: pt } : null;
+      }
+      if (type === 'multilinestring' && Array.isArray(coords) && coords[0] && coords[0].length) {
+        const pt = toLngLat(coords[0][0]);
+        return pt ? { point: pt } : null;
+      }
+      if (type === 'polygon' && Array.isArray(coords) && coords[0] && coords[0].length) {
+        const pt = toLngLat(coords[0][0]);
+        return pt ? { point: pt } : null;
+      }
+      if (type === 'multipolygon' && Array.isArray(coords) && coords[0] && coords[0][0] && coords[0][0].length) {
+        const pt = toLngLat(coords[0][0][0]);
+        return pt ? { point: pt } : null;
+      }
+      return null;
+    }
+
+    if (mode === 'line') {
+      let lineCoords = [];
+      if (type === 'linestring' && Array.isArray(coords)) {
+        lineCoords = coords.map(toLngLat).filter(Boolean);
+      } else if (type === 'multilinestring' && Array.isArray(coords)) {
+        coords.forEach((segment) => {
+          if (Array.isArray(segment)) {
+            segment.forEach((pt) => {
+              const val = toLngLat(pt);
+              if (val) lineCoords.push(val);
+            });
+          }
+        });
+      } else if (type === 'polygon' && Array.isArray(coords) && coords[0]) {
+        lineCoords = coords[0].map(toLngLat).filter(Boolean);
+      } else if (type === 'multipolygon' && Array.isArray(coords) && coords[0] && coords[0][0]) {
+        lineCoords = coords[0][0].map(toLngLat).filter(Boolean);
+      }
+      return lineCoords.length >= 2 ? { line: lineCoords } : null;
+    }
+
+    if (mode === 'polygon') {
+      let polygonRings = [];
+      if (type === 'polygon' && Array.isArray(coords)) {
+        polygonRings = coords;
+      } else if (type === 'multipolygon' && Array.isArray(coords) && coords[0]) {
+        polygonRings = coords[0];
+      } else if (type === 'linestring' && Array.isArray(coords)) {
+        polygonRings = [coords];
+      }
+      if (!polygonRings.length || !Array.isArray(polygonRings[0])) return null;
+      const outer = polygonRings[0].map(toLngLat).filter(Boolean);
+      if (outer.length < 3) return null;
+      const holes = polygonRings.slice(1).map((ring) => ring.map(toLngLat).filter(Boolean));
+      return { outer, holes };
+    }
+
+    return null;
+  };
+
+  const applyExternalGeometry = (geometry) => {
+    if (!mapInstance || !window.L) return false;
+    const mode = drawModeRef.current;
+    if (!mode) return false;
+    const normalized = normalizeGeometryForMode(geometry, mode);
+    if (!normalized) return false;
+
+    ensureDrawingLayers();
+    setIsDrawing(false);
+    isDrawingRef.current = false;
+    setIsDrawingHole(false);
+    isDrawingHoleRef.current = false;
+    setHasGeometry(true);
+    hasGeometryRef.current = true;
+    holeTempRef.current = [];
+
+    if (previewLayerRef.current) previewLayerRef.current.clearLayers();
+    drawPointsRef.current = [];
+    holesRef.current = [];
+    setHoleCount(normalized.holes ? normalized.holes.length : 0);
+
+    if (mode === 'point') {
+      drawPointsRef.current = [normalized.point];
+    } else if (mode === 'line') {
+      drawPointsRef.current = normalized.line || [];
+    } else if (mode === 'polygon') {
+      drawPointsRef.current = normalized.outer || [];
+      holesRef.current = normalized.holes || [];
+    }
+
+    redrawFinalGeometry();
+    rebuildEditHandles(mode);
+    return true;
+  };
+
+  const updateGpsLocation = (location) => {
+    setGpsLocation(location);
+    gpsLocationRef.current = location;
+    if (gpsTrackRef.current.active && !gpsTrackRef.current.paused) {
+      const point = [location.lng, location.lat];
+      const points = gpsTrackRef.current.points;
+      const last = points[points.length - 1];
+      if (!last || Math.abs(last[0] - point[0]) > 1e-9 || Math.abs(last[1] - point[1]) > 1e-9) {
+        points.push(point);
+        setGpsTrackPoints(points.length);
+        
+        // Si hay un modo de dibujo activo, añadir el punto directamente al dibujo
+        const mode = drawModeRef.current;
+        if (mode === 'line' || mode === 'polygon') {
+          ensureDrawingLayers();
+          if (!isDrawingRef.current) {
+            setIsDrawing(true);
+            isDrawingRef.current = true;
+          }
+          drawPointsRef.current.push([...point]);
+          redrawFinalGeometry();
+        }
+      }
+    }
+  };
+
+  const setGpsActiveStatus = (status) => {
+    setGpsActive(status);
+    if (!status && gpsTrackRef.current.active) {
+      gpsTrackRef.current = { active: false, type: null, points: [], paused: false };
+      setIsGpsTrackRecording(false);
+      setIsGpsTrackPaused(false);
+      setGpsTrackType(null);
+      setGpsTrackPoints(0);
+    }
+  };
+
+  const startGpsTrackRecording = (type) => {
+    if (!gpsActive) return false;
+    const mode = drawModeRef.current;
+    if (mode !== 'line' && mode !== 'polygon') return false;
+    const normalized = mode === 'polygon' ? 'polygon' : 'line';
+    gpsTrackRef.current = { active: true, type: normalized, points: [], paused: false };
+    setIsGpsTrackRecording(true);
+    setIsGpsTrackPaused(false);
+    setGpsTrackType(normalized);
+    setGpsTrackPoints(0);
+    
+    // Asegurar que las capas de dibujo estén inicializadas
+    ensureDrawingLayers();
+    if (!isDrawingRef.current) {
+      setIsDrawing(true);
+      isDrawingRef.current = true;
+    }
+    
+    // Limpiar puntos anteriores si los hay
+    drawPointsRef.current = [];
+    
+    // Añadir el primer punto si hay ubicación GPS disponible
+    if (gpsLocationRef.current) {
+      const firstPoint = [gpsLocationRef.current.lng, gpsLocationRef.current.lat];
+      gpsTrackRef.current.points.push([...firstPoint]);
+      setGpsTrackPoints(1);
+      drawPointsRef.current.push([...firstPoint]);
+      redrawFinalGeometry();
+    }
+    return true;
+  };
+
+  const pauseGpsTrackRecording = () => {
+    if (!gpsTrackRef.current.active || gpsTrackRef.current.paused) return false;
+    gpsTrackRef.current.paused = true;
+    setIsGpsTrackPaused(true);
+    return true;
+  };
+
+  const resumeGpsTrackRecording = () => {
+    if (!gpsTrackRef.current.active || !gpsTrackRef.current.paused) return false;
+    gpsTrackRef.current.paused = false;
+    setIsGpsTrackPaused(false);
+    return true;
+  };
+
+  const stopGpsTrackRecording = () => {
+    if (!gpsTrackRef.current.active) return null;
+    const { type, points } = gpsTrackRef.current;
+    gpsTrackRef.current = { active: false, type: null, points: [], paused: false };
+    setIsGpsTrackRecording(false);
+    setIsGpsTrackPaused(false);
+    setGpsTrackType(null);
+    setGpsTrackPoints(0);
+
+    // Validar que tenemos suficientes puntos
+    if (type === 'line' && points.length < 2) {
+      console.warn('[MapProvider] stopGpsTrackRecording: línea necesita al menos 2 puntos');
+      drawPointsRef.current = [];
+      setIsDrawing(false);
+      isDrawingRef.current = false;
+      if (previewLayerRef.current) previewLayerRef.current.clearLayers();
+      return null;
+    }
+    if (type === 'polygon' && points.length < 3) {
+      console.warn('[MapProvider] stopGpsTrackRecording: polígono necesita al menos 3 puntos');
+      drawPointsRef.current = [];
+      setIsDrawing(false);
+      isDrawingRef.current = false;
+      if (previewLayerRef.current) previewLayerRef.current.clearLayers();
+      return null;
+    }
+
+    // Los puntos ya están en drawPointsRef.current, así que finalizamos el dibujo
+    const mode = drawModeRef.current;
+    if (mode === type) {
+      setIsDrawing(false);
+      isDrawingRef.current = false;
+      setHasGeometry(true);
+      hasGeometryRef.current = true;
+      if (previewLayerRef.current) previewLayerRef.current.clearLayers();
+      
+      // Para polígonos, asegurar que el último punto cierra el anillo
+      if (type === 'polygon' && drawPointsRef.current.length >= 3) {
+        const first = drawPointsRef.current[0];
+        const last = drawPointsRef.current[drawPointsRef.current.length - 1];
+        if (first && last && (Math.abs(first[0] - last[0]) > 1e-9 || Math.abs(first[1] - last[1]) > 1e-9)) {
+          // Ya está cerrado o se cerrará en el render
+        }
+      }
+      
+      redrawFinalGeometry();
+      rebuildEditHandles(mode);
+      
+      // Construir geometría para retornar
+      let geometry = null;
+      if (type === 'line' && drawPointsRef.current.length >= 2) {
+        geometry = { type: 'LineString', coordinates: [...drawPointsRef.current] };
+      } else if (type === 'polygon' && drawPointsRef.current.length >= 3) {
+        const ring = [...drawPointsRef.current];
+        const first = ring[0];
+        const last = ring[ring.length - 1];
+        if (first && last && (Math.abs(first[0] - last[0]) > 1e-9 || Math.abs(first[1] - last[1]) > 1e-9)) {
+          ring.push([...first]);
+        }
+        geometry = { type: 'Polygon', coordinates: [ring] };
+      }
+      return geometry;
+    }
+
+    return null;
+  };
+
   // Iniciar dibujo
   const startDrawing = (mode) => {
     if (!mapInstance || !window.L) return;
     console.log('[MapProvider] startDrawing()', { mode });
     cancelDrawing();
+
+    const pendingGeometry = pendingExternalGeometryRef.current;
+    const pendingMode = pendingExternalModeRef.current;
+    if (pendingGeometry && (!pendingMode || pendingMode === mode)) {
+      pendingExternalGeometryRef.current = null;
+      pendingExternalModeRef.current = null;
+      setDrawMode(mode);
+      drawModeRef.current = mode;
+      const appliedPending = applyExternalGeometry(pendingGeometry);
+      if (appliedPending) {
+        return;
+      }
+    }
     setDrawMode(mode);
     drawModeRef.current = mode;
     setIsDrawing(true);
@@ -903,6 +1205,20 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     canGoForward,
     goBack,
     goForward,
+    applyExternalGeometry,
+    setPendingExternalGeometry,
+    gpsLocation,
+    gpsActive,
+    updateGpsLocation,
+    setGpsActiveStatus,
+    startGpsTrackRecording,
+    pauseGpsTrackRecording,
+    resumeGpsTrackRecording,
+    stopGpsTrackRecording,
+    isGpsTrackRecording,
+    isGpsTrackPaused,
+    gpsTrackType,
+    gpsTrackPoints,
   };
 
   return (

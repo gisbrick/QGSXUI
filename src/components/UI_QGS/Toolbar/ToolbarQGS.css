@@ -72,6 +72,11 @@
   flex-direction: column;
 }
 
+/* Permitir flex-wrap cuando sea necesario (para evitar superposiciones con búsqueda) */
+.toolbar-qgs--wrap {
+  flex-wrap: wrap;
+}
+
 /* Responsive */
 @media (max-width: 768px) {
   .toolbar-qgs {

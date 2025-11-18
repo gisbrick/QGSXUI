@@ -1,0 +1,42 @@
+
+#root_arqueo_tudela {
+  width: 100%;
+  height: 100vh;
+  /* Usa toda la altura disponible */
+}
+
+/* Estilos de la barra de navegación */
+.leaflet-bar a {
+  background-color: #0093d7;
+  border-bottom: 1px solid #0093d7;
+  
+  width: 26px;
+  height: 26px;
+  line-height: 26px;
+  display: block;
+  text-align: center;
+  text-decoration: none;
+  color: white;
+}
+.leaflet-bar a:hover {
+  background-color: #007bb5;
+  border-bottom: 1px solid #007bb5;
+}
+
+.leaflet-disabled {
+  background-color: #a9c6d4 !important;
+  opacity: 0.8;
+  border-bottom: 1px solid #a9c6d4 !important;
+  color: gray !important;
+  pointer-events: none;
+  cursor: not-allowed;
+}
+
+.ant-image-preview-img {
+  background-color: white !important;
+}
+
+.section i {
+  color: #888888 !important;
+}
+

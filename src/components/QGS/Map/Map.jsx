@@ -4,6 +4,7 @@ import { MapProvider, useMap } from './MapProvider';
 import MapContainer from './MapContainer';
 import MapControls from './MapControls';
 import MapToolbar from './MapToolbar';
+import MapSearchContainer from './MapSearchContainer';
 import './Map.css';
 
 /**
@@ -134,6 +135,7 @@ const Map = ({
                 <MapControls />
               </div>
             )}
+            <MapSearchContainer />
             <div className={`map-toolbar-container${showControls ? '' : ' no-controls'}`}>
               <MapToolbar />
             </div>

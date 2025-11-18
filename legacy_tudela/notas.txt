@@ -1,0 +1,10 @@
+
+# Crea un nuevo proyecto con Vite
+npm create vite@latest 
+
+# Instalamos todos los paquetes
+npm install
+
+# Lanzamos el proyecto
+npm run dev
+

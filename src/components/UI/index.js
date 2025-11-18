@@ -11,6 +11,7 @@ export { default as Message } from './Message/Message';
 export { default as Modal } from './Modal/Modal';
 export { default as NotificationCenter } from './NotificationCenter/NotificationCenter';
 export { default as Pagination } from './Pagination/Pagination';
+export { default as SearchInput } from './SearchInput/SearchInput';
 export { default as Select } from './Select/Select';
 export { default as SelectButton } from './SelectButton/SelectButton';
 export { default as SidePanel } from './SidePanel/SidePanel';

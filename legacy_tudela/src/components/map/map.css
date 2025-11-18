@@ -1,0 +1,54 @@
+
+html, body, #root {
+    height: 100%;
+    margin: 0;
+}
+
+.app-container {
+    display: flex;
+    flex-direction: column;
+    height: 100vh;
+}
+
+.map-top-banner {
+    flex-shrink: 0;
+    background: linear-gradient(90deg, #a1c4fd, #c2e9fb);
+    color: #003366;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 0.75rem 1.25rem;
+    height: 70px;
+    box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    font-family: 'Segoe UI', sans-serif;
+    font-size: 1rem;
+}
+
+.app-name span {
+    font-size: 1.2rem;
+    font-weight: 600;
+    color: #003366;
+}
+
+
+.map {
+    flex-grow: 1;
+    position: relative;
+    width: 100%;
+}
+
+
+.custom-label{
+    display: inline-block;
+    white-space: pre;
+}
+
+.leaflet-top.leaflet-right {
+    display: none;
+}
+
+.app-logo img {
+    height: 40px;
+    object-fit: contain;
+}

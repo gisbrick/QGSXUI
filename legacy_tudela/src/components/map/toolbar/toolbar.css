@@ -1,0 +1,16 @@
+.toolbar {
+    z-index: 999;
+    position: absolute;
+    left: 60px;
+    top: 10px;
+}
+
+/*Estilos que aplicaremos a los iconos de la toolbar*/
+i{
+    font-size: 18px; /* Cambiar el tamaño */
+    color: cornsilk ;
+}
+
+.selectedToolButton{
+    background-color: darkkhaki;
+}

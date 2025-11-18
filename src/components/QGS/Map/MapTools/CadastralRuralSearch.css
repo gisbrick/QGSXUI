@@ -1,0 +1,88 @@
+.cadastral-rural-search {
+  position: relative;
+  width: 300px;
+  min-width: 250px;
+}
+
+.cadastral-rural-search-results {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  background: #fff;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--border-radius-md, 4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  max-height: 320px;
+  overflow-y: auto;
+  z-index: 1001;
+}
+
+.cadastral-rural-search-result {
+  padding: 10px 12px;
+  cursor: pointer;
+  border-bottom: 1px solid var(--color-border-light, #f0f0f0);
+  color: var(--color-text-primary, #212121);
+  transition: background-color 0.2s;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+.cadastral-rural-search-result:last-child {
+  border-bottom: none;
+}
+
+.cadastral-rural-search-result:hover {
+  background-color: var(--color-hover, rgba(0, 0, 0, 0.04));
+}
+
+.cadastral-rural-search-result-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.cadastral-rural-search-result-icon {
+  font-size: 14px;
+  color: var(--color-primary, #1e88e5);
+}
+
+.cadastral-rural-search-result-text {
+  flex: 1;
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.cadastral-rural-search-result-type {
+  font-size: 11px;
+  text-transform: uppercase;
+  color: var(--color-text-secondary, #757575);
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: 12px;
+  padding: 1px 6px;
+}
+
+.cadastral-rural-search-result-locality {
+  font-size: 12px;
+  color: var(--color-text-secondary, #757575);
+}
+
+.cadastral-rural-search-no-results,
+.cadastral-rural-search-loading {
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  margin-top: 4px;
+  padding: 12px;
+  background: #fff;
+  border: 1px solid var(--color-border, #e0e0e0);
+  border-radius: var(--border-radius-md, 4px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.15);
+  text-align: center;
+  font-size: 13px;
+  color: var(--color-text-secondary, #757575);
+}
+

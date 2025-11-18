@@ -1,8 +1,10 @@
 import React, { useState, useMemo, useContext, useRef, useEffect } from 'react';
+import { createPortal } from 'react-dom';
 import { useMap } from './MapProvider';
 import { ToolbarQGS } from '../../UI_QGS';
 import { Button } from '../../UI';
-import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick } from './MapTools';
+import Modal from '../../UI/Modal/Modal';
+import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick, BookmarksManager } from './MapTools';
 import { QgisConfigContext } from '../QgisConfigContext';
 
 /**
@@ -11,7 +13,38 @@ import { QgisConfigContext } from '../QgisConfigContext';
  */
 const MapToolbar = () => {
   const mapContext = useMap() || {};
-  const { mapInstance, initialBoundsRef, t, config, startDrawing, startHoleDrawing, finishDrawing, clearCurrentSketch, cancelDrawing, removeLastHole, isDrawing, isDrawingHole, drawMode, holeCount, hasGeometry, canGoBack, canGoForward, goBack, goForward } = mapContext;
+  const {
+    mapInstance,
+    initialBoundsRef,
+    t,
+    config,
+    startDrawing,
+    startHoleDrawing,
+    finishDrawing,
+    clearCurrentSketch,
+    cancelDrawing,
+    removeLastHole,
+    isDrawing,
+    isDrawingHole,
+    drawMode,
+    holeCount,
+    hasGeometry,
+    canGoBack,
+    canGoForward,
+    goBack,
+    goForward,
+    gpsLocation,
+    gpsActive,
+    setPendingExternalGeometry,
+    startGpsTrackRecording,
+    pauseGpsTrackRecording,
+    resumeGpsTrackRecording,
+    stopGpsTrackRecording,
+    isGpsTrackRecording,
+    isGpsTrackPaused,
+    gpsTrackType,
+    gpsTrackPoints
+  } = mapContext;
   const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
   const [boxZoomActive, setBoxZoomActive] = useState(false);
@@ -21,6 +54,7 @@ const MapToolbar = () => {
   const [showLocationActive, setShowLocationActive] = useState(false);
   const [infoClickActive, setInfoClickActive] = useState(false);
   const [showEditHelp, setShowEditHelp] = useState(false);
+  const [showBookmarks, setShowBookmarks] = useState(false);
   const pendingCancelRef = useRef(null);
 
   useEffect(() => {
@@ -57,7 +91,8 @@ const MapToolbar = () => {
     if (except !== 'zoom-in-box') setBoxZoomActive(false);
     if (except !== 'zoom-out') setZoomOutActive(false);
     if (except !== 'measure') { setMeasureLineActive(false); setMeasureAreaActive(false); }
-    if (except !== 'show-location') setShowLocationActive(false);
+    // El GPS (show-location) nunca se desactiva automáticamente, solo manualmente por el usuario
+    // if (except !== 'show-location') setShowLocationActive(false);
     if (except !== 'info-click') setInfoClickActive(false);
   };
 
@@ -74,17 +109,28 @@ const MapToolbar = () => {
       return;
     }
     clearPendingCancel();
-    if (toolKey === 'draw-point') { deactivateAllTools(); if (cancelDrawing) cancelDrawing(); startDrawing && startDrawing('point'); }
+    if (toolKey === 'draw-point') {
+      deactivateAllTools();
+      if (cancelDrawing) cancelDrawing();
+      if (gpsActive && gpsLocation && setPendingExternalGeometry) {
+        setPendingExternalGeometry(
+          {
+            type: 'Point',
+            coordinates: [gpsLocation.lng, gpsLocation.lat]
+          },
+          'point'
+        );
+      }
+      startDrawing && startDrawing('point');
+    }
     else if (toolKey === 'draw-line') { deactivateAllTools(); if (cancelDrawing) cancelDrawing(); startDrawing && startDrawing('line'); }
     else if (toolKey === 'draw-polygon') { deactivateAllTools(); if (cancelDrawing) cancelDrawing(); startDrawing && startDrawing('polygon'); }
     else if (toolKey === 'measure-line') { setMeasureLineActive(true); setMeasureAreaActive(false); deactivateAllTools('measure'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'measure-area') { setMeasureAreaActive(true); setMeasureLineActive(false); deactivateAllTools('measure'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'zoom-in-box') { const s=!boxZoomActive; setBoxZoomActive(s); if (s) deactivateAllTools('zoom-in-box'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'zoom-out') { const s=!zoomOutActive; setZoomOutActive(s); if (s) deactivateAllTools('zoom-out'); if (cancelDrawing) cancelDrawing(); }
-    else if (toolKey === 'show-location') { const s=!showLocationActive; setShowLocationActive(s); if (s) deactivateAllTools('show-location'); if (cancelDrawing) cancelDrawing(); }
     else if (toolKey === 'info-click') { const s=!infoClickActive; setInfoClickActive(s); if (s) deactivateAllTools('info-click'); if (cancelDrawing) cancelDrawing(); }
-    else if (toolKey === 'nav-back') { goBack && goBack(); }
-    else if (toolKey === 'nav-forward') { goForward && goForward(); }
+    // nav-back y nav-forward ahora son action tools, se manejan directamente con onClick, no necesitan handleToolChange
   };
 
   const handleZoomToExtent = () => { ZoomToExtent.handleZoomToExtent(mapInstance, initialBoundsRef); };
@@ -120,10 +166,16 @@ const MapToolbar = () => {
     { key: 'zoom-in-box', type: 'tool', circular: true, icon: 'fg-zoom-in', title: tr('ui.map.zoomInBox','Zoom a caja','Box zoom') },
     { key: 'zoom-out', type: 'tool', circular: true, icon: 'fg-zoom-out', title: tr('ui.map.zoomOut','Alejar','Zoom out') },
     { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-extent', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
-    // Navegación de extensiones (solo cuando funcional)
-    ...(canGoBack ? [{ key: 'nav-back', type: 'tool', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back') }] : []),
-    ...(canGoForward ? [{ key: 'nav-forward', type: 'tool', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward') }] : []),
-    { key: 'show-location', type: 'tool', circular: true, icon: 'fg-location', title: tr('ui.map.showLocation','Mostrar ubicación','Show my location') },
+    // Navegación de extensiones (solo cuando funcional) - action tools que no deseleccionan la herramienta activa
+    ...(canGoBack ? [{ key: 'nav-back', type: 'action', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back'), onClick: () => goBack && goBack() }] : []),
+    ...(canGoForward ? [{ key: 'nav-forward', type: 'action', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward'), onClick: () => goForward && goForward() }] : []),
+    { key: 'bookmarks', type: 'action', circular: true, icon: 'fas fa-bookmark', title: tr('ui.map.bookmarks.title','Marcadores','Bookmarks'), onClick: () => setShowBookmarks(true) },
+    { key: 'show-location', type: 'action', circular: true, icon: gpsActive ? 'fg-location-on' : 'fg-location', title: tr('ui.map.showLocation','Mostrar ubicación','Show my location'), onClick: () => {
+      const newActive = !showLocationActive;
+      setShowLocationActive(newActive);
+      // Solo cancelar dibujo si se está activando el GPS, no al desactivarlo
+      if (newActive && cancelDrawing) cancelDrawing();
+    } },
     { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click'), disabled: !hasQueryableLayers },
     measureSelectItem
   ];
@@ -133,6 +185,59 @@ const MapToolbar = () => {
   if (canAddPolygon) toolbarItems.push({ key: 'draw-polygon', type: 'tool', circular: true, icon: 'fg-polygon', title: tr('ui.map.drawPolygon','Dibujar polígono','Draw polygon') });
 
   // Mostrar guardar/cancelar si ya hay geometría o no se está sketchando o si se dibuja agujero
+  const canShowGpsTrackControls = gpsActive && (drawMode === 'line' || drawMode === 'polygon') && !isGpsTrackRecording;
+
+  // Mostrar botones de track GPS cuando hay GPS activo y modo de dibujo de línea o polígono
+  if (canShowGpsTrackControls && startGpsTrackRecording) {
+    toolbarItems.push({
+      key: 'gps-track-start',
+      type: 'action',
+      circular: true,
+      icon: <i className="fa-solid fa-record-vinyl" style={{ color: '#d32f2f' }} />,
+      title: tr('ui.map.startGpsTrack', 'Iniciar track GPS', 'Start GPS track'),
+      disabled: !gpsLocation,
+      onClick: () => gpsLocation && startGpsTrackRecording(drawMode)
+    });
+  }
+
+  // Mostrar botones de pausar/reanudar y finalizar track GPS cuando se está grabando
+  if (isGpsTrackRecording && gpsTrackType === drawMode) {
+    // Botón de pausar/reanudar
+    if (isGpsTrackPaused && resumeGpsTrackRecording) {
+      toolbarItems.push({
+        key: 'gps-track-resume',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-play',
+        title: tr('ui.map.resumeGpsTrack', 'Reanudar track GPS', 'Resume GPS track'),
+        onClick: () => resumeGpsTrackRecording()
+      });
+    } else if (!isGpsTrackPaused && pauseGpsTrackRecording) {
+      toolbarItems.push({
+        key: 'gps-track-pause',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-pause',
+        title: tr('ui.map.pauseGpsTrack', 'Pausar track GPS', 'Pause GPS track'),
+        onClick: () => pauseGpsTrackRecording()
+      });
+    }
+    
+    // Botón de finalizar
+    if (stopGpsTrackRecording) {
+      const minPoints = drawMode === 'polygon' ? 3 : 2;
+      toolbarItems.push({
+        key: 'gps-track-stop',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-stop',
+        title: tr('ui.map.stopGpsTrack', 'Finalizar track GPS', 'Stop GPS track'),
+        disabled: gpsTrackPoints < minPoints,
+        onClick: () => stopGpsTrackRecording()
+      });
+    }
+  }
+
   if (drawMode && (hasGeometry || !isDrawing || isDrawingHole)) {
     if (drawMode === 'polygon') {
       toolbarItems.push({ key: 'poly-add-hole', type: 'action', circular: true, icon: 'fg-polygon-hole', title: tr('ui.map.addHole','Añadir agujero','Add hole'), onClick: () => setShowEditHelp(false) || (startHoleDrawing && startHoleDrawing()) });
@@ -152,7 +257,8 @@ const MapToolbar = () => {
     toolbarItems.push({ key: 'edit-help', type: 'action', circular: true, icon: 'fas fa-question-circle', title: tr('ui.map.editHelp','Ayuda de edición','Editing help'), onClick: () => setShowEditHelp(true) });
   }
 
-  const selectedTool = boxZoomActive ? 'zoom-in-box' : (zoomOutActive ? 'zoom-out' : (showLocationActive ? 'show-location' : (infoClickActive ? 'info-click' : (drawMode ? `draw-${drawMode}` : ((measureLineActive || measureAreaActive) ? (measureLineActive ? 'measure-line' : 'measure-area') : null)))));
+
+  const selectedTool = boxZoomActive ? 'zoom-in-box' : (zoomOutActive ? 'zoom-out' : (infoClickActive ? 'info-click' : (drawMode ? `draw-${drawMode}` : ((measureLineActive || measureAreaActive) ? (measureLineActive ? 'measure-line' : 'measure-area') : null))));
 
   return (
     <div className="map-toolbar">
@@ -164,43 +270,42 @@ const MapToolbar = () => {
       <InfoClick active={infoClickActive} onActiveChange={setInfoClickActive} />
       <ToolbarQGS items={toolbarItems} size="medium" selectedTool={selectedTool} onToolChange={handleToolChange} />
 
-      {showEditHelp && (
-        <div style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.35)', zIndex: 10000 }} onClick={() => setShowEditHelp(false)}>
-          <div style={{ maxWidth: 520, width: '90%', background: '#fff', borderRadius: 8, padding: 16, margin: '10vh auto', boxShadow: '0 8px 24px rgba(0,0,0,0.2)' }} onClick={(e) => e.stopPropagation()}>
-            <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 8 }}>
-              <h3 style={{ margin: 0 }}>{tr('ui.map.editHelp.title','Ayuda de edición','Editing help')}</h3>
-              <button onClick={() => setShowEditHelp(false)} style={{ background: 'transparent', border: 'none', fontSize: 18, cursor: 'pointer' }}>×</button>
-            </div>
-            <div style={{ fontSize: 14, lineHeight: 1.5 }}>
-              <p><b>{tr('ui.map.editHelp.basic','Flujo básico','Basic flow')}</b></p>
-              <ul style={{ paddingLeft: 18 }}>
-                <li>{tr('ui.map.editHelp.basic1','Selecciona la herramienta de dibujar (punto/línea/polígono).','Select the draw tool (point/line/polygon).')}</li>
-                <li>{tr('ui.map.editHelp.basic2','Finaliza con doble clic o haciendo clic a menos de 3 px del último vértice.','Finish with double click or clicking less than 3 px from the last vertex.')}</li>
-                <li>{tr('ui.map.editHelp.basic3','Tras finalizar, podrás Guardar o Cancelar. Si hay capas multi, podrás iniciar otra geometría con el siguiente clic.','After finishing you can Save or Cancel. If there are multi layers, you can start another geometry with the next click.')}</li>
-              </ul>
-              <p><b>{tr('ui.map.editHelp.vertices','Edición de vértices','Vertex editing')}</b></p>
-              <ul style={{ paddingLeft: 18 }}>
-                <li>{tr('ui.map.editHelp.vertices1','Arrastra los vértices para moverlos.','Drag vertices to move them.')}</li>
-                <li>{tr('ui.map.editHelp.vertices2','Haz clic en los puntos intermedios para insertar vértices; mantén pulsado para insertar y arrastrar en un solo gesto.','Click on midpoints to insert vertices; hold to insert and drag in a single gesture.')}</li>
-                <li>{tr('ui.map.editHelp.vertices3','Para borrar un vértice: Alt+clic o clic derecho sobre el vértice (líneas ≥ 2, polígonos ≥ 3).','To delete a vertex: Alt+click or right click on the vertex (lines ≥ 2, polygons ≥ 3).')}</li>
-              </ul>
-              <p><b>{tr('ui.map.editHelp.holes','Agujeros (polígonos)','Holes (polygons)')}</b></p>
-              <ul style={{ paddingLeft: 18 }}>
-                <li>{tr('ui.map.editHelp.holes1','Pulsa Añadir agujero y dibuja el anillo interior; finaliza con doble clic o cierre por proximidad.','Click Add hole and draw the inner ring; finish with double click or close by proximity.')}</li>
-                <li>{tr('ui.map.editHelp.holes2','Durante el agujero, los vértices del contorno no se mueven.','During the hole, the outer contour vertices do not move.')}</li>
-                <li>{tr('ui.map.editHelp.holes3','Puedes eliminar el último agujero con Eliminar agujero.','You can remove the last hole with Remove hole.')}</li>
-              </ul>
-              <p><b>{tr('ui.map.editHelp.save','Guardado y atributos','Saving and attributes')}</b></p>
-              <ul style={{ paddingLeft: 18 }}>
-                <li>{tr('ui.map.editHelp.save1','Al pulsar Guardar, se abrirá un diálogo para cumplimentar los atributos asociados a la geometría antes de enviarla al servidor.','When pressing Save, a dialog will open to fill the attributes associated with the geometry before sending to the server.')}</li>
-              </ul>
-            </div>
-            <div style={{ marginTop: 12, textAlign: 'right' }}>
-              <button onClick={() => setShowEditHelp(false)} style={{ padding: '6px 12px', borderRadius: 4, border: '1px solid #ddd', background: '#f7f7f7', cursor: 'pointer' }}>{tr('ui.common.close','Cerrar','Close')}</button>
-            </div>
+      {createPortal(
+        <Modal 
+          isOpen={showEditHelp} 
+          onClose={() => setShowEditHelp(false)} 
+          size="medium"
+          title={tr('ui.map.editHelp.title','Ayuda de edición','Editing help')}
+        >
+          <div style={{ fontSize: 14, lineHeight: 1.5 }}>
+            <p><b>{tr('ui.map.editHelp.basic','Flujo básico','Basic flow')}</b></p>
+            <ul style={{ paddingLeft: 18 }}>
+              <li>{tr('ui.map.editHelp.basic1','Selecciona la herramienta de dibujar (punto/línea/polígono).','Select the draw tool (point/line/polygon).')}</li>
+              <li>{tr('ui.map.editHelp.basic2','Finaliza con doble clic o haciendo clic a menos de 3 px del último vértice.','Finish with double click or clicking less than 3 px from the last vertex.')}</li>
+              <li>{tr('ui.map.editHelp.basic3','Tras finalizar, podrás Guardar o Cancelar. Si hay capas multi, podrás iniciar otra geometría con el siguiente clic.','After finishing you can Save or Cancel. If there are multi layers, you can start another geometry with the next click.')}</li>
+            </ul>
+            <p><b>{tr('ui.map.editHelp.vertices','Edición de vértices','Vertex editing')}</b></p>
+            <ul style={{ paddingLeft: 18 }}>
+              <li>{tr('ui.map.editHelp.vertices1','Arrastra los vértices para moverlos.','Drag vertices to move them.')}</li>
+              <li>{tr('ui.map.editHelp.vertices2','Haz clic en los puntos intermedios para insertar vértices; mantén pulsado para insertar y arrastrar en un solo gesto.','Click on midpoints to insert vertices; hold to insert and drag in a single gesture.')}</li>
+              <li>{tr('ui.map.editHelp.vertices3','Para borrar un vértice: Alt+clic o clic derecho sobre el vértice (líneas ≥ 2, polígonos ≥ 3).','To delete a vertex: Alt+click or right click on the vertex (lines ≥ 2, polygons ≥ 3).')}</li>
+            </ul>
+            <p><b>{tr('ui.map.editHelp.holes','Agujeros (polígonos)','Holes (polygons)')}</b></p>
+            <ul style={{ paddingLeft: 18 }}>
+              <li>{tr('ui.map.editHelp.holes1','Pulsa Añadir agujero y dibuja el anillo interior; finaliza con doble clic o cierre por proximidad.','Click Add hole and draw the inner ring; finish with double click or close by proximity.')}</li>
+              <li>{tr('ui.map.editHelp.holes2','Durante el agujero, los vértices del contorno no se mueven.','During the hole, the outer contour vertices do not move.')}</li>
+              <li>{tr('ui.map.editHelp.holes3','Puedes eliminar el último agujero con Eliminar agujero.','You can remove the last hole with Remove hole.')}</li>
+            </ul>
+            <p><b>{tr('ui.map.editHelp.save','Guardado y atributos','Saving and attributes')}</b></p>
+            <ul style={{ paddingLeft: 18 }}>
+              <li>{tr('ui.map.editHelp.save1','Al pulsar Guardar, se abrirá un diálogo para cumplimentar los atributos asociados a la geometría antes de enviarla al servidor.','When pressing Save, a dialog will open to fill the attributes associated with the geometry before sending to the server.')}</li>
+            </ul>
           </div>
-        </div>
+        </Modal>,
+        document.body
       )}
+
+      <BookmarksManager isOpen={showBookmarks} onClose={() => setShowBookmarks(false)} />
     </div>
   );
 };
