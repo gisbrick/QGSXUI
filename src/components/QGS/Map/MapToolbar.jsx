@@ -6,8 +6,7 @@ import { Button } from '../../UI';
 import Modal from '../../UI/Modal/Modal';
 import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick, BookmarksManager } from './MapTools';
 import { QgisConfigContext } from '../QgisConfigContext';
-import { ActionHandlersProvider } from '../../../contexts/ActionHandlersContext';
-import { insertFeatureWithGeometry, fetchFeatureById } from '../../../services/qgisWFSFetcher';
+import { insertFeatureWithGeometry, fetchFeatureById, updateFeatureGeometry } from '../../../services/qgisWFSFetcher';
 
 /**
  * Componente de toolbar para el mapa
@@ -48,7 +47,11 @@ const MapToolbar = () => {
     isGpsTrackRecording,
     isGpsTrackPaused,
     gpsTrackType,
-    gpsTrackPoints
+    gpsTrackPoints,
+    isEditingExistingGeometry,
+    getEditingFeature,
+    getEditingLayerConfig,
+    geometryHasChanges
   } = mapContext;
   const qgisConfig = useContext(QgisConfigContext);
   const token = qgisConfig?.token || null;
@@ -76,6 +79,10 @@ const MapToolbar = () => {
   const [layerSelectionState, setLayerSelectionState] = useState(null);
   const [attributeDialogState, setAttributeDialogState] = useState(null);
   const pendingCancelRef = useRef(null);
+  const [attributeFormValues, setAttributeFormValues] = useState({});
+  // ⚠️ Mantener este estado sincronizado: garantiza que siempre enviamos los últimos atributos al insertar.
+
+  // No additional effects
 
   const notify = useCallback(
     (level, title, text) => {
@@ -178,6 +185,7 @@ const MapToolbar = () => {
 
   const openAttributesDialog = useCallback((layerEntry, geometrySnapshot, mode) => {
     if (!layerEntry || !geometrySnapshot) return;
+    setAttributeFormValues({});
     setAttributeDialogState({
       layerName: layerEntry.name,
       layerLabel: layerEntry.label,
@@ -187,12 +195,15 @@ const MapToolbar = () => {
       key: Date.now(),
       feature: {
         id: `${layerEntry.name}.temp`,
-        properties: {}
+        type: 'Feature',
+        properties: {},
+        geometry: geometrySnapshot
       }
     });
   }, []);
 
   const handleAttributeDialogClose = useCallback(() => {
+    setAttributeFormValues({});
     if (attributeDialogState?.savedFeature) {
       // Forzar refresco del mapa para evitar caches (igual que en el borrado)
       if (mapInstance) {
@@ -284,6 +295,11 @@ const MapToolbar = () => {
     });
   }, [drawMode, finishDrawing, getLayersForMode, notify, openAttributesDialog]);
 
+
+  const handleAttributeFormValuesChange = useCallback((values) => {
+    setAttributeFormValues(values || {});
+  }, []);
+
   const handleAttributeSave = useCallback(async (formValues) => {
     if (!attributeDialogState) {
       throw new Error('No hay geometría pendiente de guardar.');
@@ -296,12 +312,17 @@ const MapToolbar = () => {
     const { layerName, geometry, layerConfig } = attributeDialogState;
 
     try {
+      const effectiveValues =
+        formValues && Object.keys(formValues || {}).length > 0
+          ? formValues
+          : attributeFormValues || {};
+
       const result = await insertFeatureWithGeometry(
         qgsUrl,
         qgsProjectPath,
         layerName,
         geometry,
-        formValues,
+        effectiveValues,
         token,
         layerConfig
       );
@@ -310,7 +331,7 @@ const MapToolbar = () => {
         'success',
         tr('ui.map.draw.save.success.title', 'Geometría guardada', 'Geometry saved'),
         result?.fid
-          ? tr('ui.map.draw.save.success.messageWithId', `Se ha creado el elemento ${result.fid}.`, `Feature ${result.fid} created.`)
+          ? (translate('ui.map.draw.save.success.messageWithId', { fid: result.fid }) || tr('ui.map.draw.save.success.messageWithId', `Se ha creado el elemento ${result.fid}.`, `Feature ${result.fid} created.`))
           : tr('ui.map.draw.save.success.message', 'El elemento se ha guardado correctamente.', 'The feature was saved successfully.')
       );
 
@@ -330,7 +351,7 @@ const MapToolbar = () => {
           // Si falla la recarga, usar los datos que tenemos
           reloadedFeature = {
             id: result?.fid ? `${layerName}.${result.fid}` : null,
-            properties: formValues
+            properties: effectiveValues
           };
         }
       }
@@ -342,11 +363,11 @@ const MapToolbar = () => {
               ...prev,
               feature: reloadedFeature || {
                 id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.feature?.id || null,
-                properties: reloadedFeature?.properties || formValues
+                properties: reloadedFeature?.properties || effectiveValues
               },
               savedFeature: reloadedFeature || {
                 id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.savedFeature?.id || prev.feature?.id || null,
-                properties: reloadedFeature?.properties || formValues
+                properties: reloadedFeature?.properties || effectiveValues
               },
               geometry: geometry
             }
@@ -399,17 +420,6 @@ const MapToolbar = () => {
     }
   }, [attributeDialogState, cancelDrawing, notify, qgsProjectPath, qgsUrl, refreshWMSLayer, token, tr]);
 
-  const attributeDialogHandlers = useMemo(() => {
-    if (!attributeDialogState) {
-      return null;
-    }
-    return {
-      form: {
-        onSave: handleAttributeSave
-      }
-    };
-  }, [attributeDialogState, handleAttributeSave]);
-
   const attributeDialogFeature = useMemo(() => {
     if (!attributeDialogState) {
       return null;
@@ -420,9 +430,12 @@ const MapToolbar = () => {
     if (attributeDialogState.savedFeature) {
       return attributeDialogState.savedFeature;
     }
+    // Para nuevas features, incluir la geometría en la feature
     return {
       id: null,
-      properties: {}
+      type: 'Feature',
+      properties: {},
+      geometry: attributeDialogState.geometry || null
     };
   }, [attributeDialogState]);
 
@@ -581,21 +594,128 @@ const MapToolbar = () => {
     }
   }
 
+  // Handler para guardar geometría editada (UPDATE directo sin diálogo)
+  const handleSaveEditedGeometry = useCallback(async () => {
+    if (!isEditingExistingGeometry || !getEditingFeature || !getEditingLayerConfig || !finishDrawing) {
+      return;
+    }
+
+    const editingFeature = getEditingFeature();
+    const editingLayerConfig = getEditingLayerConfig();
+    
+    if (!editingFeature || !editingLayerConfig) {
+      return;
+    }
+
+    const geometry = finishDrawing();
+    if (!geometry) {
+      notify(
+        'warning',
+        tr('ui.map.draw.save.incomplete.title', 'Geometría incompleta', 'Incomplete geometry'),
+        tr('ui.map.draw.save.incomplete.message', 'Dibuja una geometría válida antes de guardar.', 'Draw a valid geometry before saving.')
+      );
+      return;
+    }
+
+    if (!qgsUrl || !qgsProjectPath) {
+      notify('error', tr('ui.map.draw.save.error.title', 'Error al guardar', 'Error saving geometry'), 'No se ha configurado la conexión con QGIS Server.');
+      return;
+    }
+
+    try {
+      await updateFeatureGeometry(
+        qgsUrl,
+        qgsProjectPath,
+        editingFeature,
+        geometry,
+        editingLayerConfig,
+        token
+      );
+
+      notify(
+        'success',
+        tr('ui.map.draw.save.success.title', 'Geometría guardada', 'Geometry saved'),
+        tr('ui.map.draw.save.success.message', 'El elemento se ha guardado correctamente.', 'The feature was saved successfully.')
+      );
+
+      // Limpiar la geometría de edición
+      if (cancelDrawing) {
+        cancelDrawing();
+      }
+
+      // Refrescar el mapa para mostrar los cambios
+      if (mapInstance) {
+        try {
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.options) {
+            mapInstance.wmsLayer.options.cacheBust = Date.now();
+          }
+          if (mapInstance.wmsLayer && mapInstance.wmsLayer.redraw) {
+            mapInstance.wmsLayer.redraw();
+          }
+          if (mapInstance.invalidateSize) {
+            mapInstance.invalidateSize();
+          }
+        } catch (err) {
+          console.warn('No se pudo forzar el refresco del mapa:', err);
+        }
+      }
+
+      if (refreshWMSLayer) {
+        try {
+          refreshWMSLayer();
+        } catch (err) {
+          console.warn('No se pudo refrescar la capa WMS:', err);
+        }
+      }
+    } catch (error) {
+      console.error('Error al guardar geometría editada:', error);
+      notify(
+        'error',
+        tr('ui.map.draw.save.error.title', 'Error al guardar', 'Error saving geometry'),
+        error?.message || tr('ui.map.draw.save.error.message', 'No se pudo guardar la geometría.', 'The geometry could not be saved.')
+      );
+    }
+  }, [isEditingExistingGeometry, getEditingFeature, getEditingLayerConfig, finishDrawing, qgsUrl, qgsProjectPath, token, notify, tr, cancelDrawing, mapInstance, refreshWMSLayer]);
+
   if (drawMode && (hasGeometry || !isDrawing || isDrawingHole)) {
+    const canShowEditedSaveButton = isEditingExistingGeometry && geometryHasChanges;
+    if (isEditingExistingGeometry) {
+      console.log('[MapToolbar] evaluating save button visibility', {
+        geometryHasChanges,
+        canShowEditedSaveButton
+      });
+    }
     if (drawMode === 'polygon') {
       toolbarItems.push({ key: 'poly-add-hole', type: 'action', circular: true, icon: 'fg-polygon-hole', title: tr('ui.map.addHole','Añadir agujero','Add hole'), onClick: () => setShowEditHelp(false) || (startHoleDrawing && startHoleDrawing()) });
       if (!isDrawingHole && (holeCount || 0) > 0) {
         toolbarItems.push({ key: 'poly-remove-hole', type: 'action', circular: true, icon: 'fas fa-minus-circle', title: tr('ui.map.removeHole','Eliminar agujero','Remove hole'), onClick: () => removeLastHole && removeLastHole() });
       }
     }
-    toolbarItems.push({
-      key: 'draw-save',
-      type: 'action',
-      circular: true,
-      icon: 'fas fa-save',
-      title: tr('ui.map.saveDrawing', 'Guardar dibujo', 'Save drawing'),
-      onClick: handleSaveDrawing
-    });
+    
+    // Si estamos editando una geometría existente, mostrar botón de guardar siempre que haya geometría
+    // Si estamos creando una nueva, usar el flujo normal con handleSaveDrawing
+    if (isEditingExistingGeometry) {
+      if (canShowEditedSaveButton) {
+      toolbarItems.push({
+        key: 'draw-save',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-save',
+        title: tr('ui.map.saveDrawing', 'Guardar dibujo', 'Save drawing'),
+        onClick: handleSaveEditedGeometry
+      });
+      }
+    } else {
+      toolbarItems.push({
+        key: 'draw-save',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-save',
+        title: tr('ui.map.saveDrawing', 'Guardar dibujo', 'Save drawing'),
+        onClick: handleSaveDrawing
+      });
+    }
+    
     toolbarItems.push({ key: 'draw-cancel', type: 'action', circular: true, icon: 'fas fa-times', title: tr('ui.map.cancelDrawing','Cancelar dibujo','Cancel drawing'), onClick: () => { cancelDrawing && cancelDrawing(); } });
   }
 
@@ -694,6 +814,7 @@ const MapToolbar = () => {
                 onClick={handleLayerSelectionClose}
                 className="qgs-form-button qgs-form-button--secondary"
               >
+                <i className="fas fa-xmark" style={{ marginRight: '8px' }} />
                 {tr('ui.common.cancel', 'Cancelar', 'Cancel')}
               </button>
             </div>
@@ -702,27 +823,16 @@ const MapToolbar = () => {
       )}
 
       {attributeDialogState && attributeDialogFeature && (
-        attributeDialogHandlers ? (
-          <ActionHandlersProvider handlers={attributeDialogHandlers}>
-            <FeatureAttributesDialog
-              isOpen={true}
-              onClose={handleAttributeDialogClose}
-              layerName={attributeDialogState.layerName}
-              feature={attributeDialogFeature}
-              readOnly={false}
-              language={uiLanguage}
-            />
-          </ActionHandlersProvider>
-        ) : (
-          <FeatureAttributesDialog
-            isOpen={true}
-            onClose={handleAttributeDialogClose}
-            layerName={attributeDialogState.layerName}
-            feature={attributeDialogFeature}
-            readOnly={false}
-            language={uiLanguage}
-          />
-        )
+        <FeatureAttributesDialog
+          isOpen={true}
+          onClose={handleAttributeDialogClose}
+          layerName={attributeDialogState.layerName}
+          feature={attributeDialogFeature}
+          readOnly={false}
+          language={uiLanguage}
+          onSave={handleAttributeSave}
+          onFormValuesChange={handleAttributeFormValuesChange}
+        />
       )}
 
       <BookmarksManager isOpen={showBookmarks} onClose={() => setShowBookmarks(false)} />

@@ -19,6 +19,7 @@ export const useFormFeature = ({
   config,
   layerName,
   featureId,
+  feature: featureProp = null, // Feature opcional para nuevas features con geometría
   qgsUrl,
   qgsProjectPath,
   token,
@@ -26,8 +27,14 @@ export const useFormFeature = ({
   notificationManager
 }) => {
   const [layer, setLayer] = useState(null);
-  const [feature, setFeature] = useState(null);
-  const [isNewFeature, setIsNewFeature] = useState(false);
+  // Si hay featureProp, usarla como estado inicial (para nuevas features con geometría)
+  const [feature, setFeature] = useState(featureProp);
+  // isNewFeature se calcula dinámicamente basándose en featureId y feature.id
+  // Si la feature tiene un ID, no es nueva (modo update)
+  const [isNewFeature, setIsNewFeature] = useState(() => {
+    // Estado inicial: si no hay featureId o la feature no tiene ID, es nueva
+    return !featureId || (featureProp && !featureProp.id);
+  });
 
   /**
    * Efecto para cargar la capa y la feature cuando cambian los parámetros
@@ -104,14 +111,136 @@ export const useFormFeature = ({
           fetchFeature();
         }
       } else {
-        // Si no hay featureId o es temporal, es una feature nueva
-        if (!feature || isTemporaryId) {
-          setFeature(null);
+        // Si no hay featureId o es temporal, verificar si la feature tiene un ID
+        // Si la feature tiene un ID (después de un insert exitoso), no es nueva
+        console.log('[useFormFeature] useEffect - Sin featureId válido, verificando feature', {
+          hasFeature: !!feature,
+          featureId: feature?.id,
+          isTemporaryId,
+          propFeatureId: featureId
+        });
+        
+        if (feature && feature.id) {
+          // Verificar si el ID es temporal
+          const featureIdIsTemporary = feature.id.toString().toLowerCase().includes('temp') ||
+                                      feature.id.toString().endsWith('.temp') ||
+                                      feature.id.toString().includes('.temp.');
+          
+          if (featureIdIsTemporary) {
+            // El ID es temporal, es una feature nueva (modo insert)
+            console.log('[useFormFeature] useEffect - Feature tiene ID temporal, modo INSERT', {
+              featureId: feature.id
+            });
+            setIsNewFeature(true);
+          } else {
+            // La feature tiene un ID real, no es nueva (modo update)
+            console.log('[useFormFeature] useEffect - Feature tiene ID real, modo UPDATE', {
+              featureId: feature.id
+            });
+            setIsNewFeature(false);
+          }
+        } else if (!feature || isTemporaryId) {
+          // No hay feature o es temporal sin ID, es una feature nueva
+          // PERO: si hay featureProp con geometría, preservarla
+          console.log('[useFormFeature] useEffect - Sin feature o temporal, modo INSERT', {
+            hasFeatureProp: !!featureProp,
+            hasGeometry: !!(featureProp?.geometry)
+          });
+          if (featureProp && featureProp.geometry) {
+            // Preservar la feature con geometría para nuevas features
+            setFeature(featureProp);
+          } else {
+            setFeature(null);
+          }
           setIsNewFeature(true);
         }
       }
     }
-  }, [layerName, featureId, qgsUrl, qgsProjectPath, token, config, feature, notificationManager, t]);
+  }, [layerName, featureId, qgsUrl, qgsProjectPath, token, config, feature, notificationManager, t, featureProp]);
+
+  // Efecto adicional: actualizar feature cuando cambia featureProp (para nuevas features con geometría)
+  useEffect(() => {
+    // Si hay featureProp y es una nueva feature (sin ID o con ID temporal), actualizar la feature
+    if (featureProp) {
+      const isTemporaryId = featureId && (
+        featureId.toString().toLowerCase() === 'temp' ||
+        featureId.toString().endsWith('.temp') ||
+        featureId.toString().includes('.temp.')
+      );
+      
+      // Si no hay feature actual, o si featureProp tiene geometría y la feature actual no, actualizar
+      const shouldUpdate = !feature || 
+                          (featureProp.geometry && !feature.geometry) ||
+                          (isTemporaryId && featureProp.geometry);
+      
+      if (shouldUpdate) {
+        console.log('[useFormFeature] useEffect - Actualizando feature desde featureProp', {
+          hasGeometry: !!(featureProp?.geometry),
+          hasId: !!(featureProp?.id),
+          currentFeatureId: feature?.id,
+          isTemporaryId
+        });
+        setFeature(featureProp);
+        // Si no tiene ID o el ID es temporal, es nueva
+        if (!featureProp.id) {
+          setIsNewFeature(true);
+        } else {
+          // Verificar si el ID es temporal
+          const featureIdIsTemporary = featureProp.id.toString().toLowerCase().includes('temp') ||
+                                      featureProp.id.toString().endsWith('.temp') ||
+                                      featureProp.id.toString().includes('.temp.');
+          setIsNewFeature(featureIdIsTemporary);
+        }
+      }
+    }
+  }, [featureProp, featureId]);
+
+  // Efecto adicional: si la feature tiene un ID, no es nueva (modo update)
+  // Esto es importante después de un insert exitoso, cuando la feature pasa de no tener ID a tenerlo
+  useEffect(() => {
+    const hasFeature = !!feature;
+    const hasFeatureId = !!(feature?.id);
+    const hasPropFeatureId = !!featureId;
+    
+    console.log('[useFormFeature] useEffect - feature/id change', {
+      hasFeature,
+      featureId: feature?.id,
+      propFeatureId: featureId,
+      currentIsNewFeature: isNewFeature,
+      shouldBeNew: !hasFeatureId && !hasPropFeatureId
+    });
+    
+    if (hasFeatureId) {
+      // Verificar si el ID es temporal
+      const featureIdIsTemporary = feature.id.toString().toLowerCase().includes('temp') ||
+                                  feature.id.toString().endsWith('.temp') ||
+                                  feature.id.toString().includes('.temp.');
+      
+      if (featureIdIsTemporary) {
+        // El ID es temporal, es una feature nueva (modo insert)
+        if (!isNewFeature) {
+          console.log('[useFormFeature] useEffect - Feature tiene ID temporal, cambiando a modo INSERT', {
+            featureId: feature.id
+          });
+          setIsNewFeature(true);
+        }
+      } else {
+        // La feature tiene un ID real, no es nueva (modo update)
+        if (isNewFeature) {
+          console.log('[useFormFeature] useEffect - Feature tiene ID real, cambiando a modo UPDATE', {
+            featureId: feature.id
+          });
+          setIsNewFeature(false);
+        }
+      }
+    } else if (!hasPropFeatureId && !hasFeature) {
+      // Si no hay featureId ni feature, es nueva (modo insert)
+      if (!isNewFeature) {
+        console.log('[useFormFeature] useEffect - No hay featureId ni feature, modo INSERT');
+        setIsNewFeature(true);
+      }
+    }
+  }, [feature, featureId]);
 
   return {
     layer,

@@ -31,6 +31,7 @@
       "required": "Required",
       "optional": "Optional",
       "saving": "Saving...",
+      "exit": "Exit",
       "empty": "—"
     },
     "validation": {
@@ -51,6 +52,10 @@
       "message": "Are you sure you want to continue?",
       "confirm": "Confirm",
       "cancel": "Cancel"
+    },
+    "unsavedChangesDialog": {
+      "title": "Unsaved Changes",
+      "message": "There are unsaved changes, and if you exit they will be lost. Do you want to save the data before exiting?"
     },
     "contextMenu": {
       "copy": "Copy",
@@ -196,7 +201,34 @@
       "error": {
         "validationFailed": {
           "title": "Validation error",
-          "message": "Please correct the errors in the form before saving"
+          "message": "Please correct the errors in the form before saving",
+          "detailedMessage": "Please correct the following errors:\n{{errors}}"
+        },
+        "savingFeature": {
+          "title": "Error saving",
+          "message": "Could not save the feature"
+        },
+        "deletingFeature": {
+          "title": "Error deleting",
+          "message": "Could not delete the feature"
+        },
+        "retrievingFeature": {
+          "title": "Error retrieving feature",
+          "message": "Could not retrieve the feature from the server"
+        },
+        "layerServiceNotAvailable": {
+          "title": "Service error",
+          "message": "Layer service not available and cannot use direct QGIS parameters"
+        },
+        "layerServiceUnavailable": {
+          "title": "Service error",
+          "message": "Layer service not available"
+        }
+      },
+      "success": {
+        "savingFeature": {
+          "title": "Saved successfully",
+          "message": "Changes have been saved successfully"
         }
       }
     },
@@ -295,6 +327,32 @@
         "holes3": "You can remove the last hole with Remove hole.",
         "save": "Saving and attributes",
         "save1": "When pressing Save, a dialog will open to fill the attributes associated with the geometry before sending to the server."
+      },
+      "draw": {
+        "save": {
+          "incomplete": {
+            "title": "Incomplete geometry",
+            "message": "Draw a valid geometry before saving."
+          },
+          "noLayers": {
+            "title": "No configured layers",
+            "message": "There are no configured layers that accept this type of geometry."
+          },
+          "noMultiLayers": {
+            "message": "There are no layers that accept multiple geometries for this type."
+          },
+          "success": {
+            "title": "Geometry saved",
+            "message": "The feature was saved successfully.",
+            "messageWithId": "Feature {{fid}} created."
+          },
+          "error": {
+            "title": "Error saving geometry",
+            "message": "The geometry could not be saved."
+          },
+          "selectLayerTitle": "Select layer",
+          "selectLayerMessage": "Select the layer where you want to save the newly drawn geometry."
+        }
       }
     },
     "toolbar": {

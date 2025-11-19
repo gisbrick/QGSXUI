@@ -188,61 +188,13 @@ const featureMatchesCombo = (feature, combo, comboCodeFilters) => {
       candidateMunicipalityCodes.some((code) => expectedMunicipalityCodes.includes(code));
 
     if (!provinceMatches || !municipalityMatches) {
-      console.log('[AddressSearch][Filtro códigos] Resultado descartado', {
-        featureId: feature?.id,
-        address: feature?.properties?.displayText || feature?.properties?.address,
-        expectedProvinceCodes,
-        expectedMunicipalityCodes,
-        candidateProvinceCodes,
-        candidateMunicipalityCodes,
-        comboInfo: {
-          municipio: combo?.municipio,
-          provincia: combo?.provincia,
-          metadata: combo?.metadata ? {
-            municipality: {
-              catastroCode: combo.metadata?.municipality?.catastroCode,
-              ineCode: combo.metadata?.municipality?.ineCode,
-              provinceCatastroCode: combo.metadata?.municipality?.provinceCatastroCode,
-              provinceIneCode: combo.metadata?.municipality?.provinceIneCode
-            },
-            province: {
-              catastroCode: combo.metadata?.province?.catastroCode,
-              ineCode: combo.metadata?.province?.ineCode
-            }
-          } : null
-        }
-      });
+      // Resultado descartado por no coincidir códigos
     }
 
     return provinceMatches && municipalityMatches;
   }
 
   const matchesByName = matchesComboByName(feature, combo);
-  if (!matchesByName) {
-    console.log('[AddressSearch][Filtro nombres] Resultado descartado', {
-      featureId: feature?.id,
-      address: feature?.properties?.displayText || feature?.properties?.address,
-      candidateProvinceName: normalizeName(
-        feature?.properties?.province || feature?.properties?.provincia || feature?.properties?.provinceName
-      ),
-      candidateMunicipalityName: normalizeName(
-        feature?.properties?.locality ||
-          feature?.properties?.localidad ||
-          feature?.properties?.municipality ||
-          feature?.properties?.muni
-      ),
-      comboProvinceName: normalizeName(
-        combo?.provincia ||
-          combo?.metadata?.province?.cartoCiudadName ||
-          combo?.metadata?.province?.name
-      ),
-      comboMunicipalityName: normalizeName(
-        combo?.municipio ||
-          combo?.metadata?.municipality?.cartoCiudadName ||
-          combo?.metadata?.municipality?.name
-      )
-    });
-  }
 
   return matchesByName;
 };
@@ -374,10 +326,6 @@ const AddressSearch = () => {
       return features.filter((feature) => {
         const candidateMunicipalityCode = extractCandidateMunicipalityCode(feature);
         if (!candidateMunicipalityCode) {
-          console.log('[AddressSearch][Filtro municipios] Resultado descartado (sin muniCode)', {
-            featureId: feature?.id,
-            address: feature?.properties?.displayText || feature?.properties?.address
-          });
           return false;
         }
 
@@ -385,14 +333,6 @@ const AddressSearch = () => {
           candidateMunicipalityCode.includes(catastroCode)
         );
 
-        if (!matches) {
-          console.log('[AddressSearch][Filtro municipios] Resultado descartado', {
-            featureId: feature?.id,
-            address: feature?.properties?.displayText || feature?.properties?.address,
-            candidateMunicipalityCode,
-            allowedCatastroCodes: Array.from(allowedMunicipalityCatastroCodes)
-          });
-        }
 
         return matches;
       });
@@ -565,20 +505,7 @@ const AddressSearch = () => {
         limit: MAX_CANDIDATES_REQUEST.toString()
       });
 
-      // Log para depuración (puede eliminarse después)
-      if (nombreProvincia || nombreMunicipio) {
-        console.log('[AddressSearch] Filtros aplicados:', {
-          nombreProvincia,
-          nombreMunicipio,
-          searchTerm,
-          combo: combo ? { municipio: combo.municipio, provincia: combo.provincia } : null
-        });
-      }
-
       const requestUrl = `${CARTOCIUDAD_CANDIDATES_URL}?${params.toString()}`;
-      
-      // Log para depuración - verificar URL completa
-      console.log('[AddressSearch] Request URL:', requestUrl);
 
       const response = await fetch(requestUrl, {
         method: 'GET',

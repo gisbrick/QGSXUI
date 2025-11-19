@@ -28,6 +28,7 @@ const FormContext = createContext(null);
 export const FormProvider = ({ 
   layerName, 
   featureId, 
+  feature: featureProp = null, // Feature opcional para nuevas features con geometría
   readOnly: readOnlyProp = false, 
   onSave: onSaveProp = null, 
   children 
@@ -71,22 +72,34 @@ export const FormProvider = ({
     config,
     layerName,
     featureId,
+    feature: featureProp, // Pasar la feature prop para nuevas features con geometría
     qgsUrl,
     qgsProjectPath,
     token,
     t,
     notificationManager
   });
+  
+  // Log para debug: verificar estado de isNewFeature
+  React.useEffect(() => {
+    console.log('[FormProvider] isNewFeature changed', {
+      isNewFeature,
+      featureId: feature?.id,
+      propFeatureId: featureId,
+      hasFeature: !!feature
+    });
+  }, [isNewFeature, feature, featureId]);
 
   // Inicializar valores cuando se carga la feature
   React.useEffect(() => {
     if (feature && feature.properties) {
       setValues(feature.properties);
+      setIsDirty(false);
     } else if (!featureId) {
-      // Si no hay featureId, es una feature nueva, mantener valores vacíos
       setValues({});
+      setIsDirty(false);
     }
-  }, [feature, featureId, setValues]);
+  }, [feature, featureId, setValues, setIsDirty]);
 
   // Hook para gestionar la validación del formulario
   const {
@@ -101,7 +114,8 @@ export const FormProvider = ({
     setFieldError,
     t,
     language,
-    translations
+    translations,
+    isNewFeature
   );
 
   // Hook para gestionar las acciones del formulario (guardar, cancelar, eliminar)
@@ -127,7 +141,8 @@ export const FormProvider = ({
     t,
     notificationManager,
     onSaveProp,
-    getHandler
+    getHandler,
+    language
   });
 
   // Determinar si se puede guardar
@@ -137,8 +152,12 @@ export const FormProvider = ({
 
   /**
    * Valor del contexto que se proporciona a los componentes hijos
+   * IMPORTANTE: Este useMemo siempre debe devolver un objeto válido
+   * para que el FormContext.Provider siempre tenga un valor disponible
    */
-  const contextValue = React.useMemo(() => ({
+  const contextValue = React.useMemo(() => {
+    // Asegurar que siempre devolvemos un objeto válido
+    return {
     layer,                    // Configuración de la capa QGIS
     isNewFeature,            // Indica si es una feature nueva
     feature,                 // Feature actual
@@ -162,7 +181,8 @@ export const FormProvider = ({
       feature,
       isNewFeature
     }
-  }), [
+    };
+  }, [
     layer,
     isNewFeature,
     feature,
@@ -183,8 +203,30 @@ export const FormProvider = ({
     featureId
   ]);
 
+  // Asegurar que el contexto siempre esté disponible
+  // useMemo siempre debería devolver un objeto, pero por si acaso verificamos
+  const safeContextValue = contextValue || {
+    layer: null,
+    isNewFeature: true,
+    feature: null,
+    config: config || null,
+    values: {},
+    errors: {},
+    readOnly: readOnlyProp,
+    setValue: () => {},
+    validateField: () => {},
+    isValid: false,
+    isDirty: false,
+    canSave: false,
+    handleSave: async () => {},
+    handleCancel: () => {},
+    handleDelete: async () => {},
+    handleFieldChange: () => {},
+    context: { layerName, featureId, layer: null, feature: null, isNewFeature: true }
+  };
+
   return (
-    <FormContext.Provider value={contextValue}>
+    <FormContext.Provider value={safeContextValue}>
       {children}
     </FormContext.Provider>
   );

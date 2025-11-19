@@ -34,13 +34,6 @@ const FeatureInfoPopup = ({
   // el contexto puede no estar disponible o tener el idioma incorrecto
   // La prop language viene directamente de InfoClick que tiene acceso al contexto correcto
   const language = languageProp || qgisContext?.language || 'es';
-  console.log('[FeatureInfoPopup] Idioma detectado:', {
-    'languageProp': languageProp,
-    'qgisContext?.language': qgisContext?.language,
-    'language final': language,
-    'qgisContext disponible': !!qgisContext,
-    'NOTA': 'Priorizando languageProp porque viene del contexto correcto en InfoClick'
-  });
 
   const translate = React.useCallback(
     (key) => {
@@ -75,17 +68,12 @@ const FeatureInfoPopup = ({
   // Agrupar features por capa
   const layersWithFeatures = useMemo(() => {
     if (!updatedFeatures || !config) {
-      console.log('FeatureInfoPopup: No features or config', { features: updatedFeatures, config });
       return [];
     }
-
-    console.log('FeatureInfoPopup: Processing features', updatedFeatures);
-    console.log('FeatureInfoPopup: Available layers in config', Object.keys(config.layers || {}));
 
     const grouped = {};
     
     updatedFeatures.forEach(feature => {
-      console.log('FeatureInfoPopup: Processing feature', feature);
       
       // El ID de la feature tiene formato "layerName.featureId" o puede ser solo el nombre de la capa
       let layerName = null;
@@ -150,7 +138,6 @@ const FeatureInfoPopup = ({
     });
 
     const result = Object.values(grouped);
-    console.log('FeatureInfoPopup: Grouped layers', result);
     return result;
   }, [updatedFeatures, config]);
 
@@ -352,12 +339,23 @@ const FeatureInfoPopup = ({
       return;
     }
 
+    // Si es una acción de editar geometría, cerrar el popup y pasar la acción al handler
+    if (action === 'editGeometry') {
+      // Cerrar el popup
+      if (map && map.closePopup) {
+        map.closePopup();
+      }
+      if (onClose) {
+        onClose();
+      }
+    }
+
     const payload = {
       action,
       layer: selectedLayer.layer,
       layerName: selectedLayer.layerName,
       layerIndex: selectedLayerIndex,
-      feature: selectedFeature,
+      feature: featureWithGeometry || selectedFeature, // Usar featureWithGeometry si está disponible (tiene geometría completa)
       featureIndex: selectedFeatureIndex,
       map
     };
@@ -712,7 +710,6 @@ const FeatureInfoPopup = ({
         open={showDeleteDialog}
         title={translate('ui.map.deleteConfirmTitle')}
         message={translate('ui.map.deleteConfirmMessage')}
-        confirmText={translate('ui.common.ok')}
         cancelText={translate('ui.common.cancel')}
         onConfirm={handleConfirmDelete}
         onCancel={handleCancelDelete}
@@ -861,12 +858,6 @@ export const renderFeatureInfoPopup = (container, features, map, onClose, config
     notificationManager = null,
     language = 'es' // Idioma del contexto QGIS
   } = options || {};
-  console.log('[renderFeatureInfoPopup] Opciones recibidas:', {
-    'language': language,
-    'qgsUrl': qgsUrl,
-    'qgsProjectPath': qgsProjectPath,
-    'config disponible': !!config
-  });
   const root = createRoot(container);
   root.render(
     <FeatureInfoPopup

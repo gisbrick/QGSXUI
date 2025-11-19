@@ -6,26 +6,44 @@ El buscador por polígono-parcela, no muestra ningún aviso cuando no encuentra 
 
 Cuando estamos dibujando una geometría, hay que permitir hacer drag del mapa, ya que podemos estar a una escala en la que no veamos todo el ámbito que tendrá la geometría que queremos dibujar
 
-
 Cuando se guarde una feature por primera vez, como mantenemos el formulario de eidción de atrinbnutos, hay que recargar los atributos tras guardarla, de modo que tengamos el ID con el que se ha guardado, por si queremos hacer una actualziación
-
 
 El div de fondo de la toolbar del mapa impide interactuar sobre el mapa, y que si hacemos click, drag, etc sobre el contenedor de las tolos, se dispare igualmente un clic, drag, etc sobre el mapa
 
-
 Si tenemos varios buscadores, y mostramos la lupa para desplegar los buscadores, vamos a permitir que la toolbar del mapa llegue hasta la lupa del buscador, antes de que los botones salten a la siguiente línea.
 
+Revisa todos los botones de diálogos que tienen texto y añade icono a la izquierda del texto:
+Aceptar fa-check
+Cancelar fa-xmark
+Guardar fa-floppy-disk
+
+En los diálogos de confirmación de borrado, cambia el botón de aceptar por un botón de borrar, con icono fa-solid fa-trash-can y color de fondo tipo danter (el que este definido en los estilos globales)
+
+En todos los diálogos de edición de atributos, cambiar el texto del botón "Cancelar" por "Salir" (aplicando las locations)
+
+Cuando cerremos una ventana de edición de atributos, bien desde el botón cancelar, o desde la x del diálogo, si hay datos pendientes de guardar, guiar al usuario con un diálogo similar al siguiente "Hay datos sin guardar, y si sale se perderán ¿desea guardar los datos antes de salir?" y con los botones guardar (fa-floppy-disk) y salir (fa-xmark). Si pulsa guardar, guarda cambios y cierra el formulario, y si pulsa salir, sale sin guardar. Si lo crees necesario, crea un nuevo componente para este tipo de diálogo
 
 
 
 
+Implementa la edición de geometrías de features existentes al hacer click en el botón de edición de geometría desde el popup, para todas (puntos líneas y polígonos de cualquier tipo). Tendrás que cerrar el popup, y permitir editar la geometría. Fijate en como se hace al dibujar nueva geometría, y añade las mismas capaciades, pero enfocado a la capa en cuestión donde se encuentra la geometría (es decir, que si no es multi, no permite añadir más geometrías). En el caso de modificación de geometrías en features existentes, hay un cambio fundamental: tienes que mostrar el botón de guardar en cuanto detectes que ha habido cambios en la geometría, pero al pulsar el botón de guardar, diréctamente haras un POST de UPDATE con la geometría modificada
 
+Crea dos nuevos componentes de tipo tabla en QGS/Table, una de tabla paginada, y otra con tabla infinite scroll. Ambas tienen que funcionar de modo lazy. Revisa el proyecto legacy para ver como se hizo en el proyecto anterior. Añade dos nuevos stories para ambos tipos de tabla
 
-
+Actualiza la información/ayuda a la edición con la edición integrada que permite... añadir geometrías desde búsquedas (portalero, catastro, callejero, etc.)… añadir puntos desde localización GPS y añadir líneas y polígonos mediante grabación de tracks desde localización GPS
 
 Revisar el cursor al dibujar, ya que se cambia a pointer. Tiene que mantenerse el crosshair aunque permitamos hacer drag del mapa
 
 Revisa como se centra el mapa tras la búsqueda de portalero, ya que a veces no centra el mapa con el portal localizado
 
+Añade al mapa una herramienta, visible solo si hay alguna geometría en el mapa (dibujos, mediciones, geometrías editables, etc). Esta función exporta la geometría a GML.
+
+Si hay geometrías en el mapa, de cualquier tipo, haz visible un botón de limpiar geometrías del mapa (de cualquier tipo)
+
+Añade un botón que permita importar geometrías GML externas. Como con las geometrías de las búsquedas, si con la geometría cargada se pulsa un botón de añadir geometría, del mismo tipo que la cargada, automáticamente añade como nueva geometría la geometría GML cargada.
+
+
+
+Revisar la operatoria de multigeometrías al editar atributos
 
 

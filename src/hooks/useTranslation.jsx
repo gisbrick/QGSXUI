@@ -31,9 +31,14 @@ export const useTranslation = (locale, translations) => {
                 return key;
             }
             
-            // Interpolación de variables: reemplazar {{variable}} con valores de params
+            // Interpolación de variables: reemplazar {{variable}} y {variable} con valores de params
             if (Object.keys(params).length > 0) {
-                return result.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+                // Primero reemplazar {{variable}} (formato doble llave)
+                result = result.replace(/\{\{(\w+)\}\}/g, (match, varName) => {
+                    return params[varName] !== undefined ? String(params[varName]) : match;
+                });
+                // Luego reemplazar {variable} (formato simple llave) si no fue ya reemplazado
+                result = result.replace(/\{(\w+)\}/g, (match, varName) => {
                     return params[varName] !== undefined ? String(params[varName]) : match;
                 });
             }

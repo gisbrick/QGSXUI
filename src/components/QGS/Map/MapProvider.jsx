@@ -41,10 +41,93 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const isDrawingHoleRef = useRef(false);
   const canDrawMultipleRef = useRef(false);
   const vertexPaneNameRef = useRef('qgs-vertex-pane');
+  // Estado para saber si estamos editando una geometría existente (no creando una nueva)
+  const [isEditingExistingGeometry, setIsEditingExistingGeometry] = useState(false);
+  const isEditingExistingGeometryRef = useRef(false);
+  const editingFeatureRef = useRef(null);
+  const editingLayerConfigRef = useRef(null);
+  const originalGeometryRef = useRef(null);
+  const originalGeometryNormalizedRef = useRef(null);
+  const [geometryHasChanges, setGeometryHasChanges] = useState(false);
+  const geometryHasChangesRef = useRef(false);
+  useEffect(() => { isEditingExistingGeometryRef.current = isEditingExistingGeometry; }, [isEditingExistingGeometry]);
+  useEffect(() => { geometryHasChangesRef.current = geometryHasChanges; }, [geometryHasChanges]);
   useEffect(() => { isDrawingRef.current = isDrawing; }, [isDrawing]);
   useEffect(() => { drawModeRef.current = drawMode; }, [drawMode]);
   useEffect(() => { isDrawingHoleRef.current = isDrawingHole; }, [isDrawingHole]);
   useEffect(() => { hasGeometryRef.current = hasGeometry; }, [hasGeometry]);
+
+  const roundCoordValue = (value) => {
+    if (typeof value !== 'number') {
+      return value;
+    }
+    const rounded = Number(value.toFixed(12));
+    return Math.abs(rounded) < 1e-12 ? 0 : rounded;
+  };
+
+  const areCoordsEqual = (a, b) => {
+    if (!Array.isArray(a) || !Array.isArray(b) || a.length !== b.length) {
+      return false;
+    }
+    for (let i = 0; i < a.length; i += 1) {
+      if (roundCoordValue(a[i]) !== roundCoordValue(b[i])) {
+        return false;
+      }
+    }
+    return true;
+  };
+
+  const normalizeLinearRing = (ring) => {
+    if (!Array.isArray(ring) || ring.length === 0) {
+      return [];
+    }
+    const normalized = ring.map((coord) => {
+      if (!Array.isArray(coord)) return coord;
+      return coord.map(roundCoordValue);
+    });
+    if (normalized.length >= 2) {
+      const first = normalized[0];
+      const last = normalized[normalized.length - 1];
+      if (areCoordsEqual(first, last)) {
+        normalized.pop();
+      }
+    }
+    return normalized;
+  };
+
+  const normalizeCoordinates = (coords) => {
+    if (!Array.isArray(coords)) {
+      return coords;
+    }
+    if (coords.length === 0) {
+      return [];
+    }
+    if (typeof coords[0] === 'number') {
+      return coords.map(roundCoordValue);
+    }
+    return coords.map(normalizeCoordinates);
+  };
+
+  const normalizeGeometryForComparison = (geometry) => {
+    if (!geometry || !geometry.type) {
+      return null;
+    }
+    const type = geometry.type.toUpperCase();
+    let normalizedCoords;
+    if (type === 'POLYGON') {
+      normalizedCoords = (geometry.coordinates || []).map(normalizeLinearRing);
+    } else if (type === 'MULTIPOLYGON') {
+      normalizedCoords = (geometry.coordinates || []).map((polygon) =>
+        (polygon || []).map(normalizeLinearRing)
+      );
+    } else {
+      normalizedCoords = normalizeCoordinates(geometry.coordinates || []);
+    }
+    return {
+      type,
+      coordinates: normalizedCoords
+    };
+  };
 
   // Historial de navegación (centro/zoom)
   const viewHistoryRef = useRef([]);
@@ -76,7 +159,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     viewHistoryRef.current.push({ center: c, zoom });
     viewIndexRef.current = viewHistoryRef.current.length - 1;
     updateNavFlags();
-    console.log('[MapProvider] history push', { index: viewIndexRef.current, length: viewHistoryRef.current.length, center: c, zoom });
   };
 
   useEffect(() => {
@@ -109,7 +191,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     mapInstance.once('moveend', () => { isNavigatingRef.current = false; updateNavFlags(); });
     mapInstance.setView({ lat: target.center[0], lng: target.center[1] }, target.zoom, { animate: false });
     updateNavFlags();
-    console.log('[MapProvider] goBack', { index: viewIndexRef.current, length: viewHistoryRef.current.length });
   };
 
   const goForward = () => {
@@ -122,7 +203,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     mapInstance.once('moveend', () => { isNavigatingRef.current = false; updateNavFlags(); });
     mapInstance.setView({ lat: target.center[0], lng: target.center[1] }, target.zoom, { animate: false });
     updateNavFlags();
-    console.log('[MapProvider] goForward', { index: viewIndexRef.current, length: viewHistoryRef.current.length });
   };
 
   const checkCanDrawMultipleForMode = (mode) => {
@@ -177,7 +257,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       const pane = getVertexPaneEl();
       if (pane) {
         pane.style.pointerEvents = enabled ? 'auto' : 'none';
-        console.log('[MapProvider] vertex pane pointer-events =', pane.style.pointerEvents);
       }
     } catch (e) {}
   };
@@ -185,7 +264,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const clearEditHandles = () => {
     if (editHandlesLayerRef.current && mapInstance) {
       try {
-        console.log('[MapProvider] clearEditHandles: limpiando capa de manejadores');
         editHandlesLayerRef.current.clearLayers();
         if (mapInstance.hasLayer(editHandlesLayerRef.current)) mapInstance.removeLayer(editHandlesLayerRef.current);
       } catch (e) { console.warn('[MapProvider] clearEditHandles error:', e); }
@@ -220,8 +298,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
           multiLayerRef.current.addLayer(poly);
         });
       }
-      console.log('[MapProvider] syncMultiLayer', { mode, count: multi.length });
     } catch (e) { console.warn('syncMultiLayer error', e); }
+    if (isEditingExistingGeometryRef.current) {
+      updateGeometryChangeFlag();
+    }
   };
 
   const redrawFinalGeometry = () => {
@@ -230,12 +310,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
 
     const mode = drawModeRef.current;
     try {
-      console.log('[MapProvider] redrawFinalGeometry()', {
-        mode,
-        multiCount: multiGeometriesRef.current?.length || 0,
-        activePoints: drawPointsRef.current?.length || 0,
-        holes: holesRef.current?.length || 0
-      });
     } catch (e) {}
 
     // Solo dibujar la geometría activa en drawLayerRef; la multi se mantiene en multiLayerRef
@@ -244,29 +318,24 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         const latlng = window.L.latLng(drawPointsRef.current[0][1], drawPointsRef.current[0][0]);
         const marker = window.L.circleMarker(latlng, { radius: 6, color: '#1976d2', weight: 2, fillColor: '#2196f3', fillOpacity: 0.7 });
         drawLayerRef.current.addLayer(marker);
-        console.log('[MapProvider] redraw active point', { coord: drawPointsRef.current[0] });
       }
-      return;
-    }
-
-    if (mode === 'line') {
+    } else if (mode === 'line') {
       const latlngs = drawPointsRef.current.map(([lng, lat]) => window.L.latLng(lat, lng));
       if (latlngs.length >= 2) {
         const line = window.L.polyline(latlngs, { color: '#1976d2', weight: 3, opacity: 1 });
         drawLayerRef.current.addLayer(line);
-        console.log('[MapProvider] redraw active line', { vertices: drawPointsRef.current.length });
       }
-      return;
-    }
-
-    if (mode === 'polygon') {
+    } else if (mode === 'polygon') {
       const outer = drawPointsRef.current.map(([lng, lat]) => window.L.latLng(lat, lng));
       const holes = (holesRef.current || []).map(ring => ring.map(([lng, lat]) => window.L.latLng(lat, lng)));
       if (outer.length >= 3) {
         const poly = window.L.polygon([outer, ...holes], { color: '#1976d2', weight: 2, fillColor: '#2196f3', fillOpacity: 0.3 });
         drawLayerRef.current.addLayer(poly);
-        console.log('[MapProvider] redraw active polygon', { outer: outer.length, holes: holesRef.current?.length || 0 });
       }
+    }
+
+    if (isEditingExistingGeometryRef.current) {
+      updateGeometryChangeFlag();
     }
   };
 
@@ -282,8 +351,7 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const rebuildEditHandles = (overrideMode = null) => {
     if (!mapInstance || !window.L) return;
     const mode = overrideMode || drawModeRef.current;
-    if (!mode) { console.log('[MapProvider] rebuildEditHandles: drawMode null, omitiendo'); return; }
-    console.log('[MapProvider] rebuildEditHandles: INICIO', { drawMode: mode, puntos: drawPointsRef.current.length, holes: holesRef.current?.length || 0 });
+    if (!mode) { return; }
     clearEditHandles();
     ensureVertexPane();
     editHandlesLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
@@ -296,21 +364,17 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       const latlng = window.L.latLng(drawPointsRef.current[0][1], drawPointsRef.current[0][0]);
       const handle = window.L.marker(latlng, { draggable: true, icon: createDivIcon('#1976d2', '#64b5f6'), opacity: 1, riseOnHover: true, zIndexOffset: 10000, pane: vertexPane, autoPan: true });
       handle.on('dragstart', (e) => {
-        console.log('[MapProvider] dragstart punto', { from: e.target.getLatLng() });
       });
       handle.on('drag', (e) => {
         const p = e.latlng;
         drawPointsRef.current = [[p.lng, p.lat]];
         redrawFinalGeometry();
-        console.log('[MapProvider] drag punto', { to: p });
       });
       handle.on('dragend', (e) => {
-        console.log('[MapProvider] dragend punto', { end: e.target.getLatLng() });
         rebuildEditHandles(mode);
       });
       editHandlesLayerRef.current.addLayer(handle);
       countVertices += 1;
-      console.log('[MapProvider] rebuildEditHandles: punto -> 1 handler');
       return;
     }
 
@@ -318,16 +382,13 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       ringPoints.forEach(([lng, lat], index) => {
         const handle = window.L.marker([lat, lng], { draggable: true, icon: createDivIcon(), opacity: 1, riseOnHover: true, zIndexOffset: 10000, pane: vertexPane, autoPan: true });
         handle.on('dragstart', (e) => {
-          console.log('[MapProvider] dragstart vértice', { ring: ringLabel, index, from: e.target.getLatLng() });
         });
         handle.on('drag', (e) => {
           const p = e.latlng;
           updateAtIndex(index, [p.lng, p.lat]);
           redrawFinalGeometry();
-          console.log('[MapProvider] drag vértice', { ring: ringLabel, index, to: p });
         });
         handle.on('dragend', (e) => {
-          console.log('[MapProvider] dragend vértice', { ring: ringLabel, index, end: e.target.getLatLng() });
           rebuildEditHandles(mode);
         });
         handle.on('click', (e) => {
@@ -337,7 +398,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
             } else if (mode === 'polygon') {
               if (ringPoints.length <= 3) return;
             }
-            console.log('[MapProvider] eliminar vértice (Alt/Meta)', { ring: ringLabel, index });
             ringPoints.splice(index, 1);
             redrawFinalGeometry();
             rebuildEditHandles(mode);
@@ -350,7 +410,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
           } else if (mode === 'polygon') {
             if (ringPoints.length <= 3) return;
           }
-          console.log('[MapProvider] eliminar vértice (clic derecho)', { ring: ringLabel, index });
           ringPoints.splice(index, 1);
           redrawFinalGeometry();
           rebuildEditHandles(mode);
@@ -366,7 +425,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         // Inserción + arrastre inmediato en mousedown
         mid.on('mousedown', (e) => {
           try { e.originalEvent.preventDefault(); e.originalEvent.stopPropagation(); } catch (err) {}
-          console.log('[MapProvider] midpoint mousedown -> insertar y arrastrar', { ring: ringLabel, insertIndex: idx });
           insertAtIndex(idx, [midLng, midLat]);
           redrawFinalGeometry();
           // Convertir este midpoint en vértice arrastrable inmediatamente
@@ -382,7 +440,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
             redrawFinalGeometry();
           });
           mid.on('dragend', (ev) => {
-            console.log('[MapProvider] dragend nuevo vértice desde midpoint', { ring: ringLabel, index: currentIndex, end: ev.target.getLatLng() });
             rebuildEditHandles(mode);
           });
           mid.on('contextmenu', (ev) => {
@@ -393,7 +450,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
             } else if (mode === 'polygon') {
               if (ringPoints.length <= 3) return;
             }
-            console.log('[MapProvider] eliminar vértice (clic derecho) generado por midpoint', { ring: ringLabel, index: currentIndex });
             ringPoints.splice(currentIndex, 1);
             redrawFinalGeometry();
             rebuildEditHandles(mode);
@@ -405,7 +461,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         });
         // Click normal (por compatibilidad): insertar sin arrastre
         mid.on('click', () => {
-          console.log('[MapProvider] insertar vértice intermedio (click)', { ring: ringLabel, insertIndex: idx });
           insertAtIndex(idx, [midLng, midLat]);
           redrawFinalGeometry();
           rebuildEditHandles(mode);
@@ -420,14 +475,12 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       if (ringIsClosed && ringPoints.length > 2) {
         addMidHandle(ringPoints[ringPoints.length - 1], ringPoints[0], ringPoints.length);
       }
-      console.log(`[MapProvider] ${ringLabel}: vertices=${ringPoints.length}, midpoints=${ringIsClosed ? ringPoints.length : Math.max(0, ringPoints.length - 1)}`);
     };
 
     if (mode === 'line') {
       const updateAt = (i, pt) => { drawPointsRef.current[i] = pt; };
       const insertAt = (i, pt) => { drawPointsRef.current.splice(i, 0, pt); };
       buildRingHandles(drawPointsRef.current, updateAt, insertAt, false, 'LINE');
-      console.log('[MapProvider] rebuildEditHandles FIN (LINE):', { countVertices, countMidpoints, pane: vertexPane });
       return;
     }
 
@@ -440,7 +493,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         const insertHoleAt = (i, pt) => { holesRef.current[ringIdx].splice(i, 0, pt); };
         buildRingHandles(ring, updateHoleAt, insertHoleAt, true, `POLY-HOLE-${ringIdx}`);
       });
-      console.log('[MapProvider] rebuildEditHandles FIN (POLY):', { countVertices, countMidpoints, pane: vertexPane, holes: holesRef.current?.length || 0 });
     }
   };
 
@@ -727,7 +779,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   // Iniciar dibujo
   const startDrawing = (mode) => {
     if (!mapInstance || !window.L) return;
-    console.log('[MapProvider] startDrawing()', { mode });
     cancelDrawing();
 
     const pendingGeometry = pendingExternalGeometryRef.current;
@@ -748,7 +799,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     setHasGeometry(false);
     hasGeometryRef.current = false;
     canDrawMultipleRef.current = checkCanDrawMultipleForMode(mode);
-    console.log('[MapProvider] canDrawMultiple:', canDrawMultipleRef.current);
     // Inicializar capas
     multiLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
     drawLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
@@ -786,7 +836,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       const modeLocal = mode;
       if (modeLocal === 'point' && drawPointsRef.current.length >= 1) {
         if (canDrawMultipleRef.current) {
-          console.log('[MapProvider] finalizeCurrentSketch(point) multi, keep active for edit', { coord: drawPointsRef.current[0] });
           setIsDrawing(false);
           setHasGeometry(true);
           if (previewLayerRef.current) previewLayerRef.current.clearLayers();
@@ -795,7 +844,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         }
       } else if (modeLocal === 'line' && drawPointsRef.current.length >= 2) {
         if (canDrawMultipleRef.current) {
-          console.log('[MapProvider] finalizeCurrentSketch(line) multi, keep active for edit', { vertices: drawPointsRef.current.length });
           setIsDrawing(false);
           setHasGeometry(true);
           if (previewLayerRef.current) previewLayerRef.current.clearLayers();
@@ -804,7 +852,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         }
       } else if (modeLocal === 'polygon' && drawPointsRef.current.length >= 3) {
         if (canDrawMultipleRef.current) {
-          console.log('[MapProvider] finalizeCurrentSketch(polygon) multi, keep active for edit', { outer: drawPointsRef.current.length, holes: holesRef.current?.length || 0 });
           setIsDrawing(false);
           setHasGeometry(true);
           if (previewLayerRef.current) previewLayerRef.current.clearLayers();
@@ -816,6 +863,11 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     };
 
     const handleClick = (e) => {
+      // Si estamos editando una geometría existente y la capa NO es multi, no permitir añadir más geometrías
+      if (isEditingExistingGeometryRef.current && !canDrawMultipleRef.current) {
+        return;
+      }
+      
       // Si estamos en modo multi pero no estamos sketchando, este click inicia nueva geometría
       if (!isDrawingRef.current && canDrawMultipleRef.current && drawModeRef.current) {
         if (isDrawingHoleRef.current) return;
@@ -840,7 +892,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         const latlng = e.latlng;
         setIsDrawing(true);
         drawPointsRef.current = [[latlng.lng, latlng.lat]];
-        console.log('[MapProvider] start new sketch (multi)', { first: drawPointsRef.current[0] });
         redrawFinalGeometry();
         return;
       }
@@ -849,13 +900,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       if (isDrawingHoleRef.current) { return; }
       const latlng = e.latlng;
       if (mode === 'point') {
-        console.log('[MapProvider] click en dibujo (point)', { currentActive: drawPointsRef.current?.length || 0, multiCount: multiGeometriesRef.current?.length || 0 });
       } else {
-        console.log('[MapProvider] click en dibujo', { mode, latlng, puntos: drawPointsRef.current.length });
       }
       if ((mode === 'line' || mode === 'polygon') && drawPointsRef.current.length > 0) {
         if (isCloseToLastPointPx(latlng)) {
-          console.log('[MapProvider] click cerca del último punto (<3px): finalizar');
           if (!finalizeCurrentSketch()) {
             setIsDrawing(false);
             setHasGeometry(true);
@@ -901,7 +949,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       if (!isDrawingRef.current) return;
       if (isDrawingHoleRef.current) { return; }
       if (mode === 'line' || mode === 'polygon') {
-        console.log('[MapProvider] dblclick: finalizar');
         if (!finalizeCurrentSketch()) {
           setIsDrawing(false);
           setHasGeometry(true);
@@ -924,8 +971,11 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   };
 
   // Finalizar y obtener GeoJSON (incluyendo holes y Multi*)
-  const finishDrawing = () => {
+  const buildCurrentGeometrySnapshot = () => {
     const mode = drawModeRef.current;
+    if (!mode) {
+      return null;
+    }
     // Construir colecciones incluyendo la geometría activa si existe
     if (mode === 'point') {
       if ((multiGeometriesRef.current?.length || 0) > 0) {
@@ -933,7 +983,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         if (drawPointsRef.current.length >= 1) {
           coords.push(drawPointsRef.current[0]);
         }
-        console.log('[MapProvider] finishDrawing MultiPoint', { count: coords.length });
         return { type: 'MultiPoint', coordinates: coords };
       }
       if (drawPointsRef.current.length >= 1) return { type: 'Point', coordinates: drawPointsRef.current[0] };
@@ -946,7 +995,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         if (drawPointsRef.current.length >= 2) {
           lines.push([...drawPointsRef.current]);
         }
-        console.log('[MapProvider] finishDrawing MultiLineString', { count: lines.length });
         return { type: 'MultiLineString', coordinates: lines };
       }
       if (drawPointsRef.current.length >= 2) return { type: 'LineString', coordinates: [...drawPointsRef.current] };
@@ -963,7 +1011,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
           }
           polys.push(activeRings.map(r => [...r, r[0]]));
         }
-        console.log('[MapProvider] finishDrawing MultiPolygon', { count: polys.length });
         return { type: 'MultiPolygon', coordinates: polys };
       }
       if (drawPointsRef.current.length >= 3) {
@@ -978,12 +1025,37 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     return null;
   };
 
+  const finishDrawing = () => buildCurrentGeometrySnapshot();
+
+  const updateGeometryChangeFlag = () => {
+    if (!isEditingExistingGeometryRef.current) {
+      return;
+    }
+    if (!originalGeometryNormalizedRef.current) {
+      if (geometryHasChangesRef.current) {
+        setGeometryHasChanges(false);
+      }
+      return;
+    }
+    const currentGeometry = buildCurrentGeometrySnapshot();
+    if (!currentGeometry) {
+      if (geometryHasChangesRef.current) {
+        setGeometryHasChanges(false);
+      }
+      return;
+    }
+    const normalizedCurrent = normalizeGeometryForComparison(currentGeometry);
+    const hasChanges = JSON.stringify(normalizedCurrent) !== JSON.stringify(originalGeometryNormalizedRef.current);
+    if (hasChanges !== geometryHasChangesRef.current) {
+      setGeometryHasChanges(hasChanges);
+    }
+  };
+
   // Iniciar dibujo de agujero dentro de un polígono ya finalizado
   const startHoleDrawing = () => {
     if (!mapInstance || !window.L) return;
     const mode = drawModeRef.current;
     if (mode !== 'polygon') return;
-    console.log('[MapProvider] startHoleDrawing()', { drawMode: mode, isDrawingHole: true });
 
     // Desregistrar handlers generales de dibujo para no interferir, guardándolos para restaurar después
     if (mapInstance.__drawHandlers) {
@@ -993,7 +1065,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       try { mapInstance.off('dblclick', handleDblClick); } catch (e) {}
       try { mapInstance.off('mousemove', handleMouseMove); } catch (e) {}
       delete mapInstance.__drawHandlers;
-      console.log('[MapProvider] draw handlers desregistrados durante agujero (guardados para restaurar)');
     }
 
     setIsDrawing(true);
@@ -1040,14 +1111,12 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       const rings = withCursorLatLng ? [...tempHole, withCursorLatLng] : tempHole;
       if (outer.length >= 3 && rings.length >= 1) {
         const latlngs = [outer, ...existingHoles, rings];
-        console.log('[MapProvider] preview hole latlngs sizes', { outer: outer.length, holes: existingHoles.length, temp: rings.length });
         const polyPreview = window.L.polygon(latlngs, { color: '#f57c00', weight: 2, dashArray: '6,4', fillColor: '#2196f3', fillOpacity: 0.25, opacity: 0.9 });
         previewLayerRef.current.addLayer(polyPreview);
       }
     };
 
     const finalizeHole = () => {
-      console.log('[MapProvider] finalizeHole()', { vertices: holeTempRef.current.length });
       setIsDrawing(false);
       setIsDrawingHole(false);
       setHasGeometry(true);
@@ -1087,7 +1156,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         try { mapInstance.on('click', handleClick); } catch (e) {}
         try { mapInstance.on('dblclick', handleDblClick); } catch (e) {}
         try { mapInstance.on('mousemove', handleMouseMove); } catch (e) {}
-        console.log('[MapProvider] draw handlers restaurados tras agujero');
       }
     };
 
@@ -1095,12 +1163,10 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       if (!isDrawingRef.current || !isDrawingHoleRef.current) return;
       const latlng = e.latlng;
       if (holeTempRef.current.length > 0 && isCloseToLastPointPx(latlng)) {
-        console.log('[MapProvider] finish hole (close by proximity)');
         finalizeHole();
         return;
       }
       holeTempRef.current.push([latlng.lng, latlng.lat]);
-      console.log('[MapProvider] hole click add point', { count: holeTempRef.current.length });
       drawHolePreview(null);
     };
 
@@ -1114,7 +1180,6 @@ export const MapProvider = ({ layerName, featureId, children }) => {
 
     const handleDblClick = () => {
       if (!isDrawingRef.current || !isDrawingHoleRef.current) return;
-      console.log('[MapProvider] finish hole (dblclick)');
       finalizeHole();
     };
 
@@ -1132,13 +1197,11 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     setHoleCount(holesRef.current.length);
     redrawFinalGeometry();
     rebuildEditHandles('polygon');
-    console.log('[MapProvider] removeLastHole -> holes:', holesRef.current.length);
   };
 
   // Cancelar dibujo y limpiar
   const cancelDrawing = () => {
     if (!mapInstance) return;
-    console.log('[MapProvider] cancelDrawing()');
     if (mapInstance.__drawHandlers) {
       const { handleClick, handleDblClick, handleMouseMove } = mapInstance.__drawHandlers;
       try { mapInstance.off('click', handleClick); } catch (e) {}
@@ -1172,6 +1235,15 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     multiGeometriesRef.current = [];
     setHoleCount(0);
     holeTempRef.current = [];
+    // Limpiar estado de edición de geometría existente
+    setIsEditingExistingGeometry(false);
+    editingFeatureRef.current = null;
+    editingLayerConfigRef.current = null;
+    originalGeometryRef.current = null;
+    originalGeometryNormalizedRef.current = null;
+    if (geometryHasChangesRef.current) {
+      setGeometryHasChanges(false);
+    }
     if (previewLayerRef.current && mapInstance) { try { previewLayerRef.current.clearLayers(); if (mapInstance.hasLayer(previewLayerRef.current)) mapInstance.removeLayer(previewLayerRef.current); } catch (e) {} }
     if (editHandlesLayerRef.current && mapInstance) { try { editHandlesLayerRef.current.clearLayers(); if (mapInstance.hasLayer(editHandlesLayerRef.current)) mapInstance.removeLayer(editHandlesLayerRef.current); } catch (e) {} }
     if (drawLayerRef.current && mapInstance) { try { drawLayerRef.current.clearLayers(); if (mapInstance.hasLayer(drawLayerRef.current)) mapInstance.removeLayer(drawLayerRef.current); } catch (e) {} }
@@ -1180,6 +1252,177 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     editHandlesLayerRef.current = null;
     drawLayerRef.current = null;
     multiLayerRef.current = null;
+  };
+
+  // Función helper para obtener información de geometría de la capa (similar a la de qgisWFSFetcher)
+  const getLayerGeometryInfo = (layerConfig) => {
+    const rawType = (layerConfig?.wkbType_name ||
+      layerConfig?.geometryType ||
+      layerConfig?.geometryTypeName ||
+      layerConfig?.type ||
+      '').toString().toUpperCase();
+
+    if (!rawType) {
+      return { baseType: null, isMulti: false };
+    }
+
+    let typeToUse = rawType;
+    if (rawType === 'LINEGEOMETRY' || rawType === 'GEOMETRY') {
+      const layerName = (layerConfig?.name || '').toLowerCase();
+      const wkbType = layerConfig?.wkbType;
+      if (wkbType === 1 || layerName.includes('punto') || layerName.includes('point')) {
+        typeToUse = 'POINT';
+      } else if (wkbType === 2 || layerName.includes('linea') || layerName.includes('line')) {
+        typeToUse = 'LINESTRING';
+      } else if (wkbType === 3 || layerName.includes('poligono') || layerName.includes('polygon')) {
+        typeToUse = 'POLYGON';
+      }
+    }
+
+    const isPoint = typeToUse.includes('POINT');
+    const isLine = typeToUse.includes('LINE');
+    const isPolygon = typeToUse.includes('POLYGON');
+    const baseType = isPoint ? 'POINT' : (isPolygon ? 'POLYGON' : (isLine ? 'LINESTRING' : null));
+    const isMulti = typeToUse.includes('MULTI');
+    return { baseType, isMulti };
+  };
+
+  // Iniciar edición de geometría existente
+  const startEditingGeometry = (feature, layerConfig) => {
+    if (!mapInstance || !window.L || !feature || !layerConfig) {
+      console.warn('[MapProvider] startEditingGeometry: parámetros inválidos');
+      return;
+    }
+
+
+    // Cancelar cualquier dibujo previo antes de preparar la nueva edición
+    cancelDrawing();
+
+    // Guardar referencia a la feature y capa que estamos editando
+    editingFeatureRef.current = feature;
+    editingLayerConfigRef.current = layerConfig;
+    setIsEditingExistingGeometry(true);
+
+    // Obtener la geometría de la feature
+    const geometry = feature.geometry;
+    if (!geometry || !geometry.type) {
+      console.error('[MapProvider] startEditingGeometry: la feature no tiene geometría válida');
+      return;
+    }
+
+    // Guardar la geometría original para comparar cambios
+    originalGeometryRef.current = JSON.parse(JSON.stringify(geometry));
+    originalGeometryNormalizedRef.current = normalizeGeometryForComparison(originalGeometryRef.current);
+    setGeometryHasChanges(false);
+
+    // Determinar el modo de dibujo según el tipo de geometría
+    const geometryType = geometry.type.toUpperCase();
+    let mode = null;
+    if (geometryType.includes('POINT')) {
+      mode = 'point';
+    } else if (geometryType.includes('LINE')) {
+      mode = 'line';
+    } else if (geometryType.includes('POLYGON')) {
+      mode = 'polygon';
+    }
+
+    if (!mode) {
+      console.error('[MapProvider] startEditingGeometry: tipo de geometría no soportado', geometryType);
+      return;
+    }
+
+    // Verificar si la capa admite múltiples geometrías
+    const geometryInfo = getLayerGeometryInfo(layerConfig);
+    canDrawMultipleRef.current = geometryInfo.isMulti;
+
+    // Iniciar el modo de dibujo
+    setDrawMode(mode);
+    drawModeRef.current = mode;
+    setIsDrawing(false); // No estamos dibujando, estamos editando
+    setHasGeometry(true); // Ya tenemos geometría
+
+    // Inicializar capas
+    multiLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+    drawLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+    previewLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
+
+    // Cargar la geometría existente en los refs
+    const coords = geometry.coordinates;
+    if (mode === 'point') {
+      if (geometryType === 'POINT') {
+        drawPointsRef.current = [[coords[0], coords[1]]];
+        multiGeometriesRef.current = [];
+      } else if (geometryType === 'MULTIPOINT') {
+        if (geometryInfo.isMulti) {
+          // Si la capa admite multi, cargar todas las geometrías
+          multiGeometriesRef.current = coords.map(coord => [coord]);
+          drawPointsRef.current = coords.length > 0 ? [[coords[0][0], coords[0][1]]] : [];
+        } else {
+          // Si la capa NO admite multi, solo cargar la primera geometría
+          drawPointsRef.current = coords.length > 0 ? [[coords[0][0], coords[0][1]]] : [];
+          multiGeometriesRef.current = [];
+        }
+      }
+    } else if (mode === 'line') {
+      if (geometryType === 'LINESTRING') {
+        drawPointsRef.current = coords.map(([lng, lat]) => [lng, lat]);
+        multiGeometriesRef.current = [];
+      } else if (geometryType === 'MULTILINESTRING') {
+        if (geometryInfo.isMulti) {
+          // Si la capa admite multi, cargar todas las líneas
+          multiGeometriesRef.current = coords;
+          drawPointsRef.current = coords.length > 0 ? coords[0].map(([lng, lat]) => [lng, lat]) : [];
+        } else {
+          // Si la capa NO admite multi, solo cargar la primera línea
+          drawPointsRef.current = coords.length > 0 ? coords[0].map(([lng, lat]) => [lng, lat]) : [];
+          multiGeometriesRef.current = [];
+        }
+      }
+    } else if (mode === 'polygon') {
+      if (geometryType === 'POLYGON') {
+        drawPointsRef.current = coords[0].map(([lng, lat]) => [lng, lat]);
+        holesRef.current = coords.slice(1);
+        setHoleCount(holesRef.current.length);
+        multiGeometriesRef.current = [];
+      } else if (geometryType === 'MULTIPOLYGON') {
+        if (geometryInfo.isMulti) {
+          // Si la capa admite multi, cargar todos los polígonos
+          multiGeometriesRef.current = coords;
+          if (coords.length > 0) {
+            drawPointsRef.current = coords[0][0].map(([lng, lat]) => [lng, lat]);
+            holesRef.current = coords[0].slice(1);
+            setHoleCount(holesRef.current.length);
+          }
+        } else {
+          // Si la capa NO admite multi, solo cargar el primer polígono
+          if (coords.length > 0) {
+            drawPointsRef.current = coords[0][0].map(([lng, lat]) => [lng, lat]);
+            holesRef.current = coords[0].slice(1);
+            setHoleCount(holesRef.current.length);
+          }
+          multiGeometriesRef.current = [];
+        }
+      }
+    }
+
+    // Redibujar la geometría y crear los handles de edición
+    redrawFinalGeometry();
+    syncMultiLayer(mode);
+    rebuildEditHandles(mode);
+
+    // Configurar el cursor y el contenedor
+    try {
+      const container = mapInstance.getContainer();
+      container.classList.add('leaflet-drawing');
+      container.style.setProperty('cursor', 'crosshair', 'important');
+      if (mapInstance.doubleClickZoom && mapInstance.doubleClickZoom.enabled()) {
+        mapInstance.doubleClickZoom.disable();
+      }
+    } catch (e) {
+      console.warn('[MapProvider] startEditingGeometry: error configurando cursor', e);
+    }
+
+    updateGeometryChangeFlag();
   };
 
   const value = {
@@ -1225,6 +1468,12 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     isGpsTrackPaused,
     gpsTrackType,
     gpsTrackPoints,
+    // Edición de geometría existente
+    startEditingGeometry,
+    isEditingExistingGeometry,
+    getEditingFeature: () => editingFeatureRef.current,
+    getEditingLayerConfig: () => editingLayerConfigRef.current,
+    geometryHasChanges,
   };
 
   return (

@@ -13,7 +13,7 @@ import { FormLayoutQGS, LoadingQGS } from '../../UI_QGS';
  * Componente de formulario dinámico para edición de features de QGIS
  * Genera campos de formulario basados en la configuración del proyecto QGIS
  */
-const Form = ({ layerName, featureId, readOnly = false, onSave = null, hideActions = false, renderActions = null }) => {
+const Form = ({ layerName, featureId, feature: featureProp = null, readOnly = false, onSave = null, hideActions = false, renderActions = null, onValuesChange = null }) => {
   // Obtener configuración QGIS y función de traducción del contexto
   const { config, t, notificationManager } = useContext(QgisConfigContext);
   
@@ -23,8 +23,8 @@ const Form = ({ layerName, featureId, readOnly = false, onSave = null, hideActio
   }
 
   return (
-    <FormProvider layerName={layerName} featureId={featureId} readOnly={readOnly} onSave={onSave}>
-      <Form_ layerName={layerName} featureId={featureId} hideActions={hideActions} />
+    <FormProvider layerName={layerName} featureId={featureId} feature={featureProp} readOnly={readOnly} onSave={onSave}>
+      <Form_ layerName={layerName} featureId={featureId} hideActions={hideActions} onValuesChange={onValuesChange} />
       {renderActions && renderActions()}
     </FormProvider>
 
@@ -37,14 +37,15 @@ Form.propTypes = {
   readOnly: PropTypes.bool,
   onSave: PropTypes.func,
   hideActions: PropTypes.bool,
-  renderActions: PropTypes.func
+  renderActions: PropTypes.func,
+  onValuesChange: PropTypes.func
 };
 
 export { QgisConfigProvider };
 export default Form;
 
 
-const Form_ = ({layerName, featureId, hideActions = false }) => {
+const Form_ = ({ layerName, featureId, hideActions = false, onValuesChange = null }) => {
 
   const { t } = useContext(QgisConfigContext);
   const {
@@ -74,6 +75,11 @@ const Form_ = ({layerName, featureId, hideActions = false }) => {
 
     setIsSaving(true);
     try {
+      console.log('[Form] onSubmit', {
+        canSave,
+        isSaving,
+        valuesKeys: Object.keys(values || {})
+      });
       await handleSave(values, context);
       // Notificación de éxito se maneja en el handler
     } catch (error) {
@@ -87,6 +93,12 @@ const Form_ = ({layerName, featureId, hideActions = false }) => {
   const onCancel = () => {
     handleCancel();
   };
+
+  React.useEffect(() => {
+    if (typeof onValuesChange === 'function') {
+      onValuesChange(values);
+    }
+  }, [values, onValuesChange]);
 
   return (
     <form onSubmit={onSubmit} className="qgs-form">    
@@ -126,6 +138,7 @@ const Form_ = ({layerName, featureId, hideActions = false }) => {
             disabled={!canSave || isSaving}
             className="qgs-form-button qgs-form-button--primary"
           >
+            <i className="fas fa-floppy-disk" style={{ marginRight: '8px' }} />
             {isSaving ? translate('ui.common.saving') : translate('ui.common.save')}
           </button>
           <button 
@@ -133,6 +146,7 @@ const Form_ = ({layerName, featureId, hideActions = false }) => {
             onClick={onCancel}
             className="qgs-form-button qgs-form-button--secondary"
           >
+            <i className="fas fa-xmark" style={{ marginRight: '8px' }} />
             {translate('ui.common.cancel')}
           </button>
         </div>

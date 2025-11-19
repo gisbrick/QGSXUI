@@ -216,6 +216,7 @@ const BookmarksManager = ({ isOpen, onClose }) => {
                 onClick={handleSaveBookmark}
                 disabled={!newBookmarkName.trim() || isCapturing}
               >
+                <i className="fas fa-floppy-disk" style={{ marginRight: '8px' }} />
                 {isCapturing 
                   ? tr('ui.map.bookmarks.capturing', 'Capturando...', 'Capturing...')
                   : tr('ui.common.save', 'Guardar', 'Save')
@@ -230,6 +231,7 @@ const BookmarksManager = ({ isOpen, onClose }) => {
                 }}
                 disabled={isCapturing}
               >
+                <i className="fas fa-xmark" style={{ marginRight: '8px' }} />
                 {tr('ui.common.cancel', 'Cancelar', 'Cancel')}
               </Button>
             </div>

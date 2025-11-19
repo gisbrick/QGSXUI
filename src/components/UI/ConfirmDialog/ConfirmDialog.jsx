@@ -46,7 +46,11 @@ const ConfirmDialog = ({
     // Usar traducciones por defecto si no se proporcionan
     const resolvedTitle = title || getTranslation('ui.confirmDialog.title', lang === 'en' ? 'Confirm' : 'Confirmar');
     const resolvedMessage = message || getTranslation('ui.confirmDialog.message', lang === 'en' ? 'Are you sure?' : '¿Estás seguro?');
-    const resolvedConfirmText = confirmText || getTranslation('ui.confirmDialog.confirm', lang === 'en' ? 'Confirm' : 'Confirmar');
+    // Si es variante danger y no se proporciona confirmText, usar "Borrar"
+    const defaultConfirmText = variant === 'danger' 
+      ? (lang === 'en' ? 'Delete' : 'Borrar')
+      : getTranslation('ui.confirmDialog.confirm', lang === 'en' ? 'Confirm' : 'Confirmar');
+    const resolvedConfirmText = confirmText || defaultConfirmText;
     const resolvedCancelText = cancelText || getTranslation('ui.confirmDialog.cancel', lang === 'en' ? 'Cancel' : 'Cancelar');
     const loadingText = getTranslation('ui.common.loading', lang === 'en' ? 'Loading...' : 'Cargando...');
 
@@ -69,15 +73,21 @@ const ConfirmDialog = ({
                         aria-label={resolvedCancelText}
                         disabled={loading}
                     >
+                        <i className="fas fa-xmark" style={{ marginRight: '8px' }} />
                         {resolvedCancelText}
                     </button>
                     <button 
-                        className="confirm-dialog__button confirm-dialog__button--confirm"
+                        className={`confirm-dialog__button confirm-dialog__button--confirm ${variant === 'danger' ? 'confirm-dialog__button--danger' : ''}`}
                         onClick={onConfirm}
                         type="button"
                         aria-label={resolvedConfirmText}
                         disabled={loading}
                     >
+                        {variant === 'danger' ? (
+                            <i className="fa-solid fa-trash-can" style={{ marginRight: '8px' }} />
+                        ) : (
+                            <i className="fas fa-check" style={{ marginRight: '8px' }} />
+                        )}
                         {loading ? loadingText : resolvedConfirmText}
                     </button>
                 </div>

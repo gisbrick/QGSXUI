@@ -34,6 +34,7 @@
       "optional": "Opcional",
       "dismiss": "Descartar",
       "saving": "Guardando...",
+      "exit": "Salir",
       "empty": "—"
     },
     "accordion": {
@@ -49,6 +50,10 @@
       "message": "¿Estás seguro de que deseas continuar?",
       "confirm": "Confirmar",
       "cancel": "Cancelar"
+    },
+    "unsavedChangesDialog": {
+      "title": "Cambios sin guardar",
+      "message": "Hay datos sin guardar, y si sale se perderán. ¿Desea guardar los datos antes de salir?"
     },
     "contextMenu": {
       "copy": "Copiar",
@@ -201,7 +206,34 @@
       "error": {
         "validationFailed": {
           "title": "Error de validación",
-          "message": "Por favor, corrige los errores en el formulario antes de guardar"
+          "message": "Por favor, corrige los errores en el formulario antes de guardar",
+          "detailedMessage": "Por favor, corrige los siguientes errores:\n{{errors}}"
+        },
+        "savingFeature": {
+          "title": "Error al guardar",
+          "message": "No se pudo guardar la feature"
+        },
+        "deletingFeature": {
+          "title": "Error al borrar",
+          "message": "No se pudo borrar la feature"
+        },
+        "retrievingFeature": {
+          "title": "Error al obtener la feature",
+          "message": "No se pudo obtener la feature del servidor"
+        },
+        "layerServiceNotAvailable": {
+          "title": "Error de servicio",
+          "message": "Servicio de capa no disponible y no se pueden usar parámetros QGIS directos"
+        },
+        "layerServiceUnavailable": {
+          "title": "Error de servicio",
+          "message": "Servicio de capa no disponible"
+        }
+      },
+      "success": {
+        "savingFeature": {
+          "title": "Guardado exitoso",
+          "message": "Los cambios se han guardado correctamente"
         }
       }
     },
@@ -300,6 +332,32 @@
         "holes3": "Puedes eliminar el último agujero con Eliminar agujero.",
         "save": "Guardado y atributos",
         "save1": "Al pulsar Guardar, se abrirá un diálogo para cumplimentar los atributos asociados a la geometría antes de enviarla al servidor."
+      },
+      "draw": {
+        "save": {
+          "incomplete": {
+            "title": "Geometría incompleta",
+            "message": "Dibuja una geometría válida antes de guardar."
+          },
+          "noLayers": {
+            "title": "Sin capas configuradas",
+            "message": "No hay capas configuradas que acepten este tipo de geometría."
+          },
+          "noMultiLayers": {
+            "message": "No hay capas que acepten múltiples geometrías para este tipo."
+          },
+          "success": {
+            "title": "Geometría guardada",
+            "message": "El elemento se ha guardado correctamente.",
+            "messageWithId": "Se ha creado el elemento {{fid}}."
+          },
+          "error": {
+            "title": "Error al guardar",
+            "message": "No se pudo guardar la geometría."
+          },
+          "selectLayerTitle": "Selecciona la capa",
+          "selectLayerMessage": "Selecciona la capa donde quieres guardar la geometría recién dibujada."
+        }
       }
     },
     "toolbar": {

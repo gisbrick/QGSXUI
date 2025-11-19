@@ -51,7 +51,6 @@ export async function fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filte
     throw new Error('Missing numberOfFeatures attribute in XML response');
   }
 
-  console.log(`Total features in ${layerName} with filter: ${count}`);
   return parseInt(count, 10);
 }
 
@@ -87,7 +86,6 @@ export async function fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter = 
     throw new Error('Missing features in JSON response');
   }
 
-  console.log(`Fetched ${data.features.length} features from ${layerName}`);
   return data.features;
 }
 
@@ -142,7 +140,6 @@ export async function fetchAllFeatures(qgsUrl, qgsProjectPath, layerName, filter
     allFeatures.push(...data.features);
   }
 
-  console.log(`Fetched ${allFeatures.length} features from ${layerName}`);
   return allFeatures;
 }
 
@@ -245,31 +242,14 @@ export async function deleteFeature(qgsUrl, qgsProjectPath, feature, token = nul
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Log para debug - mostrar el XML antes de enviar
-  console.log('=== DELETE FEATURE REQUEST ===');
-  console.log('URL:', `${url}?${params.toString()}`);
-  console.log('Full URL:', `${url}?${params.toString()}`);
-  console.log('Headers:', headers);
-  console.log('Headers keys:', Object.keys(headers));
-  console.log('Headers values:', Object.values(headers));
-  console.log('XML Body (string):');
-  console.log(xmlString);
-  console.log('XML Body length:', xmlString.length);
-  console.log('XML Body type:', typeof xmlString);
-  console.log('Method: POST');
-  console.log('==============================');
-
   // Intentar la petición con manejo de errores detallado
   let response;
   try {
-    console.log('Iniciando fetch DELETE...');
     response = await fetch(`${url}?${params.toString()}`, {
       method: 'POST',
       headers: headers,
       body: xmlString
     });
-    console.log('Fetch DELETE completado. Status:', response.status, response.statusText);
-    console.log('Response headers:', [...response.headers.entries()]);
   } catch (fetchError) {
     console.error('=== ERROR EN FETCH DELETE ===');
     console.error('Error type:', fetchError.constructor.name);
@@ -502,15 +482,6 @@ export async function updateFeature(qgsUrl, qgsProjectPath, feature, properties,
     headers['Authorization'] = `Bearer ${token}`;
   }
 
-  // Log para debug
-  console.log('=== UPDATE FEATURE REQUEST ===');
-  console.log('URL:', `${url}?${params.toString()}`);
-  console.log('Full URL:', `${url}?${params.toString()}`);
-  console.log('Headers:', headers);
-  console.log('XML Body length:', xmlString.length);
-  console.log('Method: POST (usando XMLHttpRequest como legacy)');
-  console.log('==============================');
-
   // Usar XMLHttpRequest como en el legacy (unfetch usa XMLHttpRequest internamente)
   // Esto puede evitar el preflight OPTIONS en algunos casos
   return new Promise((resolve, reject) => {
@@ -525,8 +496,6 @@ export async function updateFeature(qgsUrl, qgsProjectPath, feature, properties,
     });
     
     xhr.onload = () => {
-      console.log('XMLHttpRequest UPDATE completado. Status:', xhr.status, xhr.statusText);
-      
       if (xhr.status >= 200 && xhr.status < 300) {
         // Crear un objeto Response-like para mantener compatibilidad
         const response = new Response(xhr.responseText, {
@@ -899,6 +868,52 @@ function buildInsertTransactionXml(layerName, geometryGml, propertiesXml) {
 </wfs:Transaction>`;
 }
 
+/**
+ * Genera el XML para una transacción WFS de actualización de geometría
+ * Basado en getUpdateGeomXML del legacy
+ * @param {Object} feature - Feature a actualizar (debe tener un id en formato "layerName.featureId")
+ * @param {string} geometryGml - GML de la geometría a actualizar
+ * @param {Object} layerConfig - Configuración de la capa
+ * @returns {string} XML de la transacción WFS
+ */
+function buildUpdateGeometryTransactionXml(feature, geometryGml, layerConfig) {
+  const featureIdArr = feature.id.split('.');
+  const TYPENAME = featureIdArr[0].replace(/\s+/g, '_');
+  const FID = featureIdArr[1];
+  
+  // WFS Update requiere al menos un Property. Incluir la geometría como Property,
+  // y opcionalmente la primera propiedad escalar para mantener compatibilidad.
+  const geometryFieldName =
+    layerConfig?.geometryAttribute ||
+    layerConfig?.geometryName ||
+    layerConfig?.geometry_field ||
+    'geometry';
+
+  const geometryPropertyXml = `<wfs:Property><wfs:Name>${geometryFieldName}</wfs:Name><wfs:Value>${geometryGml}</wfs:Value></wfs:Property>`;
+
+  let firstPropertyXml = '';
+  const firstPropertyKey = feature?.properties ? Object.keys(feature.properties)[0] : null;
+  if (firstPropertyKey) {
+    const safeKey = firstPropertyKey.replace(/\s+/g, '_');
+    const firstValue = feature.properties[firstPropertyKey];
+    const escapedValue = !isEmpty(firstValue) ? escapeString(firstValue) : '';
+    firstPropertyXml = `<wfs:Property><wfs:Name>${safeKey}</wfs:Name>` +
+      (escapedValue ? `<wfs:Value>${escapedValue}</wfs:Value>` : '<wfs:Value/>') +
+      `</wfs:Property>`;
+  }
+  
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<wfs:Transaction service="WFS" version="1.0.0" xmlns:wfs="http://www.opengis.net/wfs" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xmlns:ogc="http://www.opengis.net/ogc" xmlns="http://www.opengis.net/wfs" updateSequence="0" xmlns:xlink="http://www.w3.org/1999/xlink" xsi:schemaLocation="http://www.opengis.net/wfs http://schemas.opengis.net/wfs/1.0.0/WFS-capabilities.xsd" xmlns:gml="http://www.opengis.net/gml" xmlns:ows="http://www.opengis.net/ows" xmlns:qgs="http://www.qgis.org/gml">
+  <wfs:Update typeName="${TYPENAME}">
+    ${firstPropertyXml}
+    ${geometryPropertyXml}
+    <ogc:Filter>
+      <ogc:FeatureId fid="${FID}"/>
+    </ogc:Filter>
+  </wfs:Update>
+</wfs:Transaction>`;
+}
+
 export async function insertFeatureWithGeometry(
   qgsUrl,
   qgsProjectPath,
@@ -1022,4 +1037,164 @@ export async function insertFeatureWithGeometry(
     fid,
     rawResponse: responseText
   };
+}
+
+/**
+ * Actualiza solo la geometría de una feature mediante WFS Transaction
+ * @param {string} qgsUrl - URL del servidor QGIS
+ * @param {string} qgsProjectPath - Ruta del proyecto QGIS
+ * @param {Object} feature - Feature a actualizar (debe tener un id en formato "layerName.featureId")
+ * @param {Object} geometry - Geometría GeoJSON a actualizar
+ * @param {Object} layerConfig - Configuración de la capa
+ * @param {string} token - Token de autenticación (opcional)
+ * @returns {Promise<Response>} Respuesta de la petición
+ */
+export async function updateFeatureGeometry(
+  qgsUrl,
+  qgsProjectPath,
+  feature,
+  geometry,
+  layerConfig,
+  token = null
+) {
+  if (!feature || !feature.id) {
+    throw new Error('Feature must have an id property');
+  }
+
+  if (!geometry || !geometry.type) {
+    throw new Error('Geometry must be a valid GeoJSON geometry');
+  }
+
+  const featureIdArr = feature.id.split('.');
+  if (featureIdArr.length !== 2) {
+    throw new Error('Feature id must be in format "layerName.featureId"');
+  }
+
+  // Normalizar la geometría según el tipo de capa
+  const geometryInfo = getLayerGeometryInfo(layerConfig);
+  let normalizedGeometry = cloneGeometry(geometry);
+  
+  // Si la capa espera multi pero la geometría no lo es, envolverla
+  if (geometryInfo.isMulti && !normalizedGeometry.type.startsWith('Multi')) {
+    normalizedGeometry = wrapGeometryInMulti(normalizedGeometry);
+  }
+  
+  // Si la capa no espera multi pero la geometría lo es, desenrollarla
+  if (!geometryInfo.isMulti && normalizedGeometry.type.startsWith('Multi')) {
+    normalizedGeometry = unwrapMultiGeometry(normalizedGeometry);
+  }
+
+  // Validar que el tipo de geometría es compatible con la capa
+  const geometryType = normalizedGeometry.type.toUpperCase();
+  const allowedTypes = {
+    'POINT': ['POINT', 'MULTIPOINT'],
+    'LINESTRING': ['LINESTRING', 'MULTILINESTRING'],
+    'POLYGON': ['POLYGON', 'MULTIPOLYGON']
+  };
+  
+  if (geometryInfo.baseType && allowedTypes[geometryInfo.baseType]) {
+    const isAllowed = allowedTypes[geometryInfo.baseType].some(
+      type => geometryType === type || geometryType.startsWith(type)
+    );
+    if (!isAllowed) {
+      throw new Error(`La capa espera geometrías de tipo ${geometryInfo.baseType}, pero se ha proporcionado ${geometryType}.`);
+    }
+  }
+
+  // Generar GML de la geometría
+  const targetSrsName = buildSrsName(DEFAULT_SOURCE_CRS);
+  // Necesitamos enviar coord en orden lat,lon (como en legacy).
+  // Para MultiPolygon, geometryToGml invierte el axisOrder internamente, así que pasamos el contrario.
+  const targetAxisOrder = normalizedGeometry.type === 'MULTIPOLYGON' ? 'lonlat' : 'latlon';
+  const geometryGml = geometryToGml(normalizedGeometry, { srsName: targetSrsName, axisOrder: targetAxisOrder });
+
+  // Generar XML de la transacción
+  const updateXML = buildUpdateGeometryTransactionXml(feature, geometryGml, layerConfig);
+
+  // Asegurar que el XML es un string válido
+  const xmlString = String(updateXML).trim();
+
+  // Headers según el legacy: Content-Type: text/xml
+  const headers = {
+    'Content-Type': 'text/xml',
+    'Accept': 'application/xml, text/xml, */*'
+  };
+  
+  if (token) {
+    headers['Authorization'] = `Bearer ${token}`;
+  }
+
+  const TYPENAME = featureIdArr[0].replace(/\s+/g, '_');
+  const url = qgsUrl;
+  const params = new URLSearchParams({
+    SERVICE: 'WFS',
+    VERSION: '1.1.0',
+    REQUEST: 'Transaction',
+    MAP: qgsProjectPath,
+    TYPENAME: TYPENAME,
+    ...(token ? { TOKEN: token } : {})
+  });
+
+  // Usar XMLHttpRequest como en updateFeature para mantener consistencia
+  return new Promise((resolve, reject) => {
+    const xhr = new XMLHttpRequest();
+    xhr.open('POST', `${url}?${params.toString()}`, true);
+    
+    Object.keys(headers).forEach(key => {
+      xhr.setRequestHeader(key, headers[key]);
+    });
+    
+    xhr.onload = function() {
+      if (xhr.status >= 200 && xhr.status < 300) {
+        resolve({
+          ok: true,
+          status: xhr.status,
+          statusText: xhr.statusText,
+          text: () => Promise.resolve(xhr.responseText)
+        });
+      } else {
+        reject(new Error(`HTTP error: ${xhr.status} ${xhr.statusText}`));
+      }
+    };
+    
+    xhr.onerror = function() {
+      reject(new Error('XMLHttpRequest failed'));
+    };
+    
+    xhr.send(xmlString);
+  }).then(async response => {
+    // Parsear la respuesta XML
+    const text = await response.text();
+    const parser = new DOMParser();
+    const xmlDoc = parser.parseFromString(text, 'text/xml');
+
+    // Verificar si hay errores en la respuesta
+    const exceptionReport = xmlDoc.querySelector('ServiceExceptionReport');
+    if (exceptionReport) {
+      const exceptionText = exceptionReport.querySelector('ServiceException')?.textContent || 'Unknown server error';
+      throw new Error(`QGIS Server returned a ServiceException: ${exceptionText}`);
+    }
+
+    // Verificar que la transacción fue exitosa
+    const rootName = xmlDoc.documentElement.nodeName;
+    const isTransactionResponse = rootName === 'WFS_TransactionResponse' || 
+                                   rootName === 'wfs:TransactionResponse' || 
+                                   rootName === 'TransactionResponse' ||
+                                   rootName.includes('TransactionResponse');
+
+    if (!isTransactionResponse) {
+      throw new Error(`Invalid transaction response from server. Expected TransactionResponse, got: ${rootName}`);
+    }
+
+    // Verificar el estado de éxito
+    const successElement = xmlDoc.querySelector('SUCCESS, Status > SUCCESS, TransactionResult SUCCESS, TransactionResult > Status > SUCCESS');
+    const totalUpdated = xmlDoc.querySelector('totalUpdated');
+    
+    if (successElement || (totalUpdated && parseInt(totalUpdated.textContent) > 0)) {
+      return response;
+    }
+
+    // Si llegamos aquí y no hay errores explícitos, considerar exitoso
+    return response;
+  });
 }

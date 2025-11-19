@@ -1,4 +1,4 @@
-import { useCallback, useEffect } from 'react';
+import { useCallback, useEffect, useRef } from 'react';
 import { validateFieldValue } from '../../../../utilities/formValuesValidators';
 
 /**
@@ -13,6 +13,7 @@ import { validateFieldValue } from '../../../../utilities/formValuesValidators';
  * @param {Function} t - Función de traducción
  * @param {string} language - Código del idioma
  * @param {Object} translations - Traducciones completas
+ * @param {boolean} isNewFeature - Si es true, es un insert (nueva feature)
  * @returns {Object} Funciones y estado de validación
  */
 export const useFormValidation = (
@@ -23,14 +24,35 @@ export const useFormValidation = (
   setFieldError,
   t,
   language,
-  translations
+  translations,
+  isNewFeature = false
 ) => {
+  // Usar ref para obtener los valores más recientes en validateField y validateAllFields
+  // DEBE estar declarado ANTES de validateField para que pueda usarlo
+  const valuesRef = useRef(values);
+  useEffect(() => {
+    valuesRef.current = values;
+  }, [values]);
+
   /**
    * Valida un campo específico usando las reglas definidas en la configuración
    * @param {string} fieldName - Nombre del campo a validar
-   * @param {*} value - Valor del campo a validar
+   * @param {*} value - Valor del campo a validar (opcional, si no se proporciona se usa el valor del estado)
    */
   const validateField = useCallback((fieldName, value) => {
+    // Si no se proporciona el valor, usar el valor más reciente del estado
+    const currentValues = valuesRef.current;
+    const fieldValue = value !== undefined ? value : currentValues[fieldName];
+    
+    console.log('[useFormValidation] validateField', {
+      fieldName,
+      valueProvided: value !== undefined,
+      value,
+      fieldValueFromState: currentValues[fieldName],
+      fieldValue,
+      currentValuesKeys: Object.keys(currentValues || {})
+    });
+    
     // Buscar el campo en la configuración de la capa
     if (!layer || !layer.fields || !Array.isArray(layer.fields)) {
       // Si no hay layer.fields, intentar buscar en config.fields como fallback
@@ -39,7 +61,7 @@ export const useFormValidation = (
         if (fieldConfig) {
           // Validación básica con validateValue (sistema antiguo)
           const rules = fieldConfig?.validate || [];
-          const error = validateValue(value, rules);
+          const error = validateValue(fieldValue, rules);
           setFieldError(fieldName, error);
         }
       }
@@ -54,15 +76,40 @@ export const useFormValidation = (
       return;
     }
     
-    // Usar el sistema de validación completo
+    const fieldAlias = fieldConfig.alias || fieldConfig.name || fieldName;
+    
+    const replaceFieldPlaceholder = (message) => {
+      if (!message) return message;
+      // Reemplazar tanto {field} como {{field}} para compatibilidad
+      return message.replace(/\{\{field\}\}/g, fieldAlias).replace(/\{field\}/g, fieldAlias);
+    };
+
+    // Función helper para identificar si un campo es PK
+    const isPrimaryKey = (field) => {
+      if (!field) return false;
+      // El campo con index 0 suele ser el PK
+      if (field.index === 0) {
+        return true;
+      }
+      // También puede ser PK si tiene constraintUnique y constraintNotNull y se llama "fid" o "id"
+      const fieldNameLower = (field.name || '').toLowerCase();
+      if ((field.constraintUnique === true && field.constraintNotNull === true) &&
+          (fieldNameLower === 'fid' || fieldNameLower === 'id' || fieldNameLower.endsWith('_id'))) {
+        return true;
+      }
+      return false;
+    };
+
+    // Usar el sistema de validación completo con los valores más recientes
     const validation = validateFieldValue(
       fieldConfig, 
-      value, 
-      values, 
+      fieldValue, 
+      currentValues, 
       layer, 
       t, 
       language, 
-      translations
+      translations,
+      isNewFeature
     );
     
     if (validation.valid) {
@@ -76,33 +123,148 @@ export const useFormValidation = (
         const fieldAlias = fieldConfig.alias || fieldConfig.name || fieldName;
         let errorMessage = '';
         
-        if (fieldConfig.constraintNotNull && (value === null || value === undefined || value === '')) {
-          const requiredMsg = t('ui.qgis.validation.required') || 'Este campo debe rellenarse de manera obligatoria';
-          errorMessage = requiredMsg.replace('Este campo', `El campo "${fieldAlias}"`);
+        // Para inserts (nuevas features), no validar constraintNotNull en el PK ya que se asigna automáticamente en el servidor
+        const fieldIsPK = isPrimaryKey(fieldConfig);
+        const shouldValidateNotNull = !(fieldIsPK && isNewFeature);
+        
+        if (fieldConfig.constraintNotNull && shouldValidateNotNull && (fieldValue === null || fieldValue === undefined || fieldValue === '')) {
+          let requiredMsg =
+            t('ui.qgis.validation.requiredWithField', { field: fieldAlias }) ||
+            t('ui.qgis.validation.required');
+          
+          // Si la traducción devuelve la clave (no se encontró), usar fallback
+          if (!requiredMsg || requiredMsg === 'ui.qgis.validation.requiredWithField' || requiredMsg === 'ui.qgis.validation.required') {
+            // Intentar obtener el mensaje directamente de las traducciones
+            if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+              const validationTranslations = translations.ui.qgis.validation;
+              requiredMsg = validationTranslations.requiredWithField || validationTranslations.required;
+            }
+            
+            // Si aún no hay mensaje, usar fallback hardcodeado
+            if (!requiredMsg || requiredMsg === 'ui.qgis.validation.requiredWithField' || requiredMsg === 'ui.qgis.validation.required') {
+              requiredMsg = `El campo "${fieldAlias}" debe rellenarse de manera obligatoria`;
+            } else {
+              // Interpolar {field} manualmente si existe
+              requiredMsg = replaceFieldPlaceholder(requiredMsg);
+            }
+          } else {
+            // Interpolar {field} o {{field}} manualmente si existe en el mensaje
+            requiredMsg = replaceFieldPlaceholder(requiredMsg);
+            // Si el mensaje genérico no incluye el nombre del campo, agregarlo
+            if (requiredMsg.includes('Este campo')) {
+              requiredMsg = requiredMsg.replace('Este campo', `El campo "${fieldAlias}"`);
+            }
+          }
+          errorMessage = requiredMsg;
         } else if (fieldConfig.typeName) {
           const typeNameUpper = String(fieldConfig.typeName).toUpperCase();
           if (typeNameUpper.includes('INT') || typeNameUpper.includes('LONG')) {
-            const msg = t('ui.qgis.validation.integerType') || 'El valor debe ser un número entero';
-            errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            let msg = t('ui.qgis.validation.integerTypeWithField', { field: fieldAlias }) ||
+              t('ui.qgis.validation.integerType') ||
+              'El valor debe ser un número entero';
+            
+            // Si la traducción devuelve la clave, intentar obtener de translations directamente
+            if (msg === 'ui.qgis.validation.integerTypeWithField' || msg === 'ui.qgis.validation.integerType') {
+              if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+                msg = translations.ui.qgis.validation.integerTypeWithField || translations.ui.qgis.validation.integerType || msg;
+              }
+            }
+            
+            // Interpolar {field} o {{field}} si existe
+            msg = replaceFieldPlaceholder(msg);
+            // Si el mensaje no incluye el nombre del campo, agregarlo
+            if (!msg.includes(fieldAlias) && !msg.includes('{field}') && !msg.includes('{{field}}')) {
+              errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            } else {
+              errorMessage = msg;
+            }
           } else if (typeNameUpper.includes('REAL') || typeNameUpper.includes('FLOAT')) {
-            const msg = t('ui.qgis.validation.numberType') || 'El valor debe ser un número';
-            errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            let msg = t('ui.qgis.validation.numberTypeWithField', { field: fieldAlias }) ||
+              t('ui.qgis.validation.numberType') ||
+              'El valor debe ser un número';
+            
+            // Si la traducción devuelve la clave, intentar obtener de translations directamente
+            if (msg === 'ui.qgis.validation.numberTypeWithField' || msg === 'ui.qgis.validation.numberType') {
+              if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+                msg = translations.ui.qgis.validation.numberTypeWithField || translations.ui.qgis.validation.numberType || msg;
+              }
+            }
+            
+            // Interpolar {field} o {{field}} si existe
+            msg = replaceFieldPlaceholder(msg);
+            // Si el mensaje no incluye el nombre del campo, agregarlo
+            if (!msg.includes(fieldAlias) && !msg.includes('{field}') && !msg.includes('{{field}}')) {
+              errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            } else {
+              errorMessage = msg;
+            }
           } else if (typeNameUpper.includes('DATE')) {
-            const msg = t('ui.qgis.validation.dateType') || 'El valor debe ser una fecha válida';
-            errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            let msg = t('ui.qgis.validation.dateTypeWithField', { field: fieldAlias }) ||
+              t('ui.qgis.validation.dateType') ||
+              'El valor debe ser una fecha válida';
+            
+            // Si la traducción devuelve la clave, intentar obtener de translations directamente
+            if (msg === 'ui.qgis.validation.dateTypeWithField' || msg === 'ui.qgis.validation.dateType') {
+              if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+                msg = translations.ui.qgis.validation.dateTypeWithField || translations.ui.qgis.validation.dateType || msg;
+              }
+            }
+            
+            // Interpolar {field} o {{field}} si existe
+            msg = replaceFieldPlaceholder(msg);
+            // Si el mensaje no incluye el nombre del campo, agregarlo
+            if (!msg.includes(fieldAlias) && !msg.includes('{field}') && !msg.includes('{{field}}')) {
+              errorMessage = `El campo "${fieldAlias}": ${msg}`;
+            } else {
+              errorMessage = msg;
+            }
           } else {
-            const invalidMsg = t('ui.qgis.validation.invalidValue') || 'El valor introducido no es válido';
-            errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
+            let invalidMsg = t('ui.qgis.validation.invalidValueWithField', { field: fieldAlias }) ||
+              t('ui.qgis.validation.invalidValue') ||
+              'El valor introducido no es válido';
+            
+            // Si la traducción devuelve la clave, intentar obtener de translations directamente
+            if (invalidMsg === 'ui.qgis.validation.invalidValueWithField' || invalidMsg === 'ui.qgis.validation.invalidValue') {
+              if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+                invalidMsg = translations.ui.qgis.validation.invalidValueWithField || translations.ui.qgis.validation.invalidValue || invalidMsg;
+              }
+            }
+            
+            // Interpolar {field} o {{field}} si existe
+            invalidMsg = replaceFieldPlaceholder(invalidMsg);
+            // Si el mensaje no incluye el nombre del campo, agregarlo
+            if (!invalidMsg.includes(fieldAlias) && !invalidMsg.includes('{field}') && !invalidMsg.includes('{{field}}')) {
+              errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
+            } else {
+              errorMessage = invalidMsg;
+            }
           }
         } else {
-          const invalidMsg = t('ui.qgis.validation.invalidValue') || 'El valor introducido no es válido';
-          errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
+          let invalidMsg = t('ui.qgis.validation.invalidValueWithField', { field: fieldAlias }) ||
+            t('ui.qgis.validation.invalidValue') ||
+            'El valor introducido no es válido';
+          
+          // Si la traducción devuelve la clave, intentar obtener de translations directamente
+          if (invalidMsg === 'ui.qgis.validation.invalidValueWithField' || invalidMsg === 'ui.qgis.validation.invalidValue') {
+            if (translations && translations.ui && translations.ui.qgis && translations.ui.qgis.validation) {
+              invalidMsg = translations.ui.qgis.validation.invalidValueWithField || translations.ui.qgis.validation.invalidValue || invalidMsg;
+            }
+          }
+          
+          // Interpolar {field} o {{field}} si existe
+          invalidMsg = replaceFieldPlaceholder(invalidMsg);
+          // Si el mensaje no incluye el nombre del campo, agregarlo
+          if (!invalidMsg.includes(fieldAlias) && !invalidMsg.includes('{field}') && !invalidMsg.includes('{{field}}')) {
+            errorMessage = `El campo "${fieldAlias}": ${invalidMsg}`;
+          } else {
+            errorMessage = invalidMsg;
+          }
         }
         
         setFieldError(fieldName, errorMessage);
       }
     }
-  }, [layer, values, config, t, language, translations, setFieldError]);
+  }, [layer, config, t, language, translations, setFieldError, isNewFeature]);
 
   /**
    * Valida todos los campos del formulario
@@ -113,6 +275,15 @@ export const useFormValidation = (
       return { valid: true, errors: {} };
     }
     
+    // Usar los valores más recientes del ref para evitar problemas de sincronización
+    const currentValues = valuesRef.current;
+    
+    console.log('[useFormValidation] validateAllFields', {
+      currentValuesKeys: Object.keys(currentValues || {}),
+      currentValues,
+      layerFieldsCount: layer.fields?.length || 0
+    });
+    
     const newErrors = {};
     let hasErrors = false;
     
@@ -120,15 +291,23 @@ export const useFormValidation = (
       // Solo validar campos editables
       if (field.readOnly) return;
       
-      const value = values[field.name];
+      const value = currentValues[field.name];
+      
+      console.log('[useFormValidation] validateAllFields - campo', {
+        fieldName: field.name,
+        value,
+        constraintNotNull: field.constraintNotNull,
+        isNewFeature
+      });
       const validation = validateFieldValue(
         field, 
         value, 
-        values, 
+        currentValues, 
         layer, 
         t, 
         language, 
-        translations
+        translations,
+        isNewFeature
       );
       
       if (!validation.valid && validation.error) {
@@ -139,26 +318,46 @@ export const useFormValidation = (
     });
     
     return { valid: !hasErrors, errors: newErrors };
-  }, [layer, values, t, language, translations, setFieldError]);
+  }, [layer, t, language, translations, setFieldError, isNewFeature]);
 
   /**
    * Determina si todos los campos son válidos
    */
   const isValid = Object.values(errors).every(e => !e || e === '');
 
+  // Usar ref para rastrear el último idioma y evitar ciclos infinitos
+  const lastLanguageRef = useRef(language);
+  const errorsRef = useRef(errors);
+  
+  // Mantener la referencia de errores actualizada
+  useEffect(() => {
+    errorsRef.current = errors;
+  }, [errors]);
+
   // Re-validar todos los campos cuando cambia el idioma para actualizar los mensajes de error
   useEffect(() => {
-    if (layer && layer.fields && Object.keys(errors).length > 0) {
-      const fieldsWithErrors = Object.keys(errors);
-      fieldsWithErrors.forEach(fieldName => {
-        const field = layer.fields.find(f => f.name === fieldName);
-        if (field) {
-          const value = values[fieldName];
-          validateField(fieldName, value);
-        }
-      });
+    // Solo re-validar si realmente cambió el idioma
+    const languageChanged = lastLanguageRef.current !== language;
+    
+    if (languageChanged && layer && layer.fields) {
+      lastLanguageRef.current = language;
+      // Usar los errores actuales desde la ref para evitar dependencias
+      const currentErrors = errorsRef.current;
+      const hasErrors = Object.keys(currentErrors).length > 0;
+      
+      if (hasErrors) {
+        // Solo re-validar campos que tienen errores actualmente
+        const fieldsWithErrors = Object.keys(currentErrors);
+        fieldsWithErrors.forEach(fieldName => {
+          const field = layer.fields.find(f => f.name === fieldName);
+          if (field) {
+            const value = values[fieldName];
+            validateField(fieldName, value);
+          }
+        });
+      }
     }
-  }, [language, t, layer, values, errors, validateField]);
+  }, [language, t, layer, values, validateField]); // Removido 'errors' de las dependencias
 
   return {
     validateField,

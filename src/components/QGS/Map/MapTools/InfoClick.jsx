@@ -10,16 +10,11 @@ import { renderFeatureInfoPopup } from './FeatureInfoPopup';
  * Realiza peticiones WMS GetFeatureInfo a las capas consultables
  */
 const InfoClick = ({ active, onActiveChange }) => {
-  const { mapInstance, config, qgsUrl, qgsProjectPath, notificationManager, t } = useMap() || {};
+  const { mapInstance, config, qgsUrl, qgsProjectPath, notificationManager, t, startEditingGeometry } = useMap() || {};
   const qgisConfig = useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
   // Obtener el idioma del contexto QGIS
   const language = qgisConfig?.language || 'es';
-  console.log('[InfoClick] Idioma detectado:', {
-    'qgisConfig?.language': qgisConfig?.language,
-    'language final': language,
-    'qgisConfig disponible': !!qgisConfig
-  });
   
   // Referencia para el popup y el root de React
   const popupRef = useRef(null);
@@ -128,13 +123,7 @@ const InfoClick = ({ active, onActiveChange }) => {
         
         const data = await fetchFeatureInfo(qgsUrl, qgsProjectPath, queryParams, token);
         
-        console.log('InfoClick: GetFeatureInfo response', data);
-        console.log('InfoClick: Features count', data.features?.length);
-        console.log('InfoClick: Config available', !!config);
-        console.log('InfoClick: Config layers', config?.layers ? Object.keys(config.layers) : 'no layers');
-        
         if (data.features && data.features.length > 0) {
-          console.log('InfoClick: Features to display', data.features);
           
           // Cerrar popup anterior si existe
           if (popupRef.current) {
@@ -180,6 +169,21 @@ const InfoClick = ({ active, onActiveChange }) => {
 
           // Renderizar componente React en el contenedor
           // Pasar el config directamente para asegurar que esté disponible
+          // Handler para acciones de la toolbar del popup
+          const handleToolbarAction = (payload) => {
+            if (payload.action === 'editGeometry') {
+              const { feature, layer } = payload;
+              if (feature && layer && startEditingGeometry) {
+                // Cerrar el popup
+                if (map && map.closePopup) {
+                  map.closePopup();
+                }
+                // Iniciar la edición de la geometría
+                startEditingGeometry(feature, layer);
+              }
+            }
+          };
+
           const root = renderFeatureInfoPopup(container, data.features, map, () => {
             if (popupRef.current) {
               map.closePopup(popupRef.current);
@@ -195,7 +199,8 @@ const InfoClick = ({ active, onActiveChange }) => {
             qgsProjectPath: qgsProjectPath,
             token: qgisConfig?.token || null,
             notificationManager: notificationManager || qgisConfig?.notificationManager || null,
-            language: language // Pasar el idioma del contexto QGIS
+            language: language, // Pasar el idioma del contexto QGIS
+            onToolbarAction: handleToolbarAction
           });
           
           reactRootRef.current = root;

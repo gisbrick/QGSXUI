@@ -305,15 +305,45 @@ const parseConstraintExpression = (constraintExpression) => {
 };
 
 /**
+ * Identifica si un campo es la clave primaria (PK)
+ * Un campo se considera PK si:
+ * - Tiene index === 0 (primer campo)
+ * - O tiene constraintUnique === true y constraintNotNull === true y se llama "fid" o "id"
+ * @param {Object} field - Configuración del campo QGIS
+ * @param {Object} layer - Configuración de la capa (opcional)
+ * @returns {boolean} true si es PK
+ */
+const isPrimaryKey = (field, layer = null) => {
+  if (!field) return false;
+  
+  // El campo con index 0 suele ser el PK
+  if (field.index === 0) {
+    return true;
+  }
+  
+  // También puede ser PK si tiene constraintUnique y constraintNotNull y se llama "fid" o "id"
+  const fieldNameLower = (field.name || '').toLowerCase();
+  if ((field.constraintUnique === true && field.constraintNotNull === true) &&
+      (fieldNameLower === 'fid' || fieldNameLower === 'id' || fieldNameLower.endsWith('_id'))) {
+    return true;
+  }
+  
+  return false;
+};
+
+/**
  * Valida un campo completo según su configuración QGIS
  * @param {Object} field - Configuración del campo QGIS
  * @param {*} value - Valor a validar
  * @param {Object} allValues - Todos los valores del formulario (para validaciones comparativas)
  * @param {Object} layer - Configuración de la capa (para obtener otros campos)
  * @param {Function} t - Función de traducción
+ * @param {string} language - Código del idioma
+ * @param {Object} translations - Traducciones completas
+ * @param {boolean} isNewFeature - Si es true, es un insert (nueva feature)
  * @returns {Object} { valid: boolean, error: string }
  */
-export const validateFieldValue = (field, value, allValues = {}, layer = null, t = null, language = 'es', translations = null) => {
+export const validateFieldValue = (field, value, allValues = {}, layer = null, t = null, language = 'es', translations = null, isNewFeature = false) => {
   // Función de traducción que usa el sistema de traducción del proyecto
   const translate = (key, params = {}) => {
     // Si hay función de traducción proporcionada, usarla
@@ -459,9 +489,16 @@ export const validateFieldValue = (field, value, allValues = {}, layer = null, t
     return { valid: true, error: '' };
   }
   
+  // Identificar si es PK
+  const fieldIsPK = isPrimaryKey(field, layer);
+  
   // 1. Validar constraintNotNull (campo requerido)
+  // Para inserts (nuevas features), no validar constraintNotNull en el PK ya que se asigna automáticamente en el servidor
   if (field.constraintNotNull) {
-    if (value === null || value === undefined || value === '') {
+    // Si es PK y es una nueva feature (insert), omitir la validación de constraintNotNull
+    if (fieldIsPK && isNewFeature) {
+      // No validar constraintNotNull para PK en inserts
+    } else if (value === null || value === undefined || value === '') {
       const fieldAlias = field.alias || field.name;
       // Usar mensaje personalizado si existe, sino usar el traducido
       const errorMsg = field.constraints?.constraintDescription;
