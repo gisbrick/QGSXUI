@@ -19,6 +19,8 @@
   gap: 8px;
   pointer-events: auto;
   min-width: 0;
+  /* Asegurar que los buscadores personalizados no se superpongan con la toolbar */
+  max-width: 100%;
 }
 
 /* Permitir interacción en los componentes hijos */

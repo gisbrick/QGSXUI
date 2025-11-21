@@ -14,11 +14,12 @@
 
 .tree-node__content {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   padding: var(--spacing-xs) var(--spacing-sm);
   cursor: pointer;
   border-radius: var(--border-radius-md);
   transition: var(--transition-fast);
+  min-width: 0;
 }
 
 .tree-node__content:hover {
@@ -40,15 +41,17 @@
   width: 16px;
   height: 16px;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
   cursor: pointer;
   padding: 0;
   margin-right: var(--spacing-xs);
+  margin-top: 2px; /* Alinear con la primera línea del texto */
   font-size: 10px;
   color: var(--color-text-secondary);
   transition: var(--transition-fast);
   border-radius: var(--border-radius-sm);
+  flex-shrink: 0;
 }
 
 .tree-node__toggle:hover {
@@ -67,15 +70,36 @@
 .tree-node__icon {
   margin-right: var(--spacing-sm);
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   font-size: var(--font-size-lg);
+  flex-shrink: 0;
+  padding-top: 2px; /* Alinear con la primera línea del texto */
 }
 
 .tree-node__label {
   flex: 1;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
+  min-width: 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: var(--line-height-normal);
+}
+
+.tree-node__checkbox {
+  margin-right: var(--spacing-sm);
+  cursor: pointer;
+  flex-shrink: 0;
+  margin-top: 2px; /* Alinear con la primera línea del texto */
+}
+
+.tree-node__actions {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-xs);
+  margin-left: var(--spacing-sm);
+  flex-shrink: 0;
+  padding-top: 2px; /* Alinear con la primera línea del texto */
 }
 
 /* Children are already indented via inline styles */

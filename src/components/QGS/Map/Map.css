@@ -183,7 +183,16 @@
   left: 60px; /* Dejar espacio para los controles de zoom de Leaflet (normalmente ~50px de ancho) */
   z-index: 1000;
   pointer-events: none;
-  max-width: calc(100% - 20px); /* Asegurar que no se salga del contenedor */
+  /* max-width se ajusta dinámicamente según si hay buscadores o no (ver reglas más abajo) */
+  max-width: calc(100% - 20px); /* Valor por defecto cuando no hay buscadores */
+}
+
+/* Ajustar z-index de los controles de Leaflet (zoom, etc.) para que estén por encima de la toolbar
+   pero por debajo de los buscadores y drawers */
+.map-content :global(.leaflet-top),
+.map-content :global(.leaflet-bottom),
+.map-content :global(.leaflet-control) {
+  z-index: 1020 !important;
 }
 
 .map-toolbar-container.no-controls {
@@ -224,22 +233,85 @@
 }
 
 /* Cuando hay contenedor de búsqueda visible, ajustar la toolbar para evitar superposiciones */
-/* Usamos :has() para detectar la presencia del contenedor de búsqueda */
-/* Cuando el contenedor de búsqueda está colapsado O expandido, solo reservar espacio para la lupa */
-/* El contenido desplegable se mostrará sobre la toolbar con z-index más alto */
-.map-content:has(.map-search-container) .map-toolbar-container {
-  /* Calcular el espacio disponible: ancho total - espacio izquierdo - espacio derecho (solo lupa) */
-  /* El contenido desplegable se mostrará sobre la toolbar, no desplazará los botones */
-  max-width: calc(100% - 60px - 60px); /* 60px izquierda + ~60px para la lupa (40px botón + padding) */
+/* 
+ * Lógica:
+ * 1. Múltiples buscadores (con .map-search-dropdown): 
+ *    - Los botones de la toolbar NO deben superponerse al botón de la lupa
+ *    - SIEMPRE reservar solo ~60px para la lupa (colapsado o expandido)
+ *    - El dropdown expandido SÍ puede superponerse a los botones (z-index más alto)
+ * 2. Un solo buscador (sin .map-search-dropdown):
+ *    - Los botones de la toolbar NO deben superponerse al buscador
+ *    - Reservar ~320px para el buscador completo
+ */
+/* Regla para múltiples buscadores (con dropdown) */
+/* Los botones NO deben superponerse a la lupa, pero el dropdown puede superponerse a los botones */
+/* Simplificamos el selector: buscamos directamente .map-search-dropdown dentro de .map-content */
+.map-content:has(.map-search-dropdown) .map-toolbar-container {
+  /* Cuando hay dropdown, SIEMPRE reservar espacio para la lupa */
+  /* Esto se aplica tanto cuando está colapsado como cuando está expandido */
+  /* El dropdown expandido se muestra sobre la toolbar, pero los botones no deben superponerse a la lupa */
+  max-width: calc(100% - 60px - 60px) !important; /* 60px izquierda + ~60px para la lupa (40px botón + padding) */
   right: auto;
 }
 
-.map-content:has(.map-search-container) .map-toolbar-container.no-controls {
-  max-width: calc(100% - 10px - 60px); /* 10px izquierda + ~60px para la lupa */
+/* Regla para un solo buscador (sin dropdown) */
+/* Los botones NO deben superponerse al buscador */
+/* Se detecta porque tiene .map-search-container pero NO tiene .map-search-dropdown */
+.map-content:has(.map-search-container):not(:has(.map-search-dropdown)) .map-toolbar-container {
+  /* Si tiene .map-search-container pero no tiene .map-search-dropdown, es un solo buscador */
+  /* Los botones no deben superponerse al buscador, así que reservamos ~320px */
+  max-width: calc(100% - 60px - 320px) !important; /* 60px izquierda + ~320px para el buscador (300px + padding) */
+}
+
+/* Regla para múltiples buscadores sin controles */
+.map-content:has(.map-search-dropdown) .map-toolbar-container.no-controls {
+  /* Cuando hay dropdown, SIEMPRE reservar espacio para la lupa */
+  max-width: calc(100% - 10px - 60px) !important; /* 10px izquierda + ~60px para la lupa */
+}
+
+/* Regla para un solo buscador sin controles */
+.map-content:has(.map-search-container):not(:has(.map-search-dropdown)) .map-toolbar-container.no-controls {
+  /* Los botones no deben superponerse al buscador */
+  max-width: calc(100% - 10px - 320px) !important; /* 10px izquierda + ~320px para el buscador */
 }
 
 /* Permitir que la toolbar se ajuste a múltiples líneas cuando hay búsqueda visible */
 .map-content:has(.map-search-container) .map-toolbar-container .map-toolbar .toolbar-qgs {
+  flex-wrap: wrap !important;
+  max-width: 100%;
+}
+
+/* Cuando hay buscadores personalizados (customSearchers), ajustar la toolbar para evitar superposiciones */
+/* Los buscadores personalizados tienen un ancho fijo de 300px + padding/margin */
+.map-content:has(.custom-search-example) .map-toolbar-container {
+  /* Calcular el espacio disponible: ancho total - espacio izquierdo - espacio derecho (buscador + padding) */
+  /* 60px izquierda (controles) + 10px margen derecho + 300px buscador + 10px padding = 380px */
+  max-width: calc(100% - 60px - 380px);
+  right: auto;
+}
+
+.map-content:has(.custom-search-example) .map-toolbar-container.no-controls {
+  /* 10px izquierda + 10px margen derecho + 300px buscador + 10px padding = 330px */
+  max-width: calc(100% - 10px - 330px);
+}
+
+/* Permitir que la toolbar se ajuste a múltiples líneas cuando hay buscador personalizado */
+.map-content:has(.custom-search-example) .map-toolbar-container .map-toolbar .toolbar-qgs {
+  flex-wrap: wrap !important;
+  max-width: 100%;
+}
+
+/* Fallback para navegadores que no soportan :has() */
+.map-content.has-custom-search .map-toolbar-container {
+  max-width: calc(100% - 60px - 380px);
+  right: auto;
+}
+
+.map-content.has-custom-search .map-toolbar-container.no-controls {
+  max-width: calc(100% - 10px - 330px);
+}
+
+.map-content.has-custom-search .map-toolbar-container .map-toolbar .toolbar-qgs {
   flex-wrap: wrap !important;
   max-width: 100%;
 }
@@ -251,8 +323,18 @@
   right: auto;
 }
 
+/* Cuando hay un solo buscador (sin dropdown colapsado) */
+.map-content.has-search:not(.has-search-collapsed) .map-toolbar-container {
+  max-width: calc(100% - 60px - 320px);
+}
+
 .map-content.has-search .map-toolbar-container.no-controls {
   max-width: calc(100% - 10px - 60px);
+}
+
+/* Cuando hay un solo buscador sin controles */
+.map-content.has-search:not(.has-search-collapsed) .map-toolbar-container.no-controls {
+  max-width: calc(100% - 10px - 320px);
 }
 
 .map-content.has-search .map-toolbar-container .map-toolbar .toolbar-qgs {

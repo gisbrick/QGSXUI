@@ -95,6 +95,8 @@ const Map = ({
   onMapClick = null,
   onMapMove = null,
   onFeatureSelect = null,
+  customSearchers = [],
+  toolsConfig = null,
   ...mapProps 
 }) => {
   const handleMapReady = (mapInstance) => {
@@ -135,9 +137,12 @@ const Map = ({
                 <MapControls />
               </div>
             )}
-            <MapSearchContainer />
+            <MapSearchContainer 
+              customSearchers={customSearchers} 
+              toolsConfig={toolsConfig}
+            />
             <div className={`map-toolbar-container${showControls ? '' : ' no-controls'}`}>
-              <MapToolbar />
+              <MapToolbar toolsConfig={toolsConfig} />
             </div>
           </div>
         </div>
@@ -163,6 +168,50 @@ Map.propTypes = {
   onMapMove: PropTypes.func,
   /** Callback cuando se selecciona una feature */
   onFeatureSelect: PropTypes.func,
+  /** Array de buscadores personalizados. Cada buscador debe tener:
+   * - id: string (opcional)
+   * - component: ReactNode (componente React a renderizar)
+   * - render: function (función que retorna un componente React, alternativa a component)
+   */
+  customSearchers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      component: PropTypes.node,
+      render: PropTypes.func
+    })
+  ),
+  /** Configuración de herramientas y buscadores visibles. Formato:
+   * {
+   *   toolbar: {
+   *     'zoom-in-box': true/false,
+   *     'zoom-out': true/false,
+   *     'zoom-extent': true/false,
+   *     'nav-back': true/false,
+   *     'nav-forward': true/false,
+   *     'bookmarks': true/false,
+   *     'show-location': true/false,
+   *     'info-click': true/false,
+   *     'measure-line': true/false,
+   *     'measure-area': true/false,
+   *     'draw-point': true/false,
+   *     'draw-line': true/false,
+   *     'draw-polygon': true/false,
+   *     'table-of-contents': true/false,
+   *     // ... otras herramientas
+   *   },
+   *   searchers: {
+   *     'address': true/false,
+   *     'rural': true/false,
+   *     'reference': true/false
+   *   }
+   * }
+   * Si una herramienta o buscador no está en la configuración, se muestra por defecto.
+   * Si está en false, se oculta.
+   */
+  toolsConfig: PropTypes.shape({
+    toolbar: PropTypes.objectOf(PropTypes.bool),
+    searchers: PropTypes.objectOf(PropTypes.bool)
+  }),
   /** Opciones adicionales para Leaflet */
   mapOptions: PropTypes.object
 };

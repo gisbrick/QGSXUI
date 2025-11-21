@@ -15,11 +15,12 @@ import ColumnFilterPopover from './filters/ColumnFilterPopover';
 import { buildFilterQuery } from './filters/filterUtils';
 import { getTableState, setTableState } from './tableStateStore';
 import { useColumnResize } from './hooks/useColumnResize';
+import TableActionsColumn, { calculateActionsColumnWidth } from './TableActionsColumn';
 
 /**
  * Tabla con scroll infinito que carga los datos de forma lazy según se avanza.
  */
-const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
+const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360, onFilterChange }) => {
   const { config, t, notificationManager, qgsUrl, qgsProjectPath, token } =
     useContext(QgisConfigContext);
   const translate = typeof t === 'function' ? t : (key) => key;
@@ -39,6 +40,8 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
   }, [layer]);
 
   const [rows, setRows] = useState([]);
+  const [featuresData, setFeaturesData] = useState([]); // Guardar features completas con id
+  const [selectedRows, setSelectedRows] = useState(new Set());
   const [hasMore, setHasMore] = useState(true);
   const [totalCount, setTotalCount] = useState(null);
   const [loading, setLoading] = useState(true);
@@ -285,6 +288,7 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
     }
     
     setRows([]);
+    setFeaturesData([]);
     setHasMore(true);
     setInitialLoaded(false);
     setError(null);
@@ -305,22 +309,55 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
     event.preventDefault();
     const field = layer?.fields?.find((f) => f.name === column.field);
     if (!field) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    setFilterPopover({
-      field,
-      position: {
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX
-      }
-    });
+    
+    // Obtener la posición del botón relativa al contenedor de la tabla
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const tableContainer = containerRef.current?.closest('.table');
+    
+    if (tableContainer) {
+      const containerRect = tableContainer.getBoundingClientRect();
+      // Calcular posición relativa al contenedor de la tabla (que tiene position: relative)
+      setFilterPopover({
+        field,
+        position: {
+          top: buttonRect.bottom - containerRect.top,
+          left: buttonRect.left - containerRect.left
+        }
+      });
+    } else {
+      // Fallback: usar posición absoluta relativa al viewport
+      const rect = event.currentTarget.getBoundingClientRect();
+      setFilterPopover({
+        field,
+        position: {
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX
+        }
+      });
+    }
   };
 
   const handleApplyFilter = (fieldName, filter) => {
-    setColumnFilters((prev) => ({
-      ...prev,
-      [fieldName]: filter
-    }));
+    setColumnFilters((prev) => {
+      const newFilters = {
+        ...prev,
+        [fieldName]: filter
+      };
+      
+      // Notificar cambio de filtros al mapa si hay callback
+      if (onFilterChange) {
+        const fieldsMap = (layer?.fields || []).reduce((acc, f) => {
+          acc[f.name] = f;
+          return acc;
+        }, {});
+        const filterQuery = buildFilterQuery(newFilters, fieldsMap);
+        onFilterChange(layerName, filterQuery);
+      }
+      
+      return newFilters;
+    });
     setRows([]);
+    setFeaturesData([]);
     setHasMore(true);
     setInitialLoaded(false);
     offsetRef.current = 0;
@@ -330,9 +367,21 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
     setColumnFilters((prev) => {
       const next = { ...prev };
       delete next[fieldName];
+      
+      // Notificar cambio de filtros al mapa si hay callback
+      if (onFilterChange) {
+        const fieldsMap = (layer?.fields || []).reduce((acc, f) => {
+          acc[f.name] = f;
+          return acc;
+        }, {});
+        const filterQuery = buildFilterQuery(next, fieldsMap);
+        onFilterChange(layerName, filterQuery);
+      }
+      
       return next;
     });
     setRows([]);
+    setFeaturesData([]);
     setHasMore(true);
     setInitialLoaded(false);
     offsetRef.current = 0;
@@ -340,7 +389,14 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
 
   const handleClearAllFilters = () => {
     setColumnFilters({});
+    
+    // Notificar cambio de filtros al mapa si hay callback
+    if (onFilterChange) {
+      onFilterChange(layerName, '');
+    }
+    
     setRows([]);
+    setFeaturesData([]);
     setHasMore(true);
     setInitialLoaded(false);
     offsetRef.current = 0;
@@ -394,7 +450,7 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
   };
 
   return (
-    <div className="table">
+    <div className="table" style={height === '100%' ? { height: '100%', display: 'flex', flexDirection: 'column', overflow: 'hidden' } : {}}>
       {columns.length === 0 ? (
         <div>{translate('ui.table.noData')}</div>
       ) : (
@@ -402,13 +458,34 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
           <div
             ref={containerRef}
             className="table__scroll-container"
-            style={{ maxHeight: height, overflowY: 'auto', overflowX: 'auto' }}
+            style={{ 
+              maxHeight: height === '100%' ? 'none' : height, 
+              height: height === '100%' ? '100%' : undefined,
+              flex: height === '100%' ? '1 1 auto' : undefined,
+              minHeight: height === '100%' ? 0 : undefined,
+              overflowY: 'auto', 
+              overflowX: 'auto',
+              display: 'flex',
+              flexDirection: 'column'
+            }}
           >
             <table className="table__native">
               <thead>
                 <tr>
+                  <th 
+                    className="table__actions-header" 
+                    style={{ 
+                      width: `${calculateActionsColumnWidth(layer, null)}px`, 
+                      minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
+                      maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                    }}
+                  >
+                    {translate('ui.table.actions')}
+                  </th>
                   {columns.map((column, colIndex) => {
-                    const colWidth = getColumnWidth(colIndex, column.field, column.label);
+                    // Ajustar índice para tener en cuenta la columna de acciones (índice 0)
+                    const adjustedIndex = colIndex + 1;
+                    const colWidth = getColumnWidth(adjustedIndex, column.field, column.label);
                     return (
                       <th
                         key={column.field}
@@ -446,8 +523,8 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
                           {renderSortIcon(column.field)}
                         </span>
                         <div
-                          className={`table__resize-handle${resizing.columnIndex === colIndex ? ' table__resize-handle--active' : ''}`}
-                          onMouseDown={(e) => handleMouseDown(e, colIndex, colWidth)}
+                          className={`table__resize-handle${resizing.columnIndex === adjustedIndex ? ' table__resize-handle--active' : ''}`}
+                          onMouseDown={(e) => handleMouseDown(e, adjustedIndex, colWidth)}
                           role="separator"
                           aria-orientation="vertical"
                           aria-label={translate('ui.table.resizeColumn', 'Redimensionar columna')}
@@ -460,23 +537,82 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
               <tbody>
                 {rows.length === 0 ? (
                   <tr>
-                    <td colSpan={columns.length} className="table__empty-cell">
+                    <td colSpan={columns.length + 1} className="table__empty-cell">
                       {error ? translate('ui.table.error') : translate('ui.table.noData')}
                     </td>
                   </tr>
                 ) : (
-                  rows.map((row, index) => (
-                    <tr key={`${layerName}-${index}`}>
-                      {columns.map((column, colIndex) => {
-                        const colWidth = getColumnWidth(colIndex, column.field, column.label);
-                        return (
-                          <td key={column.field} style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}>
-                            {formatValue(row[column.field])}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))
+                  rows.map((row, index) => {
+                    const feature = featuresData[index];
+                    // El feature.id puede venir en formato "layerName.featureId" o solo "featureId"
+                    let featureId = feature?.id;
+                    if (featureId && typeof featureId === 'string' && featureId.includes('.')) {
+                      // Si tiene formato "layerName.featureId", extraer solo el id
+                      featureId = featureId.split('.').slice(1).join('.');
+                    }
+                    // Si no hay id, intentar obtenerlo de las propiedades o usar el índice
+                    if (!featureId) {
+                      featureId = feature?.properties?.id || feature?.properties?.fid || index;
+                    }
+                    return (
+                      <tr key={`${layerName}-${featureId}-${index}`}>
+                        <td 
+                          className="table__actions-cell" 
+                          style={{ 
+                            width: `${calculateActionsColumnWidth(layer, null)}px`, 
+                            minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
+                            maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                          }}
+                        >
+                          <TableActionsColumn
+                            feature={row}
+                            featureId={featureId}
+                            layer={layer}
+                            layerName={layerName}
+                            selected={selectedRows.has(featureId)}
+                            onSelectChange={(id, checked) => {
+                              setSelectedRows(prev => {
+                                const next = new Set(prev);
+                                if (checked) {
+                                  next.add(id);
+                                } else {
+                                  next.delete(id);
+                                }
+                                return next;
+                              });
+                            }}
+                            onAction={(actionPayload) => {
+                              // Refrescar datos después de acciones que modifican features
+                              if (actionPayload.action === 'update' || actionPayload.action === 'delete') {
+                                // Limpiar datos y recargar desde el inicio
+                                setRows([]);
+                                setFeaturesData([]);
+                                setHasMore(true);
+                                offsetRef.current = 0;
+                                setInitialLoaded(false);
+                                // El useEffect se encargará de recargar los datos
+                              }
+                            }}
+                            translate={translate}
+                            qgsUrl={qgsUrl}
+                            qgsProjectPath={qgsProjectPath}
+                            token={token}
+                            notificationManager={notificationManager}
+                          />
+                        </td>
+                        {columns.map((column, colIndex) => {
+                          // Ajustar índice para tener en cuenta la columna de acciones (índice 0)
+                          const adjustedIndex = colIndex + 1;
+                          const colWidth = getColumnWidth(adjustedIndex, column.field, column.label);
+                          return (
+                            <td key={column.field} style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}>
+                              {formatValue(row[column.field])}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>
@@ -484,7 +620,7 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
               <div className="table__loading-inline">{translate('ui.table.loadingMore')}</div>
             )}
           </div>
-          <div className="table__summary">
+          <div className="table__summary" style={height === '100%' ? { flexShrink: 0 } : {}}>
             {totalCount !== null
               ? translate('ui.table.totalRecords', { count: totalCount })
               : translate('ui.table.totalRecords', { count: rows.length })}
@@ -500,10 +636,10 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
             )}
           </div>
           {!hasMore && rows.length > 0 && (
-            <div className="table__hint">{translate('ui.table.allDataLoaded')}</div>
+            <div className="table__hint" style={height === '100%' ? { flexShrink: 0 } : {}}>{translate('ui.table.allDataLoaded')}</div>
           )}
           {error && (
-            <div className="table__error">
+            <div className="table__error" style={height === '100%' ? { flexShrink: 0 } : {}}>
               {translate('ui.table.error')}: {error}
             </div>
           )}
@@ -513,8 +649,8 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
               className="table__filter-popover"
               style={{
                 position: 'absolute',
-                top: filterPopover.position.top,
-                left: filterPopover.position.left,
+                top: `${filterPopover.position.top}px`,
+                left: `${filterPopover.position.left}px`,
                 zIndex: 2000
               }}
             >
@@ -539,6 +675,9 @@ const TableInfiniteScroll = ({ layerName, chunkSize = 50, height = 360 }) => {
 
 TableInfiniteScroll.propTypes = {
   layerName: PropTypes.string.isRequired,
+  chunkSize: PropTypes.number,
+  height: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
+  onFilterChange: PropTypes.func, // Callback: (layerName, filterQuery) => void
   chunkSize: PropTypes.number,
   height: PropTypes.number
 };

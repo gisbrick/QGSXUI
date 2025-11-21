@@ -1,9 +1,16 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import './Tabs.css';
 
 const Tabs = ({ tabs, defaultActive = 0, onTabChange }) => {
   const [activeIndex, setActiveIndex] = useState(defaultActive);
+
+  // Sincronizar activeIndex con defaultActive cuando cambie
+  useEffect(() => {
+    if (defaultActive !== activeIndex && defaultActive >= 0 && defaultActive < tabs.length) {
+      setActiveIndex(defaultActive);
+    }
+  }, [defaultActive, tabs.length]);
 
   const handleTabClick = (index) => {    
     setActiveIndex(index);
@@ -24,7 +31,7 @@ const Tabs = ({ tabs, defaultActive = 0, onTabChange }) => {
               handleTabClick(index);
             }}
           >
-            {tab.label}
+            {typeof tab.label === 'string' ? tab.label : tab.label}
           </button>
         ))}
       </div>
@@ -39,7 +46,7 @@ const Tabs = ({ tabs, defaultActive = 0, onTabChange }) => {
 Tabs.propTypes = {
   tabs: PropTypes.arrayOf(
     PropTypes.shape({
-      label: PropTypes.string.isRequired,
+      label: PropTypes.oneOfType([PropTypes.string, PropTypes.node]).isRequired,
       content: PropTypes.node.isRequired,
     })
   ).isRequired,

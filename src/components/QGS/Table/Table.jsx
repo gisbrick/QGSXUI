@@ -9,6 +9,7 @@ import ColumnFilterPopover from './filters/ColumnFilterPopover';
 import { buildFilterQuery } from './filters/filterUtils';
 import { getTableState, setTableState } from './tableStateStore';
 import { useColumnResize } from './hooks/useColumnResize';
+import TableActionsColumn, { calculateActionsColumnWidth } from './TableActionsColumn';
 
 /**
  * Componente de tabla para mostrar datos de features de QGIS
@@ -23,6 +24,8 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
 
   // Hooks deben ir siempre al principio, antes de cualquier return condicional
   const [datos, setDatos] = useState([]);
+  const [featuresData, setFeaturesData] = useState([]); // Guardar features completas con id
+  const [selectedRows, setSelectedRows] = useState(new Set());
   const [sortState, setSortState] = useState(persistentState.sortState || { field: null, direction: null });
   const [columnFilters, setColumnFilters] = useState(persistentState.columnFilters || {});
   const [filterPopover, setFilterPopover] = useState(null);
@@ -156,6 +159,8 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
           const props = feature.properties || {};
           return props;
         });
+        // Guardar features completas con id para la columna de acciones
+        setFeaturesData(features);
         setDatos(datosExtraidos);
         setLoading(false);
       })
@@ -206,14 +211,32 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
 
   const handleFilterClick = useCallback((event, field) => {
     event.stopPropagation();
-    const rect = event.currentTarget.getBoundingClientRect();
-    setFilterPopover({
-      field,
-      position: {
-        top: rect.bottom + window.scrollY,
-        left: rect.left + window.scrollX
-      }
-    });
+    
+    // Obtener la posición del botón relativa al contenedor de la tabla
+    const buttonRect = event.currentTarget.getBoundingClientRect();
+    const tableContainer = scrollContainerRef.current?.closest('.table') || event.currentTarget.closest('.table');
+    
+    if (tableContainer) {
+      const containerRect = tableContainer.getBoundingClientRect();
+      // Calcular posición relativa al contenedor de la tabla (que tiene position: relative)
+      setFilterPopover({
+        field,
+        position: {
+          top: buttonRect.bottom - containerRect.top,
+          left: buttonRect.left - containerRect.left
+        }
+      });
+    } else {
+      // Fallback: usar posición absoluta relativa al viewport
+      const rect = event.currentTarget.getBoundingClientRect();
+      setFilterPopover({
+        field,
+        position: {
+          top: rect.bottom + window.scrollY,
+          left: rect.left + window.scrollX
+        }
+      });
+    }
   }, []);
 
   useEffect(() => {
@@ -316,8 +339,10 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
         ref={popoverRef}
         className="table__filter-popover"
         style={{
-          top: filterPopover.position.top,
-          left: filterPopover.position.left
+          position: 'absolute',
+          top: `${filterPopover.position.top}px`,
+          left: `${filterPopover.position.left}px`,
+          zIndex: 2000
         }}
       >
         <ColumnFilterPopover
@@ -349,8 +374,20 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
             <table className="table__native">
               <thead>
                 <tr>
+                  <th 
+                    className="table__actions-header" 
+                    style={{ 
+                      width: `${calculateActionsColumnWidth(layer, null)}px`, 
+                      minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
+                      maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                    }}
+                  >
+                    {translate('ui.table.actions')}
+                  </th>
                   {columnas.map((columna, colIndex) => {
-                    const colWidth = getColumnWidth(colIndex, columna.field, columna.label);
+                    // Ajustar índice para tener en cuenta la columna de acciones (índice 0)
+                    const adjustedIndex = colIndex + 1;
+                    const colWidth = getColumnWidth(adjustedIndex, columna.field, columna.label);
                     return (
                       <th
                         key={columna.field}
@@ -388,8 +425,8 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
                           {renderSortIcon(columna.field)}
                         </span>
                         <div
-                          className={`table__resize-handle${resizing.columnIndex === colIndex ? ' table__resize-handle--active' : ''}`}
-                          onMouseDown={(e) => handleMouseDown(e, colIndex, colWidth)}
+                          className={`table__resize-handle${resizing.columnIndex === adjustedIndex ? ' table__resize-handle--active' : ''}`}
+                          onMouseDown={(e) => handleMouseDown(e, adjustedIndex, colWidth)}
                           role="separator"
                           aria-orientation="vertical"
                           aria-label={translate('ui.table.resizeColumn', 'Redimensionar columna')}
@@ -402,23 +439,91 @@ const Table = ({ layerName, maxRows = 10, tableHeight = 360 }) => {
               <tbody>
                 {datos.length === 0 ? (
                   <tr>
-                    <td colSpan={columnas.length} className="table__empty-cell">
+                    <td colSpan={columnas.length + 1} className="table__empty-cell">
                       {translate('ui.table.noData')}
                     </td>
                   </tr>
                 ) : (
-                  datos.map((fila, index) => (
-                    <tr key={`${layerName}-${index}`}>
-                      {columnas.map((columna, colIndex) => {
-                        const colWidth = getColumnWidth(colIndex, columna.field, columna.label);
-                        return (
-                          <td key={columna.field} style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}>
-                            {formatearValor(fila[columna.field])}
-                          </td>
-                        );
-                      })}
-                    </tr>
-                  ))
+                  datos.map((fila, index) => {
+                    const feature = featuresData[index];
+                    const featureId = feature?.id || feature?.properties?.id || index;
+                    return (
+                      <tr key={`${layerName}-${featureId}-${index}`}>
+                        <td 
+                          className="table__actions-cell" 
+                          style={{ 
+                            width: `${calculateActionsColumnWidth(layer, null)}px`, 
+                            minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
+                            maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                          }}
+                        >
+                          <TableActionsColumn
+                            feature={fila}
+                            featureId={featureId}
+                            layer={layer}
+                            layerName={layerName}
+                            selected={selectedRows.has(featureId)}
+                            onSelectChange={(id, checked) => {
+                              setSelectedRows(prev => {
+                                const next = new Set(prev);
+                                if (checked) {
+                                  next.add(id);
+                                } else {
+                                  next.delete(id);
+                                }
+                                return next;
+                              });
+                            }}
+                            onAction={(actionPayload) => {
+                              // Refrescar datos después de acciones que modifican features
+                              if (actionPayload.action === 'update' || actionPayload.action === 'delete') {
+                                // Recargar datos
+                                setLoading(true);
+                                const sortOptions =
+                                  sortState.field && sortState.direction
+                                    ? { sortBy: sortState.field, sortDirection: sortState.direction.toUpperCase() }
+                                    : undefined;
+                                const fieldsMap = (layer?.fields || []).reduce((acc, f) => {
+                                  acc[f.name] = f;
+                                  return acc;
+                                }, {});
+                                const cqlFilter = buildFilterQuery(columnFilters, fieldsMap);
+                                fetchFeatures(qgsUrl, qgsProjectPath, layerName, cqlFilter, 0, maxRows, token, sortOptions)
+                                  .then(features => {
+                                    const datosExtraidos = features.map(f => {
+                                      const props = f.properties || {};
+                                      return props;
+                                    });
+                                    setFeaturesData(features);
+                                    setDatos(datosExtraidos);
+                                    setLoading(false);
+                                  })
+                                  .catch(err => {
+                                    console.error('Error al recargar datos:', err);
+                                    setLoading(false);
+                                  });
+                              }
+                            }}
+                            translate={translate}
+                            qgsUrl={qgsUrl}
+                            qgsProjectPath={qgsProjectPath}
+                            token={token}
+                            notificationManager={notificationManager}
+                          />
+                        </td>
+                        {columnas.map((columna, colIndex) => {
+                          // Ajustar índice para tener en cuenta la columna de acciones (índice 0)
+                          const adjustedIndex = colIndex + 1;
+                          const colWidth = getColumnWidth(adjustedIndex, columna.field, columna.label);
+                          return (
+                            <td key={columna.field} style={{ width: colWidth, minWidth: colWidth, maxWidth: colWidth }}>
+                              {formatearValor(fila[columna.field])}
+                            </td>
+                          );
+                        })}
+                      </tr>
+                    );
+                  })
                 )}
               </tbody>
             </table>

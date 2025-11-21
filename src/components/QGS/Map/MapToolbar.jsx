@@ -4,7 +4,8 @@ import { useMap } from './MapProvider';
 import { ToolbarQGS, FeatureAttributesDialog } from '../../UI_QGS';
 import { Button } from '../../UI';
 import Modal from '../../UI/Modal/Modal';
-import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick, BookmarksManager } from './MapTools';
+import Drawer from '../../UI/Drawer/Drawer';
+import { ZoomInBox, ZoomOut, ZoomToExtent, MeasureLine, MeasureArea, ShowLocation, InfoClick, BookmarksManager, TableOfContents, OpenTablesManager } from './MapTools';
 import { QgisConfigContext } from '../QgisConfigContext';
 import { insertFeatureWithGeometry, fetchFeatureById, updateFeatureGeometry } from '../../../services/qgisWFSFetcher';
 
@@ -12,7 +13,7 @@ import { insertFeatureWithGeometry, fetchFeatureById, updateFeatureGeometry } fr
  * Componente de toolbar para el mapa
  * Proporciona herramientas de zoom, medición y edición
  */
-const MapToolbar = () => {
+const MapToolbar = ({ toolsConfig = null }) => {
   const mapContext = useMap() || {};
   const {
     mapInstance,
@@ -79,6 +80,8 @@ const MapToolbar = () => {
   const [infoClickActive, setInfoClickActive] = useState(false);
   const [showEditHelp, setShowEditHelp] = useState(false);
   const [showBookmarks, setShowBookmarks] = useState(false);
+  const [showTableOfContents, setShowTableOfContents] = useState(false);
+  const showTableHandlerRef = useRef(null);
   const [layerSelectionState, setLayerSelectionState] = useState(null);
   const [attributeDialogState, setAttributeDialogState] = useState(null);
   const pendingCancelRef = useRef(null);
@@ -533,52 +536,78 @@ const MapToolbar = () => {
 
   const handleZoomToExtent = () => { ZoomToExtent.handleZoomToExtent(mapInstance, initialBoundsRef); };
 
-  const measureSelectItem = {
-    key: 'measure-select',
-    type: 'selectButton',
-    circular: false,
-    icon: 'fg-measure',
-    title: tr('ui.map.measurements','Mediciones','Measurements'),
-    hideLabel: true,
-    options: [
-      {
+  // Función helper para verificar si una herramienta está habilitada
+  const isToolEnabled = useCallback((toolKey) => {
+    if (!toolsConfig?.toolbar) {
+      return true; // Por defecto, todas las herramientas están habilitadas
+    }
+    return toolsConfig.toolbar[toolKey] !== false; // Si no está en la config o está en true, está habilitada
+  }, [toolsConfig]);
+
+  const measureSelectItem = (() => {
+    const measureOptions = [];
+    if (isToolEnabled('measure-line')) {
+      measureOptions.push({
         key: 'measure-line',
         toolKey: 'measure-line',
         element: (
           <Button size="small" circular icon={<i className="fg-measure-line" />} title={tr('ui.map.measureLine','Medir distancia','Measure distance')} />
         )
-      },
-      {
+      });
+    }
+    if (isToolEnabled('measure-area')) {
+      measureOptions.push({
         key: 'measure-area',
         toolKey: 'measure-area',
         element: (
           <Button size="small" circular icon={<i className="fg-measure-area" />} title={tr('ui.map.measureArea','Medir área','Measure area')} />
         )
-      }
-    ]
-  };
+      });
+    }
+    
+    // Solo mostrar el selector de medición si hay al menos una opción habilitada
+    if (measureOptions.length === 0) {
+      return null;
+    }
+    
+    return {
+      key: 'measure-select',
+      type: 'selectButton',
+      circular: false,
+      icon: 'fg-measure',
+      title: tr('ui.map.measurements','Mediciones','Measurements'),
+      hideLabel: true,
+      options: measureOptions
+    };
+  })();
 
   const toolbarItems = [
-    { key: 'zoom-in-box', type: 'tool', circular: true, icon: 'fg-zoom-in', title: tr('ui.map.zoomInBox','Zoom a caja','Box zoom') },
-    { key: 'zoom-out', type: 'tool', circular: true, icon: 'fg-zoom-out', title: tr('ui.map.zoomOut','Alejar','Zoom out') },
-    { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-home', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
+    isToolEnabled('zoom-in-box') && { key: 'zoom-in-box', type: 'tool', circular: true, icon: 'fg-zoom-in', title: tr('ui.map.zoomInBox','Zoom a caja','Box zoom') },
+    isToolEnabled('zoom-out') && { key: 'zoom-out', type: 'tool', circular: true, icon: 'fg-zoom-out', title: tr('ui.map.zoomOut','Alejar','Zoom out') },
+    isToolEnabled('zoom-extent') && { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-home', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
     // Navegación de extensiones (solo cuando funcional) - action tools que no deseleccionan la herramienta activa
-    ...(canGoBack ? [{ key: 'nav-back', type: 'action', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back'), onClick: () => goBack && goBack() }] : []),
-    ...(canGoForward ? [{ key: 'nav-forward', type: 'action', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward'), onClick: () => goForward && goForward() }] : []),
-    { key: 'bookmarks', type: 'action', circular: true, icon: 'fas fa-bookmark', title: tr('ui.map.bookmarks.title','Marcadores','Bookmarks'), onClick: () => setShowBookmarks(true) },
-    { key: 'show-location', type: 'action', circular: true, icon: gpsActive ? 'fg-location-on' : 'fg-location', title: tr('ui.map.showLocation','Mostrar ubicación','Show my location'), onClick: () => {
+    ...(canGoBack && isToolEnabled('nav-back') ? [{ key: 'nav-back', type: 'action', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back'), onClick: () => goBack && goBack() }] : []),
+    ...(canGoForward && isToolEnabled('nav-forward') ? [{ key: 'nav-forward', type: 'action', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward'), onClick: () => goForward && goForward() }] : []),
+    isToolEnabled('bookmarks') && { key: 'bookmarks', type: 'action', circular: true, icon: 'fas fa-bookmark', title: tr('ui.map.bookmarks.title','Marcadores','Bookmarks'), onClick: () => setShowBookmarks(true) },
+    isToolEnabled('show-location') && { key: 'show-location', type: 'action', circular: true, icon: gpsActive ? 'fg-location-on' : 'fg-location', title: tr('ui.map.showLocation','Mostrar ubicación','Show my location'), onClick: () => {
       const newActive = !showLocationActive;
       setShowLocationActive(newActive);
       // Solo cancelar dibujo si se está activando el GPS, no al desactivarlo
       if (newActive && cancelDrawing) cancelDrawing();
     } },
-    { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click'), disabled: !hasQueryableLayers },
+    isToolEnabled('info-click') && { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click'), disabled: !hasQueryableLayers },
     measureSelectItem
-  ];
+  ].filter(Boolean); // Filtrar elementos falsy (false, null, undefined)
 
-  if (canAddPoint) toolbarItems.push({ key: 'draw-point', type: 'tool', circular: true, icon: 'fg-point', title: tr('ui.map.drawPoint','Añadir punto','Add point') });
-  if (canAddLine) toolbarItems.push({ key: 'draw-line', type: 'tool', circular: true, icon: 'fg-polyline', title: tr('ui.map.drawLine','Dibujar línea','Draw line') });
-  if (canAddPolygon) toolbarItems.push({ key: 'draw-polygon', type: 'tool', circular: true, icon: 'fg-polygon', title: tr('ui.map.drawPolygon','Dibujar polígono','Draw polygon') });
+  if (canAddPoint && isToolEnabled('draw-point')) {
+    toolbarItems.push({ key: 'draw-point', type: 'tool', circular: true, icon: 'fg-point', title: tr('ui.map.drawPoint','Añadir punto','Add point') });
+  }
+  if (canAddLine && isToolEnabled('draw-line')) {
+    toolbarItems.push({ key: 'draw-line', type: 'tool', circular: true, icon: 'fg-polyline', title: tr('ui.map.drawLine','Dibujar línea','Draw line') });
+  }
+  if (canAddPolygon && isToolEnabled('draw-polygon')) {
+    toolbarItems.push({ key: 'draw-polygon', type: 'tool', circular: true, icon: 'fg-polygon', title: tr('ui.map.drawPolygon','Dibujar polígono','Draw polygon') });
+  }
 
   // Mostrar guardar/cancelar si ya hay geometría o no se está sketchando o si se dibuja agujero
   const canShowGpsTrackControls = gpsActive && (drawMode === 'line' || drawMode === 'polygon') && !isGpsTrackRecording;
@@ -830,6 +859,17 @@ const MapToolbar = () => {
     toolbarItems.push({ key: 'edit-help', type: 'action', circular: true, icon: 'fas fa-question-circle', title: tr('ui.map.editHelp','Ayuda de edición','Editing help'), onClick: () => setShowEditHelp(true) });
   }
 
+  // Botón de tabla de contenidos
+  if (isToolEnabled('table-of-contents')) {
+    toolbarItems.push({ 
+      key: 'table-of-contents', 
+      type: 'action', 
+      circular: true, 
+      icon: 'fg-layers', 
+      title: tr('ui.map.tableOfContents', 'Tabla de contenidos', 'Table of contents'), 
+      onClick: () => setShowTableOfContents(true) 
+    });
+  }
 
   const selectedTool = boxZoomActive ? 'zoom-in-box' : (zoomOutActive ? 'zoom-out' : (infoClickActive ? 'info-click' : (drawMode ? `draw-${drawMode}` : ((measureLineActive || measureAreaActive) ? (measureLineActive ? 'measure-line' : 'measure-area') : null))));
 
@@ -842,6 +882,30 @@ const MapToolbar = () => {
       <ShowLocation active={showLocationActive} onActiveChange={setShowLocationActive} />
       <InfoClick active={infoClickActive} onActiveChange={setInfoClickActive} />
       <ToolbarQGS items={toolbarItems} size="medium" selectedTool={selectedTool} onToolChange={handleToolChange} />
+
+      {createPortal(
+        <Drawer
+          isOpen={showTableOfContents}
+          onClose={() => setShowTableOfContents(false)}
+          position="right"
+          width="400px"
+          title={tr('ui.map.tableOfContents', 'Tabla de contenidos', 'Table of contents')}
+          allowBackdropInteraction={true}
+          showOverlay={false}
+        >
+          <TableOfContents
+            onShowTable={(layerName) => {
+              if (showTableHandlerRef.current) {
+                showTableHandlerRef.current(layerName);
+              } else {
+                console.warn('[MapToolbar] showTableHandlerRef.current is null, cannot open table');
+              }
+              setShowTableOfContents(false);
+            }}
+          />
+        </Drawer>,
+        document.body
+      )}
 
       {createPortal(
         <Modal
@@ -945,6 +1009,11 @@ const MapToolbar = () => {
       )}
 
       <BookmarksManager isOpen={showBookmarks} onClose={() => setShowBookmarks(false)} />
+
+      {/* Componente para gestionar tablas abiertas */}
+      <OpenTablesManager onShowTable={(handler) => {
+        showTableHandlerRef.current = handler;
+      }} />
     </div>
   );
 };

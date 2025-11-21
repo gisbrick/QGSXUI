@@ -9,6 +9,7 @@ import {
   createBaseLayer,
   setView
 } from '../../../utilities/mapUtilities';
+import { resetTableState } from '../Table/tableStateStore';
 
 
 
@@ -59,7 +60,8 @@ const MapContainer = ({
     notificationManager,
     qgsUrl,
     qgsProjectPath,
-    setRefreshWMSLayer
+    setRefreshWMSLayer,
+    restoreAllLayerFilters
   } = mapContext || {};
 
   const translate = typeof t === 'function' ? t : (key) => key;
@@ -288,6 +290,14 @@ const MapContainer = ({
 
     // Cleanup
     return () => {
+      // Limpiar el estado de todas las tablas (filtros, etc.) cuando se cierra el mapa
+      resetTableState();
+      
+      // Restaurar todos los filtros base de las capas antes de desmontar el mapa
+      if (restoreAllLayerFilters) {
+        restoreAllLayerFilters();
+      }
+      
       const instance = contextMapInstance || (mapInstanceRef?.current);
       if (instance && instance.remove) {
         try {
@@ -341,6 +351,12 @@ const MapContainer = ({
       const layersParam = Array.isArray(layerNames) 
         ? layerNames.join(',') 
         : layerNames;
+      
+      console.log('[MapContainer] Creando capa WMS con layers:', {
+        layerNames: Array.isArray(layerNames) ? layerNames : [layerNames],
+        layersParam,
+        filters
+      });
       
       // Crear una clase personalizada que extienda L.TileLayer.WMS para incluir MAP y FILTER
       const QgisWMSLayer = window.L.TileLayer.WMS.extend({
@@ -454,17 +470,72 @@ const MapContainer = ({
               addedLayersRef.current.overlays = [wmsLayer];
             }
             
-            // Crear función para refrescar la capa WMS (actualizar cache busting y redibujar)
-            refreshWMSLayerRef.current = () => {
-              if (wmsLayer && map) {
-                // Actualizar el cache busting para forzar la recarga de tiles
-                wmsLayer.options.cacheBust = Date.now();
-                // Redibujar todos los tiles visibles
-                wmsLayer.redraw();
-                // Invalidar el tamaño del mapa para forzar actualización
-                if (map.invalidateSize) {
-                  map.invalidateSize();
+            // Crear función para refrescar la capa WMS (recrear con nuevas capas visibles)
+            refreshWMSLayerRef.current = async () => {
+              if (!map || !config || !qgsUrl || !qgsProjectPath) {
+                return;
+              }
+
+              try {
+                // Obtener las nuevas capas visibles
+                const children = config.layerTree.children || (config.layerTree.nodeType ? [config.layerTree] : []);
+                const newVisibleLayers = getVisibleLayersInChildren(children, [], baseLayersConfig);
+                
+                // Filtrar capas visibles que existen en el config
+                const newVisibleProjectLayers = newVisibleLayers.filter((layerName) => {
+                  return !!config.layers[layerName];
+                });
+
+                // Obtener nuevos filtros WMS
+                const newWmsFilters = getWMSFilters(config, newVisibleProjectLayers);
+
+                // Si no hay capas visibles, eliminar la capa WMS existente
+                if (newVisibleProjectLayers.length === 0) {
+                  if (map.wmsLayer) {
+                    const oldLayer = map.wmsLayer;
+                    map.removeLayer(oldLayer);
+                    // Actualizar addedLayersRef
+                    if (addedLayersRef.current.overlays.includes(oldLayer)) {
+                      addedLayersRef.current.overlays = addedLayersRef.current.overlays.filter(l => l !== oldLayer);
+                    }
+                    if (addedLayersRef.current.base === oldLayer) {
+                      addedLayersRef.current.base = null;
+                    }
+                    map.wmsLayer = null;
+                  }
+                  return;
                 }
+
+                // Si la capa WMS existe, eliminarla primero
+                const oldWmsLayer = map.wmsLayer;
+                if (oldWmsLayer) {
+                  map.removeLayer(oldWmsLayer);
+                  // Actualizar addedLayersRef
+                  if (addedLayersRef.current.overlays.includes(oldWmsLayer)) {
+                    addedLayersRef.current.overlays = addedLayersRef.current.overlays.filter(l => l !== oldWmsLayer);
+                  }
+                  if (addedLayersRef.current.base === oldWmsLayer) {
+                    addedLayersRef.current.base = null;
+                  }
+                  map.wmsLayer = null;
+                }
+
+                // Crear nueva capa WMS con las capas visibles actualizadas
+                const newWmsLayer = await createQgisWmsLayer(newVisibleProjectLayers, newWmsFilters);
+                if (newWmsLayer) {
+                  newWmsLayer.addTo(map);
+                  map.wmsLayer = newWmsLayer;
+                  
+                  // Si no hay capa base, usar la capa WMS como base
+                  if (!addedLayersRef.current.base) {
+                    addedLayersRef.current.base = newWmsLayer;
+                  } else {
+                    // Si hay capa base, la WMS es overlay
+                    addedLayersRef.current.overlays = [newWmsLayer];
+                  }
+                }
+              } catch (error) {
+                console.error('[MapContainer] refreshWMSLayer - Error al refrescar la capa WMS:', error);
               }
             };
           }
@@ -535,7 +606,7 @@ const MapContainer = ({
   
   // Exponer la función de refresh a través del contexto
   useEffect(() => {
-    if (setRefreshWMSLayer && refreshWMSLayerRef.current) {
+    if (setRefreshWMSLayer) {
       setRefreshWMSLayer(() => refreshWMSLayerRef.current);
     }
   }, [setRefreshWMSLayer]);

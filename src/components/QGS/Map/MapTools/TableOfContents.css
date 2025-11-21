@@ -1,0 +1,44 @@
+@import '../../../UI/ui.css';
+
+.table-of-contents {
+  padding: var(--spacing-sm);
+}
+
+.table-of-contents__empty {
+  padding: var(--spacing-lg);
+  text-align: center;
+  color: var(--color-text-secondary);
+}
+
+.table-of-contents__layer-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--spacing-sm);
+  flex: 1;
+  min-width: 0;
+}
+
+.table-of-contents__layer-name {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  white-space: normal;
+  line-height: var(--line-height-normal);
+}
+
+.table-of-contents__legend-icon-wrapper {
+  display: flex;
+  align-items: flex-start;
+  flex-shrink: 0;
+  padding-top: 2px; /* Alinear con la primera línea del texto */
+}
+
+.table-of-contents__legend-icon {
+  width: 20px;
+  height: 20px;
+  object-fit: contain;
+  flex-shrink: 0;
+}
+

@@ -8,19 +8,51 @@ import './MapSearchContainer.css';
  * Se posiciona en la parte superior derecha del mapa
  * Agrupa los buscadores en un desplegable si hay más de uno
  */
-const MapSearchContainer = ({ children }) => {
+const MapSearchContainer = ({ children, customSearchers = [], toolsConfig = null }) => {
   const [isExpanded, setIsExpanded] = useState(false);
   const dropdownRef = useRef(null);
 
   // Lista de buscadores disponibles
   const searchComponents = useMemo(() => {
     const components = [];
-    // TODO: En el futuro, estos se habilitarán/deshabilitarán por configuración
-    components.push({ id: 'address', component: <AddressSearch key="address" /> });
-    components.push({ id: 'rural', component: <CadastralRuralSearch key="rural" /> });
-    components.push({ id: 'reference', component: <CadastralReferenceSearch key="reference" /> });
+    const searchersConfig = toolsConfig?.searchers || {};
+    
+    // Añadir buscadores personalizados si se proporcionan
+    if (Array.isArray(customSearchers) && customSearchers.length > 0) {
+      customSearchers.forEach((searcher, index) => {
+        if (searcher && (searcher.component || searcher.render)) {
+          const searcherId = searcher.id || `custom-${index}`;
+          // Verificar si el buscador personalizado está habilitado (por defecto true si no está en la config)
+          const isEnabled = searchersConfig[searcherId] !== false;
+          if (isEnabled) {
+            const component = searcher.component || (typeof searcher.render === 'function' ? searcher.render() : null);
+            if (component) {
+              components.push({ 
+                id: searcherId, 
+                component: React.cloneElement(component, { key: searcherId })
+              });
+            }
+          }
+        }
+      });
+    }
+    
+    // Añadir buscadores por defecto si no se proporcionan personalizados o si se permite
+    // Verificar la configuración para cada buscador por defecto
+    if (customSearchers.length === 0) {
+      if (searchersConfig.address !== false) {
+        components.push({ id: 'address', component: <AddressSearch key="address" /> });
+      }
+      if (searchersConfig.rural !== false) {
+        components.push({ id: 'rural', component: <CadastralRuralSearch key="rural" /> });
+      }
+      if (searchersConfig.reference !== false) {
+        components.push({ id: 'reference', component: <CadastralReferenceSearch key="reference" /> });
+      }
+    }
+    
     return components;
-  }, []);
+  }, [customSearchers, toolsConfig]);
 
   const hasMultipleSearchers = searchComponents.length > 1;
 
@@ -75,7 +107,24 @@ const MapSearchContainer = ({ children }) => {
 
 MapSearchContainer.propTypes = {
   /** Componentes de búsqueda a renderizar dentro del contenedor */
-  children: PropTypes.node
+  children: PropTypes.node,
+  /** Array de buscadores personalizados. Cada buscador debe tener:
+   * - id: string (opcional, se genera automáticamente si no se proporciona)
+   * - component: ReactNode (componente React a renderizar)
+   * - render: function (función que retorna un componente React, alternativa a component)
+   */
+  customSearchers: PropTypes.arrayOf(
+    PropTypes.shape({
+      id: PropTypes.string,
+      component: PropTypes.node,
+      render: PropTypes.func
+    })
+  ),
+  /** Configuración de herramientas y buscadores visibles */
+  toolsConfig: PropTypes.shape({
+    toolbar: PropTypes.objectOf(PropTypes.bool),
+    searchers: PropTypes.objectOf(PropTypes.bool)
+  })
 };
 
 export default MapSearchContainer;

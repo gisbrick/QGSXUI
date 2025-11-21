@@ -1,0 +1,132 @@
+@import '../ui.css';
+
+.drawer-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 1100;
+  opacity: 0;
+  transition: opacity var(--transition-normal);
+  pointer-events: none;
+}
+
+.drawer-overlay--open {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.drawer-overlay--allow-interaction {
+  pointer-events: none;
+}
+
+.drawer-overlay--allow-interaction .drawer {
+  pointer-events: auto;
+}
+
+.drawer-overlay--no-backdrop {
+  background-color: transparent;
+}
+
+.drawer {
+  position: fixed;
+  background-color: var(--color-surface);
+  box-shadow: var(--shadow-lg);
+  display: flex;
+  flex-direction: column;
+  z-index: 1001;
+  transition: transform var(--transition-normal);
+  overflow: hidden;
+}
+
+/* Posicionamiento */
+.drawer--right {
+  top: 0;
+  right: 0;
+  bottom: 0;
+  transform: translateX(100%);
+}
+
+.drawer--right.drawer--open {
+  transform: translateX(0);
+}
+
+.drawer--left {
+  top: 0;
+  left: 0;
+  bottom: 0;
+  transform: translateX(-100%);
+}
+
+.drawer--left.drawer--open {
+  transform: translateX(0);
+}
+
+.drawer--top {
+  top: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(-100%);
+}
+
+.drawer--top.drawer--open {
+  transform: translateY(0);
+}
+
+.drawer--bottom {
+  bottom: 0;
+  left: 0;
+  right: 0;
+  transform: translateY(100%);
+}
+
+.drawer--bottom.drawer--open {
+  transform: translateY(0);
+}
+
+.drawer__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--spacing-md);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  flex-shrink: 0;
+}
+
+.drawer__title {
+  margin: 0;
+  font-size: var(--font-size-lg);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+}
+
+.drawer__close-button {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: var(--spacing-xs);
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--border-radius-md);
+  transition: var(--transition-fast);
+}
+
+.drawer__close-button:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.drawer__content {
+  flex: 1;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--spacing-md);
+}
+

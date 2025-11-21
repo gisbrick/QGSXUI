@@ -1,0 +1,125 @@
+@import '../../../UI/ui.css';
+
+.open-tables-manager__button-container {
+  position: fixed;
+  bottom: var(--spacing-md);
+  left: var(--spacing-md);
+  z-index: 1102; /* Por encima del drawer (z-index 1101) y su overlay (z-index 1100) */
+}
+
+.open-tables-manager__toggle-button {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  box-shadow: var(--shadow-md);
+}
+
+.open-tables-manager__button-text {
+  margin-left: var(--spacing-xs);
+}
+
+.open-tables-manager__drawer-content {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.open-tables-manager__tab-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.open-tables-manager__tab-name {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.open-tables-manager__tab-close {
+  background: none;
+  border: none;
+  padding: var(--spacing-xs);
+  cursor: pointer;
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--border-radius-sm);
+  transition: var(--transition-fast);
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.open-tables-manager__tab-close:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text-primary);
+}
+
+.open-tables-manager__table-container {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+}
+
+/* Ajustar el componente table cuando está dentro del drawer */
+.open-tables-manager__table-container .table {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  padding: var(--spacing-sm);
+  min-height: 0;
+}
+
+.open-tables-manager__table-container .table__scroll-container {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: auto;
+}
+
+.open-tables-manager__table-container .table__summary,
+.open-tables-manager__table-container .table__hint,
+.open-tables-manager__table-container .table__error {
+  flex-shrink: 0;
+  margin-top: var(--spacing-sm);
+}
+
+/* Asegurar que el contenido del tab ocupe todo el espacio */
+.open-tables-manager__drawer-content .tabs {
+  height: 100%;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+.open-tables-manager__drawer-content .tabs__content {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  min-height: 0;
+  padding: 0;
+}
+
+/* Ajustar el botón cuando el drawer está abierto - se desplaza hacia arriba */
+.open-tables-manager__button-container {
+  transition: transform var(--transition-normal);
+}
+
+.open-tables-manager__button-container.drawer-open {
+  /* Calcular la posición para que el botón quede justo encima del drawer sin espacio */
+  /* El drawer está en bottom: 0 con altura 80vh, así que el botón debe estar en bottom: 80vh */
+  /* Como el botón tiene bottom: var(--spacing-md) inicialmente, movemos 80vh - var(--spacing-md) hacia arriba */
+  transform: translateY(calc(-80vh + var(--spacing-md)));
+  z-index: 1102; /* Por encima del drawer (z-index 1101) y su overlay (z-index 1100) */
+  margin-bottom: 0; /* Asegurar que no hay margen adicional */
+  padding-bottom: 0; /* Asegurar que no hay padding adicional */
+}
+

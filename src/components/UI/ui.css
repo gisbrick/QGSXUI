@@ -111,12 +111,12 @@
   --z-dropdown: 1000;
   --z-sticky: 1020;
   --z-fixed: 1030;
-  --z-modal-backdrop: 1040;
-  --z-modal: 1050;
+  --z-modal-backdrop: 1200; /* Por encima de drawers (1100-1101) */
+  --z-modal: 1201; /* Por encima de drawers (1100-1101) */
   --z-popover: 1060;
   --z-tooltip: 1070;
   --z-toast: 1080;
-  --z-notification: 99999; /* Siempre por encima de todo, incluyendo diálogos */
+  --z-notification: 999999; /* Siempre por encima de todo, incluyendo diálogos y drawers */
 }
 
 /* Reset básico para componentes UI */

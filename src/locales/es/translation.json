@@ -122,6 +122,8 @@
       "rowsPerPage": "Registros por página",
       "totalRecords": "Total de registros: {{count}}",
       "resizeColumn": "Redimensionar columna",
+      "actions": "Acciones",
+      "selectRow": "Seleccionar fila",
       "filter": {
         "open": "Abrir filtro",
         "title": "Filtrar por {{field}}",
@@ -322,9 +324,14 @@
       "infoClick": "Información en click",
       "noFeaturesFound": "No se encontraron features en este punto",
       "infoClickError": "Error al obtener información",
+      "tableOfContents": {
+        "showTable": "Ver tabla",
+        "noLayers": "No hay capas disponibles"
+      },
       "deleteConfirmTitle": "Borrar feature",
       "deleteConfirmMessage": "Va a borrar el elemento seleccionado. Esta acción no puede deshacerse ¿desea continuar?",
       "deleteSuccess": "Feature borrada",
+      "tableOfContents": "Tabla de contenidos",
       "bookmarks": {
         "title": "Marcadores de extensión",
         "add": "Añadir marcador",

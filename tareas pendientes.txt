@@ -38,7 +38,12 @@ Cuando haces click en el botón de edición de geometría del popup, se lanza un
 
 En la edición de geometrías sobre el mapa, si tenemos varias geometrías, mostrar un botón de siguiente y anterior para navegar entre las geometrías temporales editadas, y poner editable la geometría a la que naveguemos (mover vértices, dibujar agujeros, etc). Usa los iconos fa-angle-left y fa-angle-right
 
-Cambia los iconos de zoom a la extensión inicial del que usar ahora (fg-extent) a fg-home. Cambialo tanto en la navegación de leaflet como en la toolbar del mapa
+Cambia los iconos de zoom a la extensión inicial del que usar ahora (fg-extent) a fg-home. Cambialo tanto en la navegación de leaflet como en la toolbar del map
+
+Que la lupa y buscadores del mapa se vean por debajo de los drawers, pero por encima de la toolbar
+
+Desde la tabla de contenidos, necesito que implementes la funcionalidad que abre las tablas al pulsar el botón de showTable. La idea es que, si hay tablas abiertas, en la parte inferior izquierda del navegador se muestre un botón con el text "Tablas abiertas". Ese botón muestra u oculta un drawer (se desplaza con el Drwaer hacia arriba cuando el drawer está abierto) que contiene todas las tablas abiertas (un tabview con una tab por tabla, con su nombre). En el contenido de cada tab, mostraremos la tabla infine scroll, adaptado el componente para ocupar todo el tab. Si pulsamos en abrir una nueva tabla, y esta no está en el tabview, añadiría una pestaña con la tabla. Si pulsamos un showTable de una tabla que ya está en el tabview, se mostraría el drawer y seleccionaría el tab de la tabla indicada. Cada tab incluirá, además del nombre de la tabla, un icono (x) para borrar el tab del tabview. 
+
 
 
 

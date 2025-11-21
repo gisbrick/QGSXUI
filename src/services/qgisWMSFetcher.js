@@ -43,7 +43,23 @@ export async function fetchFeatureInfo(qgsUrl, qgsProjectPath, queryParams, toke
     params.set('STYLES', Array.isArray(queryParams.styles) ? queryParams.styles.join(',') : queryParams.styles);
   }
 
-  const response = await fetch(`${url}?${params.toString()}`);
+  // Construir URL manualmente para añadir FILTER (como en MapContainer)
+  // URLSearchParams codifica automáticamente, pero para FILTER necesitamos usar encodeURIComponent
+  let requestUrl = `${url}?${params.toString()}`;
+  
+  console.log('[fetchFeatureInfo] URL antes de añadir FILTER:', requestUrl);
+  console.log('[fetchFeatureInfo] LAYERS en params:', params.get('LAYERS'));
+  console.log('[fetchFeatureInfo] QUERY_LAYERS en params:', params.get('QUERY_LAYERS'));
+  
+  // Añadir filtros si están disponibles (formato: layerName: "filter"; layerName2: "filter2")
+  if (queryParams.filters && queryParams.filters.trim()) {
+    // Usar encodeURIComponent para codificar el filtro (como en MapContainer para WMS layers)
+    requestUrl += `&FILTER=${encodeURIComponent(queryParams.filters)}`;
+  }
+
+  console.log('[fetchFeatureInfo] URL final de GetFeatureInfo:', requestUrl);
+  
+  const response = await fetch(requestUrl);
   
   if (!response.ok) {
     const text = await response.text();

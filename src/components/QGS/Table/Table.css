@@ -6,6 +6,7 @@
   padding: var(--spacing-lg);
   background: var(--color-background);
   border-radius: var(--border-radius-lg);
+  position: relative; /* Para que el popover se posicione relativo a este contenedor */
 }
 
 .table table,
@@ -519,6 +520,31 @@
 /* ==========================================================================
    Responsive
    ========================================================================== */
+
+/* ==========================================================================
+   Actions Column
+   ========================================================================== */
+
+.table__actions-header {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  text-align: center;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  border-right: var(--border-width-thin) solid var(--color-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  user-select: none;
+}
+
+.table__actions-cell {
+  padding: var(--spacing-xs);
+  text-align: center;
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  border-right: var(--border-width-thin) solid var(--color-border);
+}
 
 @media (max-width: 768px) {
   .table {

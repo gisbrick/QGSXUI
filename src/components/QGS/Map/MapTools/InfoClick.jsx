@@ -50,26 +50,61 @@ const InfoClick = ({ active, onActiveChange }) => {
       }
 
       // Obtener las capas WMS visibles del mapa
+      // Seguir la lógica del legacy: añadir todas las capas que están en wmsParams.layers y existen en config.layers
+      // No filtrar por has_geometry o allowQuery aquí, ya que eso se hace en el servidor
       const visibleLayers = [];
       const versions = [];
       const styles = [];
+
+      console.log('[InfoClick] Iniciando búsqueda de capas WMS');
+      console.log('[InfoClick] Config layers disponibles:', Object.keys(config.layers || {}));
 
       // Recorrer todas las capas del mapa para encontrar las WMS
       map.eachLayer((layer) => {
         if (layer.wmsParams) {
           const layerNames = layer.wmsParams.layers ? layer.wmsParams.layers.split(',') : [];
           
-          // Verificar que las capas existan en el config y tengan allowQuery
+          console.log('[InfoClick] Capa WMS encontrada, layers en wmsParams:', layerNames);
+          
+          // Añadir todas las capas que existen en el config (como en legacy)
+          // Nota: Los nombres pueden tener diferencias de espacios (finales/iniciales) entre wmsParams y config
           layerNames.forEach((layerName) => {
             const trimmedName = layerName.trim();
-            const qgisLayer = config.layers?.[trimmedName];
             
-            if (qgisLayer && 
-                qgisLayer.has_geometry && 
-                qgisLayer.WFSCapabilities?.allowQuery) {
-              if (!visibleLayers.includes(trimmedName)) {
-                visibleLayers.push(trimmedName);
+            // Buscar la capa en el config, primero con el nombre exacto, luego normalizando espacios
+            let qgisLayer = config.layers?.[trimmedName];
+            let configLayerName = trimmedName;
+            
+            // Si no se encuentra con el nombre exacto, buscar normalizando espacios finales/iniciales
+            if (!qgisLayer && config.layers) {
+              // Buscar en todas las claves del config, comparando sin espacios finales/iniciales
+              for (const key in config.layers) {
+                if (key.trim() === trimmedName) {
+                  qgisLayer = config.layers[key];
+                  configLayerName = key; // Usar el nombre original del config
+                  break;
+                }
               }
+            }
+            
+            const existsInConfig = !!qgisLayer;
+            
+            console.log(`[InfoClick] Procesando capa: "${trimmedName}"`, {
+              existsInConfig,
+              configLayerName: existsInConfig ? configLayerName : null,
+              has_geometry: qgisLayer?.has_geometry,
+              wkbType_name: qgisLayer?.wkbType_name,
+              allowQuery: qgisLayer?.WFSCapabilities?.allowQuery,
+              alreadyInList: visibleLayers.includes(configLayerName)
+            });
+            
+            // Verificar solo que la capa exista en el config (como en legacy: layersSplit[i] in QGISPRJ.layers)
+            // Usar el nombre original del config para mantener consistencia
+            if (existsInConfig && !visibleLayers.includes(configLayerName)) {
+              visibleLayers.push(configLayerName);
+              console.log(`[InfoClick] ✓ Capa añadida: "${configLayerName}"`);
+            } else if (!existsInConfig) {
+              console.warn(`[InfoClick] ✗ Capa NO existe en config: "${trimmedName}"`);
             }
           });
 
@@ -82,8 +117,10 @@ const InfoClick = ({ active, onActiveChange }) => {
         }
       });
 
-      // Si no hay capas consultables, no hacer nada
+      // Si no hay capas, no hacer nada
+      console.log('[InfoClick] Capas finales para consulta GetFeatureInfo:', visibleLayers);
       if (visibleLayers.length === 0) {
+        console.warn('[InfoClick] No hay capas para consultar');
         return;
       }
 
@@ -95,6 +132,21 @@ const InfoClick = ({ active, onActiveChange }) => {
       const crs = map.options.crs;
       const sw = crs.project(bounds.getSouthWest());
       const ne = crs.project(bounds.getNorthEast());
+
+      // Obtener filtros activos de las capas desde el config
+      // Los filtros se actualizan cuando se aplican desde las tablas
+      const activeFilters = [];
+      visibleLayers.forEach((layerName) => {
+        const qgisLayer = config.layers?.[layerName];
+        if (qgisLayer?.filter && qgisLayer.filter.trim()) {
+          // Remover "1=1 AND " del inicio del filtro si existe (como en getWMSFilters)
+          let filter = qgisLayer.filter.replace(/^1=1\s+AND\s+/i, '');
+          if (filter && filter.trim()) {
+            activeFilters.push(`${layerName}: ${filter}`);
+          }
+        }
+      });
+      const filtersString = activeFilters.length > 0 ? activeFilters.join(';') : '';
 
       // Construir parámetros de la consulta
       const version = versions[0] || '1.3.0';
@@ -109,8 +161,16 @@ const InfoClick = ({ active, onActiveChange }) => {
         bbox: `${sw.x},${sw.y},${ne.x},${ne.y}`,
         width: size.x,
         height: size.y,
-        styles: styles[0] || ''
+        styles: styles[0] || '',
+        filters: filtersString // Añadir filtros activos
       };
+      
+      console.log('[InfoClick] Parámetros de consulta GetFeatureInfo:', {
+        layers: queryParams.layers,
+        query_layers: queryParams.query_layers,
+        version: queryParams.version,
+        filters: queryParams.filters
+      });
 
       // Añadir parámetros según la versión de WMS
       if (parseFloat(version) >= 1.3) {

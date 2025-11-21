@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useEffect, useState, useRef } from 'react';
+import React, { createContext, useContext, useEffect, useState, useRef, useCallback } from 'react';
 import { QgisConfigContext } from '../QgisConfigContext';
 
 // Creamos un contexto para compartir estado entre componentes
@@ -251,6 +251,26 @@ export const MapProvider = ({ layerName, featureId, children }) => {
 
   const qgisConfig = useContext(QgisConfigContext);
   const { config, t, notificationManager, qgsUrl, qgsProjectPath } = qgisConfig || {};
+
+  // Inicializar filtros base cuando se carga el config por primera vez
+  // Esto asegura que no se mantengan filtros de sesiones anteriores
+  useEffect(() => {
+    if (!config?.layers) {
+      return;
+    }
+
+    // Inicializar los filtros base de todas las capas desde el config original
+    // Solo si no se han inicializado antes (para evitar sobrescribir si ya hay filtros temporales)
+    Object.keys(config.layers).forEach((layerName) => {
+      if (!(layerName in layerBaseFiltersRef.current)) {
+        const layer = config.layers[layerName];
+        // Guardar el filtro original del config como filtro base
+        layerBaseFiltersRef.current[layerName] = layer.filter || null;
+        // Asegurarse de que el filtro de la capa sea el filtro base (limpiar filtros temporales)
+        layer.filter = layerBaseFiltersRef.current[layerName];
+      }
+    });
+  }, [config]); // Solo ejecutar cuando cambie el config
 
   const updateNavFlags = () => {
     const len = viewHistoryRef.current.length;
@@ -1668,6 +1688,96 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     updateGeometryChangeFlag();
   };
 
+  // Función para actualizar el filtro de una capa y refrescar el mapa
+  // Usa una ref para almacenar el filtro base original de cada capa
+  const layerBaseFiltersRef = useRef({});
+  
+  // Función para restaurar todos los filtros base de las capas
+  const restoreAllLayerFilters = useCallback(() => {
+    if (!config?.layers) {
+      return;
+    }
+    
+    // Restaurar el filtro base de todas las capas que tengan un filtro base guardado
+    Object.keys(layerBaseFiltersRef.current).forEach((layerName) => {
+      const layer = config.layers[layerName];
+      if (layer) {
+        layer.filter = layerBaseFiltersRef.current[layerName];
+      }
+    });
+    
+    // También restaurar filtros de capas que no estén en layerBaseFiltersRef pero que puedan tener filtros temporales
+    // Esto asegura que todas las capas vuelvan a su estado original
+    Object.keys(config.layers).forEach((layerName) => {
+      const layer = config.layers[layerName];
+      if (layer && !(layerName in layerBaseFiltersRef.current)) {
+        // Si no está en layerBaseFiltersRef, significa que nunca se modificó desde el inicio
+        // Pero por si acaso, restaurar desde el filtro base guardado inicialmente
+        // (esto se hace en el useEffect de inicialización)
+      }
+    });
+    
+    // Limpiar la referencia de filtros base
+    layerBaseFiltersRef.current = {};
+    
+    // Refrescar la capa WMS para aplicar los cambios
+    if (refreshWMSLayer) {
+      refreshWMSLayer();
+    }
+  }, [config, refreshWMSLayer]);
+  
+  const updateLayerFilter = useCallback((layerName, filterQuery) => {
+    if (!config?.layers || !layerName) {
+      return;
+    }
+
+    const layer = config.layers[layerName];
+    if (!layer) {
+      return;
+    }
+
+    // Guardar el filtro base original la primera vez que se accede a la capa
+    // Solo si no se ha guardado antes (para evitar sobrescribir si ya hay un filtro temporal)
+    if (!(layerName in layerBaseFiltersRef.current)) {
+      // Si el filtro actual contiene " AND (" al final, es probable que sea un filtro temporal
+      // En ese caso, intentar extraer el filtro base
+      const currentFilter = layer.filter || null;
+      if (currentFilter && currentFilter.includes(' AND (')) {
+        // Extraer el filtro base (todo antes del último " AND (")
+        const lastAndIndex = currentFilter.lastIndexOf(' AND (');
+        if (lastAndIndex > 0) {
+          layerBaseFiltersRef.current[layerName] = currentFilter.substring(0, lastAndIndex).trim() || null;
+        } else {
+          layerBaseFiltersRef.current[layerName] = null;
+        }
+      } else {
+        // Si no parece un filtro temporal, guardar como está
+        layerBaseFiltersRef.current[layerName] = currentFilter;
+      }
+    }
+
+    const baseFilter = layerBaseFiltersRef.current[layerName];
+
+    // Construir el nuevo filtro combinando el filtro base con el filtro de la tabla
+    if (filterQuery && filterQuery.trim()) {
+      if (baseFilter && baseFilter.trim()) {
+        // Si hay filtro base, combinarlo con el filtro de la tabla
+        layer.filter = `${baseFilter} AND (${filterQuery})`;
+      } else {
+        // Si no hay filtro base, usar solo el filtro de la tabla
+        layer.filter = filterQuery;
+      }
+    } else {
+      // Si no hay filtro de tabla, restaurar solo el filtro base
+      layer.filter = baseFilter;
+    }
+
+    // Refrescar la capa WMS para aplicar el nuevo filtro
+    if (refreshWMSLayer) {
+      refreshWMSLayer();
+    }
+  }, [config, refreshWMSLayer]);
+
   const value = {
     mapInstance,
     setMapInstance,
@@ -1682,6 +1792,7 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     qgsProjectPath,
     refreshWMSLayer,
     setRefreshWMSLayer,
+    updateLayerFilter,
     startDrawing,
     startHoleDrawing,
     finishDrawing,

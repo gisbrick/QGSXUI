@@ -1,0 +1,58 @@
+.table-actions-column {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  white-space: nowrap;
+  overflow: hidden;
+}
+
+.table-actions-column__checkbox {
+  cursor: pointer;
+  margin: 0;
+  flex-shrink: 0;
+  width: 20px;
+  height: 20px;
+}
+
+.table-actions-column__buttons {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  flex-wrap: nowrap;
+  flex-shrink: 0;
+}
+
+/* Estilos para los botones de UI dentro de la columna de acciones */
+.table-actions-column__buttons .ui-button {
+  min-width: 28px;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border: var(--border-width-thin) solid var(--color-border);
+  background-color: transparent;
+  color: var(--color-text-secondary);
+}
+
+.table-actions-column__buttons .ui-button:hover:not(:disabled) {
+  background-color: var(--color-hover);
+  color: var(--color-text-primary);
+  border-color: var(--color-border);
+}
+
+.table-actions-column__buttons .ui-button__icon {
+  font-size: var(--font-size-sm);
+}
+
+/* Estilo para botón de peligro (eliminar) */
+.table-actions-column__button--danger.ui-button {
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+
+.table-actions-column__button--danger.ui-button:hover:not(:disabled) {
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--color-error);
+  border-color: var(--color-error);
+}
+

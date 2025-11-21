@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from 'react';
+import React, { useState, useCallback, useMemo, useEffect } from 'react';
 import PropTypes from 'prop-types';
 import { useUITranslation } from '../../../hooks/useTranslation';
 import './TreeView.css';
@@ -9,6 +9,9 @@ const TreeNode = React.memo(({
   selectedNode, 
   onToggle, 
   expandedNodes, 
+  checkedNodes,
+  onCheck,
+  checkable = false,
   level = 0,
   onKeyDown,
   t
@@ -16,6 +19,8 @@ const TreeNode = React.memo(({
   const hasChildren = node.children && node.children.length > 0;
   const isExpanded = expandedNodes.has(node.id);
   const isSelected = selectedNode === node.id;
+  const isChecked = checkedNodes.has(node.id);
+  const isIndeterminate = node.indeterminate || false;
 
   const handleToggle = useCallback((e) => {
     e.stopPropagation();
@@ -27,6 +32,13 @@ const TreeNode = React.memo(({
   const handleSelect = useCallback(() => {
     onSelect(node);
   }, [onSelect, node]);
+
+  const handleCheck = useCallback((e) => {
+    e.stopPropagation();
+    if (checkable && onCheck) {
+      onCheck(node.id, !isChecked, node);
+    }
+  }, [checkable, onCheck, node.id, isChecked, node]);
 
   const handleKeyDown = useCallback((e) => {
     onKeyDown(e, node, hasChildren, isExpanded);
@@ -57,8 +69,26 @@ const TreeNode = React.memo(({
         )}
         {!hasChildren && <span className="tree-node__spacer" />}
         
+        {checkable && !node.isLegendSymbol && (
+          <input
+            type="checkbox"
+            className="tree-node__checkbox"
+            checked={isChecked}
+            onChange={handleCheck}
+            onClick={(e) => e.stopPropagation()}
+            ref={(el) => {
+              if (el) {
+                el.indeterminate = isIndeterminate;
+              }
+            }}
+            tabIndex={-1}
+            aria-label={`${isChecked ? 'Uncheck' : 'Check'} ${node.label}`}
+          />
+        )}
+        
         {node.icon && <span className="tree-node__icon" aria-hidden="true">{node.icon}</span>}
         <span className="tree-node__label">{node.label}</span>
+        {node.actions && <span className="tree-node__actions">{node.actions}</span>}
       </div>
       
       {hasChildren && isExpanded && (
@@ -71,6 +101,9 @@ const TreeNode = React.memo(({
               selectedNode={selectedNode}
               onToggle={onToggle}
               expandedNodes={expandedNodes}
+              checkedNodes={checkedNodes}
+              onCheck={onCheck}
+              checkable={checkable}
               level={level + 1}
               onKeyDown={onKeyDown}
               t={t}
@@ -89,23 +122,81 @@ const TreeView = ({
   onSelect, 
   selectedNode, 
   defaultExpandedNodes = [],
+  defaultCheckedNodes = [],
+  checkable = false,
+  onCheck,
+  onToggle: onToggleProp,
   locale,
   translations
 }) => {
   const [expandedNodes, setExpandedNodes] = useState(new Set(defaultExpandedNodes));
+  const [checkedNodes, setCheckedNodes] = useState(new Set(defaultCheckedNodes));
   const { t } = useUITranslation('ui.treeView', { locale, translations });
 
+  // Sincronizar checkedNodes cuando cambien los datos o defaultCheckedNodes
+  useEffect(() => {
+    if (defaultCheckedNodes.length > 0) {
+      setCheckedNodes(new Set(defaultCheckedNodes));
+    }
+  }, [defaultCheckedNodes]);
+
+  // Sincronizar expandedNodes cuando cambien defaultExpandedNodes (solo si no hay callback onToggle)
+  useEffect(() => {
+    if (!onToggleProp && defaultExpandedNodes.length > 0) {
+      setExpandedNodes(new Set(defaultExpandedNodes));
+    }
+  }, [defaultExpandedNodes, onToggleProp]);
+
   const handleToggle = useCallback((nodeId) => {
-    setExpandedNodes(prev => {
-      const newExpanded = new Set(prev);
-      if (newExpanded.has(nodeId)) {
-        newExpanded.delete(nodeId);
+    const newExpanded = new Set(expandedNodes);
+    if (newExpanded.has(nodeId)) {
+      newExpanded.delete(nodeId);
+    } else {
+      newExpanded.add(nodeId);
+    }
+    
+    // Actualizar el estado interno siempre
+    setExpandedNodes(newExpanded);
+    
+    // Si hay un callback, notificar al componente padre
+    if (onToggleProp) {
+      onToggleProp(nodeId, newExpanded.has(nodeId), Array.from(newExpanded));
+    }
+  }, [expandedNodes, onToggleProp]);
+
+  const handleCheck = useCallback((nodeId, checked, node) => {
+    setCheckedNodes(prev => {
+      const newChecked = new Set(prev);
+      if (checked) {
+        newChecked.add(nodeId);
       } else {
-        newExpanded.add(nodeId);
+        newChecked.delete(nodeId);
       }
-      return newExpanded;
+      
+      // Si tiene hijos, actualizar también los hijos
+      if (node.children && node.children.length > 0) {
+        const updateChildren = (children) => {
+          children.forEach(child => {
+            if (checked) {
+              newChecked.add(child.id);
+            } else {
+              newChecked.delete(child.id);
+            }
+            if (child.children && child.children.length > 0) {
+              updateChildren(child.children);
+            }
+          });
+        };
+        updateChildren(node.children);
+      }
+      
+      return newChecked;
     });
-  }, []);
+    
+    if (onCheck) {
+      onCheck(nodeId, checked, node);
+    }
+  }, [onCheck]);
 
   const flattenNodes = useCallback((nodes, level = 0) => {
     let result = [];
@@ -183,6 +274,9 @@ const TreeView = ({
           selectedNode={selectedNode}
           onToggle={handleToggle}
           expandedNodes={expandedNodes}
+          checkedNodes={checkedNodes}
+          onCheck={handleCheck}
+          checkable={checkable}
           onKeyDown={handleKeyDown}
           t={t}
         />
@@ -196,11 +290,17 @@ TreeView.propTypes = {
     id: PropTypes.oneOfType([PropTypes.string, PropTypes.number]).isRequired,
     label: PropTypes.string.isRequired,
     icon: PropTypes.node,
+    actions: PropTypes.node,
     children: PropTypes.array,
+    indeterminate: PropTypes.bool,
   })).isRequired,
   onSelect: PropTypes.func,
   selectedNode: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   defaultExpandedNodes: PropTypes.array,
+  defaultCheckedNodes: PropTypes.array,
+  checkable: PropTypes.bool,
+  onCheck: PropTypes.func,
+  onToggle: PropTypes.func,
   locale: PropTypes.string,
   translations: PropTypes.object,
 };
@@ -209,6 +309,9 @@ TreeView.defaultProps = {
   onSelect: () => {},
   selectedNode: null,
   defaultExpandedNodes: [],
+  defaultCheckedNodes: [],
+  checkable: false,
+  onCheck: null,
 };
 
 export default TreeView;
