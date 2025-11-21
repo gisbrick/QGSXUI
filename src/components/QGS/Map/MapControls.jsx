@@ -61,7 +61,7 @@ const MapControls = () => {
           title={translate('ui.map.resetView')}
           aria-label={translate('ui.map.resetView')}
         >
-          <i className="fg-extent" aria-hidden="true" />
+          <i className="fg-home" aria-hidden="true" />
         </button>
       </div>
     </div>

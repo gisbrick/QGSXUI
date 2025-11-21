@@ -1,4 +1,4 @@
-import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect, useMemo, useRef, useCallback } from 'react';
 import PropTypes from 'prop-types';
 import { createRoot } from 'react-dom/client';
 import MapTipViewer from './MapTipViewer';
@@ -7,6 +7,11 @@ import { fetchFeatureById, deleteFeature } from '../../../../services/qgisWFSFet
 import ConfirmDialog from '../../../UI/ConfirmDialog/ConfirmDialog';
 import { FeatureAttributesDialog } from '../../../UI_QGS';
 import './FeatureInfoPopup.css';
+
+const normalizeFeatureId = (id) => {
+  if (id === null || id === undefined) return '';
+  return id.toString().replace(/\s+/g, '_');
+};
 
 /**
  * Componente para mostrar los resultados de GetFeatureInfo dentro de un Popup de Leaflet
@@ -59,6 +64,10 @@ const FeatureInfoPopup = ({
 
   // Estado local para mantener las features actualizadas
   const [updatedFeatures, setUpdatedFeatures] = useState(features);
+  const updatedFeaturesRef = useRef(updatedFeatures);
+  useEffect(() => {
+    updatedFeaturesRef.current = updatedFeatures;
+  }, [updatedFeatures]);
   
   // Actualizar el estado local cuando cambien las features del prop
   React.useEffect(() => {
@@ -171,6 +180,38 @@ const FeatureInfoPopup = ({
   const qgsUrl = qgsUrlProp || qgisContext?.qgsUrl;
   const qgsProjectPath = qgsProjectPathProp || qgisContext?.qgsProjectPath;
   const token = tokenProp || qgisContext?.token;
+
+  const applyUpdatedFeatureData = useCallback((updatedFeatureData) => {
+    if (!updatedFeatureData) {
+      return;
+    }
+
+    const normalizedUpdatedId = normalizeFeatureId(updatedFeatureData.id);
+
+    setUpdatedFeatures((prevFeatures) => {
+      if (!prevFeatures) return prevFeatures;
+      return prevFeatures.map((f) => {
+        const normalizedFId = normalizeFeatureId(f.id);
+        if (normalizedFId === normalizedUpdatedId) {
+          return {
+            ...f,
+            properties: updatedFeatureData.properties,
+            geometry: updatedFeatureData.geometry || f.geometry
+          };
+        }
+        return f;
+      });
+    });
+
+    setFeatureWithGeometry((prevFeature) => {
+      if (prevFeature && normalizeFeatureId(prevFeature.id) === normalizedUpdatedId) {
+        return updatedFeatureData;
+      }
+      return prevFeature;
+    });
+
+    setFeaturesUpdateKey((prev) => prev + 1);
+  }, [setUpdatedFeatures, setFeatureWithGeometry, setFeaturesUpdateKey]);
 
   // Obtener la geometría completa de la feature si no la tiene
   useEffect(() => {
@@ -520,6 +561,56 @@ const FeatureInfoPopup = ({
   const hasMultipleLayers = layersWithFeatures.length > 1;
   const hasMultipleFeatures = selectedLayer?.features.length > 1;
 
+  useEffect(() => {
+    const handleExternalFeatureUpdate = async (event) => {
+      const detail = event?.detail || {};
+      const { featureId: updatedFeatureId, layerName: updatedLayerName } = detail;
+      const providedFeatureData = detail?.featureData || detail?.feature || null;
+
+      if (!updatedFeatureId || !updatedLayerName) {
+        return;
+      }
+
+      if (!qgsUrl || !qgsProjectPath) {
+        return;
+      }
+
+      const normalizedUpdatedId = normalizeFeatureId(updatedFeatureId);
+      const hasFeature =
+        (updatedFeaturesRef.current || []).some(
+          (f) => normalizeFeatureId(f.id) === normalizedUpdatedId
+        );
+
+      if (!hasFeature) {
+        return;
+      }
+
+      if (providedFeatureData) {
+        applyUpdatedFeatureData(providedFeatureData);
+        return;
+      }
+
+      try {
+        const refreshedFeature = await fetchFeatureById(
+          qgsUrl,
+          qgsProjectPath,
+          updatedLayerName,
+          updatedFeatureId,
+          token
+        );
+
+        applyUpdatedFeatureData(refreshedFeature);
+      } catch (error) {
+        console.error('FeatureInfoPopup: Error al refrescar feature tras actualización externa:', error);
+      }
+    };
+
+    window.addEventListener('qgs-feature-updated', handleExternalFeatureUpdate);
+    return () => {
+      window.removeEventListener('qgs-feature-updated', handleExternalFeatureUpdate);
+    };
+  }, [qgsUrl, qgsProjectPath, token, applyUpdatedFeatureData]);
+
   return (
     <div className="feature-info-popup">
       {/* Navegación de capas */}
@@ -762,47 +853,7 @@ const FeatureInfoPopup = ({
                   selectedFeature.id,
                   token
                 );
-                
-                // Función helper para normalizar IDs (reemplazar espacios por guiones bajos)
-                const normalizeId = (id) => {
-                  if (!id) return id;
-                  return id.toString().replace(/\s+/g, '_');
-                };
-                
-                // Normalizar el ID de la feature actualizada para comparar
-                const normalizedUpdatedId = normalizeId(updatedFeature.id);
-                
-                // Actualizar el estado local de features con la feature actualizada
-                setUpdatedFeatures(prevFeatures => {
-                  if (!prevFeatures) return prevFeatures;
-                  
-                  // Buscar y actualizar la feature en el array usando comparación normalizada
-                  return prevFeatures.map(f => {
-                    const normalizedFId = normalizeId(f.id);
-                    
-                    if (normalizedFId === normalizedUpdatedId) {
-                      return {
-                        ...f,
-                        properties: updatedFeature.properties,
-                        geometry: updatedFeature.geometry || f.geometry
-                      };
-                    }
-                    return f;
-                  });
-                });
-                
-                // Actualizar featureWithGeometry si es la feature seleccionada
-                // Usar comparación normalizada también aquí
-                const normalizeFeatureId = (id) => {
-                  if (!id) return id;
-                  return id.toString().replace(/\s+/g, '_');
-                };
-                if (featureWithGeometry && normalizeFeatureId(featureWithGeometry.id) === normalizedUpdatedId) {
-                  setFeatureWithGeometry(updatedFeature);
-                }
-                
-                // Forzar re-render del popup incrementando el key
-                setFeaturesUpdateKey(prev => prev + 1);
+                applyUpdatedFeatureData(updatedFeature);
               } catch (error) {
                 console.error('Error al recargar la feature después de guardar:', error);
               }

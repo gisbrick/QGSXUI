@@ -23,10 +23,25 @@ En todos los diálogos de edición de atributos, cambiar el texto del botón "Ca
 
 Cuando cerremos una ventana de edición de atributos, bien desde el botón cancelar, o desde la x del diálogo, si hay datos pendientes de guardar, guiar al usuario con un diálogo similar al siguiente "Hay datos sin guardar, y si sale se perderán ¿desea guardar los datos antes de salir?" y con los botones guardar (fa-floppy-disk) y salir (fa-xmark). Si pulsa guardar, guarda cambios y cierra el formulario, y si pulsa salir, sale sin guardar. Si lo crees necesario, crea un nuevo componente para este tipo de diálogo
 
-
-
-
 Implementa la edición de geometrías de features existentes al hacer click en el botón de edición de geometría desde el popup, para todas (puntos líneas y polígonos de cualquier tipo). Tendrás que cerrar el popup, y permitir editar la geometría. Fijate en como se hace al dibujar nueva geometría, y añade las mismas capaciades, pero enfocado a la capa en cuestión donde se encuentra la geometría (es decir, que si no es multi, no permite añadir más geometrías). En el caso de modificación de geometrías en features existentes, hay un cambio fundamental: tienes que mostrar el botón de guardar en cuanto detectes que ha habido cambios en la geometría, pero al pulsar el botón de guardar, diréctamente haras un POST de UPDATE con la geometría modificada
+
+Tras un primer insert exitoso, hay que borrar las geometrías temporales de edición del mapa, y hacer un refresco forzado del mapa, como el que se hace tras borrar una feature, para que no queden imágenes cacheadas
+
+Los buscadores deben aparecer siempre por encima de los botones de la toolbar del mapa, pero por debajo de los diálogos
+
+
+Si seleccionamos la edición de geometría, desde el popup, desactivar la herramienta de información
+
+Tras realizar un update de geometrías, si existe popup, porque vemimos de una edición de feature existente, hay que actualizar también los atributos del popup (volver a hacer una request con el id de la feature y actualizar atributos). Ya estás actualizando los atributos del formulario, pero falta la actualización de atributos del popup
+
+Cuando haces click en el botón de edición de geometría del popup, se lanza un info en click sobre el mapa, que no tiene sentido (puede que sea porque se cierra el popup en esa acción, pero no hay que ejecutar ningún info en click en ese caso)
+
+En la edición de geometrías sobre el mapa, si tenemos varias geometrías, mostrar un botón de siguiente y anterior para navegar entre las geometrías temporales editadas, y poner editable la geometría a la que naveguemos (mover vértices, dibujar agujeros, etc). Usa los iconos fa-angle-left y fa-angle-right
+
+Cambia los iconos de zoom a la extensión inicial del que usar ahora (fg-extent) a fg-home. Cambialo tanto en la navegación de leaflet como en la toolbar del mapa
+
+
+
 
 Crea dos nuevos componentes de tipo tabla en QGS/Table, una de tabla paginada, y otra con tabla infinite scroll. Ambas tienen que funcionar de modo lazy. Revisa el proyecto legacy para ver como se hizo en el proyecto anterior. Añade dos nuevos stories para ambos tipos de tabla
 

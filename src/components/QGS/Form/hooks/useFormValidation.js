@@ -44,14 +44,6 @@ export const useFormValidation = (
     const currentValues = valuesRef.current;
     const fieldValue = value !== undefined ? value : currentValues[fieldName];
     
-    console.log('[useFormValidation] validateField', {
-      fieldName,
-      valueProvided: value !== undefined,
-      value,
-      fieldValueFromState: currentValues[fieldName],
-      fieldValue,
-      currentValuesKeys: Object.keys(currentValues || {})
-    });
     
     // Buscar el campo en la configuración de la capa
     if (!layer || !layer.fields || !Array.isArray(layer.fields)) {
@@ -278,12 +270,6 @@ export const useFormValidation = (
     // Usar los valores más recientes del ref para evitar problemas de sincronización
     const currentValues = valuesRef.current;
     
-    console.log('[useFormValidation] validateAllFields', {
-      currentValuesKeys: Object.keys(currentValues || {}),
-      currentValues,
-      layerFieldsCount: layer.fields?.length || 0
-    });
-    
     const newErrors = {};
     let hasErrors = false;
     
@@ -293,12 +279,6 @@ export const useFormValidation = (
       
       const value = currentValues[field.name];
       
-      console.log('[useFormValidation] validateAllFields - campo', {
-        fieldName: field.name,
-        value,
-        constraintNotNull: field.constraintNotNull,
-        isNewFeature
-      });
       const validation = validateFieldValue(
         field, 
         value, 

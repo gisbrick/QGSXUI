@@ -30,7 +30,10 @@ export const FormProvider = ({
   featureId, 
   feature: featureProp = null, // Feature opcional para nuevas features con geometría
   readOnly: readOnlyProp = false, 
-  onSave: onSaveProp = null, 
+  onSave: onSaveProp = null,
+  cancelDrawing = null, // Función para cancelar el dibujo y limpiar geometrías temporales
+  refreshWMSLayer = null, // Función para refrescar la capa WMS del mapa
+  mapInstance = null, // Instancia del mapa para refrescar tiles
   children 
 }) => {
   // Obtener configuración QGIS del contexto
@@ -80,16 +83,6 @@ export const FormProvider = ({
     notificationManager
   });
   
-  // Log para debug: verificar estado de isNewFeature
-  React.useEffect(() => {
-    console.log('[FormProvider] isNewFeature changed', {
-      isNewFeature,
-      featureId: feature?.id,
-      propFeatureId: featureId,
-      hasFeature: !!feature
-    });
-  }, [isNewFeature, feature, featureId]);
-
   // Inicializar valores cuando se carga la feature
   React.useEffect(() => {
     if (feature && feature.properties) {
@@ -142,7 +135,10 @@ export const FormProvider = ({
     notificationManager,
     onSaveProp,
     getHandler,
-    language
+    language,
+    cancelDrawing,
+    refreshWMSLayer,
+    mapInstance
   });
 
   // Determinar si se puede guardar
@@ -177,6 +173,9 @@ export const FormProvider = ({
     context: {               // Contexto adicional para pasar a los handlers
       layerName,
       featureId,
+      cancelDrawing,
+      refreshWMSLayer,
+      mapInstance,
       layer,
       feature,
       isNewFeature
@@ -237,6 +236,9 @@ FormProvider.propTypes = {
   featureId: PropTypes.oneOfType([PropTypes.string, PropTypes.number]),
   readOnly: PropTypes.bool,
   onSave: PropTypes.func,
+  cancelDrawing: PropTypes.func,
+  refreshWMSLayer: PropTypes.func,
+  mapInstance: PropTypes.object,
   children: PropTypes.node.isRequired
 };
 

@@ -19,6 +19,7 @@ const InfoClick = ({ active, onActiveChange }) => {
   // Referencia para el popup y el root de React
   const popupRef = useRef(null);
   const reactRootRef = useRef(null);
+  const ignoreNextMapClickRef = useRef(false);
 
   useEffect(() => {
     if (!mapInstance || !active) {
@@ -34,6 +35,11 @@ const InfoClick = ({ active, onActiveChange }) => {
 
     // Función para realizar la consulta GetFeatureInfo
     const handleMapClick = async (e) => {
+      if (ignoreNextMapClickRef.current) {
+        ignoreNextMapClickRef.current = false;
+        return;
+      }
+
       // Si hay un popup abierto, no hacer nada (permitir PAN del mapa)
       if (popupRef.current) {
         return;
@@ -174,12 +180,17 @@ const InfoClick = ({ active, onActiveChange }) => {
             if (payload.action === 'editGeometry') {
               const { feature, layer } = payload;
               if (feature && layer && startEditingGeometry) {
+                ignoreNextMapClickRef.current = true;
                 // Cerrar el popup
                 if (map && map.closePopup) {
                   map.closePopup();
                 }
                 // Iniciar la edición de la geometría
                 startEditingGeometry(feature, layer);
+                // Desactivar la herramienta de información para evitar nuevos clicks mientras se edita
+                if (typeof onActiveChange === 'function') {
+                  onActiveChange(false);
+                }
               }
             }
           };

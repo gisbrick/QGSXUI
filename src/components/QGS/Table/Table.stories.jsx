@@ -1,5 +1,7 @@
 import React from 'react';
 import Table from './Table';
+import TablePaginated from './TablePaginated';
+import TableInfiniteScroll from './TableInfiniteScroll';
 import QgisConfigProvider from '../QgisConfigProvider';
 
 export default {
@@ -70,7 +72,7 @@ export default {
 export const Default = {
   args: {
     // Props del componente Table
-    layerName: 'puntos_interes',
+    layerName: 'tabla',
     maxRows: 10,
     // Props del QgisConfigProvider
     qgsUrl: 'http://localhost/cgi-bin/qgis_mapserv.fcgi.exe',
@@ -78,4 +80,29 @@ export const Default = {
     language: 'es',
     token: null
   }
+};
+
+export const Paginated = {
+  args: {
+    layerName: 'tabla',
+    defaultPageSize: 10,
+    qgsUrl: 'http://localhost/cgi-bin/qgis_mapserv.fcgi.exe',
+    qgsProjectPath: 'C:/trabajos/gisbrick/QGIS/demo01.qgz',
+    language: 'es',
+    token: null
+  },
+  render: (args) => <TablePaginated {...args} />
+};
+
+export const InfiniteScroll = {
+  args: {
+    layerName: 'tabla',
+    chunkSize: 40,
+    height: 360,
+    qgsUrl: 'http://localhost/cgi-bin/qgis_mapserv.fcgi.exe',
+    qgsProjectPath: 'C:/trabajos/gisbrick/QGIS/demo01.qgz',
+    language: 'es',
+    token: null
+  },
+  render: (args) => <TableInfiniteScroll {...args} />
 };

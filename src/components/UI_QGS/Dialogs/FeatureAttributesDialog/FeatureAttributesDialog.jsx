@@ -34,7 +34,10 @@ const FeatureAttributesDialog = ({
   t: tProp = null,
   notificationManager: notificationManagerProp = null,
   onSave = null, // Callback cuando se guarda exitosamente (solo en modo edición)
-  onFormValuesChange = null
+  onFormValuesChange = null,
+  cancelDrawing = null, // Función para cancelar el dibujo y limpiar geometrías temporales
+  refreshWMSLayer = null, // Función para refrescar la capa WMS del mapa
+  mapInstance = null // Instancia del mapa para refrescar tiles
 }) => {
   // TODOS LOS HOOKS DEBEN IR AL PRINCIPIO, ANTES DE CUALQUIER RETURN CONDICIONAL
   const qgisContext = useContext(QgisConfigContext);
@@ -320,39 +323,22 @@ const FeatureAttributesDialog = ({
       
       const handleSubmit = React.useCallback(async (e) => {
         e.preventDefault();
-        console.log('[FeatureAttributesDialog] handleSubmit - INICIO', {
-          canSave,
-          isSaving,
-          isSaveLocked,
-          valuesKeys: Object.keys(values || {}),
-          context
-        });
         
         if (!canSave || isSaving || isSaveLocked) {
-          console.log('[FeatureAttributesDialog] handleSubmit - BLOQUEADO', {
-            canSave,
-            isSaving,
-            isSaveLocked
-          });
           return;
         }
         
         setIsSaving(true);
         try {
-          console.log('[FeatureAttributesDialog] handleSubmit - Llamando handleSave', {
-            values,
-            context
-          });
           // CRÍTICO: Usar values directamente, no formValuesRef.current
           // formValuesRef.current puede estar desactualizado
           await handleSave(values, context);
-          console.log('[FeatureAttributesDialog] handleSubmit - handleSave completado');
           // Notificación de éxito se maneja en el handler
           // Bloquear el botón hasta que haya nuevos cambios
           setIsSaveLocked(true);
         } catch (error) {
           // Error ya manejado en el handler
-          console.error('[FeatureAttributesDialog] handleSubmit - Error al guardar:', error);
+          console.error('[FeatureAttributesDialog] Error al guardar:', error);
         } finally {
           setIsSaving(false);
         }
@@ -398,15 +384,9 @@ const FeatureAttributesDialog = ({
           <div className="feature-attributes-dialog__footer-actions">
             <button 
               type="button"
-              onClick={(e) => {
-                console.log('[FeatureAttributesDialog] Botón Guardar - CLICK', {
-                  canSave,
-                  isSaving,
-                  isSaveLocked,
-                  handleSubmitRef: !!handleSubmitRef.current
-                });
-                handleSubmitRef.current(e);
-              }}
+                onClick={(e) => {
+                  handleSubmitRef.current(e);
+                }}
               disabled={!canSave || isSaving || isSaveLocked}
               className="qgs-form-button qgs-form-button--primary"
             >
@@ -567,6 +547,9 @@ const FeatureAttributesDialog = ({
               onFormValuesChangeRef.current(values || {});
             }
           }}
+          cancelDrawing={cancelDrawing}
+          refreshWMSLayer={refreshWMSLayer}
+          mapInstance={mapInstance}
         />
       ) : contextValue && contextValue.config ? (
         // Si no hay contexto pero tenemos contextValue válido con config, proporcionar uno temporal
@@ -584,6 +567,9 @@ const FeatureAttributesDialog = ({
                 onFormValuesChangeRef.current(values || {});
               }
             }}
+            cancelDrawing={cancelDrawing}
+            refreshWMSLayer={refreshWMSLayer}
+            mapInstance={mapInstance}
           />
         </QgisConfigContext.Provider>
       ) : (
@@ -652,6 +638,12 @@ FeatureAttributesDialog.propTypes = {
   onSave: PropTypes.func,
   /** Callback opcional para observar cambios en los valores del formulario */
   onFormValuesChange: PropTypes.func,
+  /** Función para cancelar el dibujo y limpiar geometrías temporales */
+  cancelDrawing: PropTypes.func,
+  /** Función para refrescar la capa WMS del mapa */
+  refreshWMSLayer: PropTypes.func,
+  /** Instancia del mapa Leaflet para refrescar tiles */
+  mapInstance: PropTypes.object
 };
 
 export default FeatureAttributesDialog;

@@ -13,11 +13,16 @@ export async function fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filte
     ...(token ? { TOKEN: token } : {})
   });
 
+  // Construir URL manualmente para EXP_FILTER (como en legacy) para evitar problemas de codificación
+  let requestUrl = `${url}?${params.toString()}`;
   if (filter) {
-    params.set('CQL_FILTER', filter);
+    // En legacy usan EXP_FILTER y codifican manualmente: replaceAll("%", "%25").replaceAll("'", "%27")
+    // También eliminan "1=1 AND " si existe
+    let cleanFilter = filter.replace(/1=1 AND /g, '').replace(/%/g, '%25').replace(/'/g, '%27');
+    requestUrl += `&EXP_FILTER=${cleanFilter}`;
   }
 
-  const response = await fetch(`${url}?${params.toString()}`);
+  const response = await fetch(requestUrl);
   const text = await response.text();
   
   if (!response.ok) {
@@ -55,9 +60,19 @@ export async function fetchFeatureCount(qgsUrl, qgsProjectPath, layerName, filte
 }
 
 // Servicio que obtiene features con paginación desde QGIS Server
-export async function fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter = '', startIndex = 0, pageSize = 100, token = null) {
+export async function fetchFeatures(
+  qgsUrl,
+  qgsProjectPath,
+  layerName,
+  filter = '',
+  startIndex = 0,
+  pageSize = 100,
+  token = null,
+  options = {}
+) {
   layerName = layerName.replace(/\s+/g, '_'); // Reemplazar espacios por guiones bajos
   const url = qgsUrl;
+  const { sortBy = null, sortDirection = 'ASC' } = options || {};
   const params = new URLSearchParams({
     SERVICE: 'WFS',
     VERSION: '1.1.0',
@@ -71,11 +86,21 @@ export async function fetchFeatures(qgsUrl, qgsProjectPath, layerName, filter = 
     ...(token ? { TOKEN: token } : {})
   });
 
-  if (filter) {
-    params.set('CQL_FILTER', filter);
+  if (sortBy) {
+    const direction = sortDirection && sortDirection.toUpperCase() === 'DESC' ? 'DESC' : 'ASC';
+    params.set('SORTBY', `${sortBy} ${direction}`);
   }
 
-  const response = await fetch(`${url}?${params.toString()}`);
+  // Construir URL manualmente para EXP_FILTER (como en legacy) para evitar problemas de codificación
+  let requestUrl = `${url}?${params.toString()}`;
+  if (filter) {
+    // En legacy usan EXP_FILTER y codifican manualmente: replaceAll("%", "%25").replaceAll("'", "%27")
+    // También eliminan "1=1 AND " si existe
+    let cleanFilter = filter.replace(/1=1 AND /g, '').replace(/%/g, '%25').replace(/'/g, '%27');
+    requestUrl += `&EXP_FILTER=${cleanFilter}`;
+  }
+
+  const response = await fetch(requestUrl);
   if (!response.ok) {
     throw new Error(`HTTP error: ${response.status} ${response.statusText}`);
   }
@@ -123,11 +148,15 @@ export async function fetchAllFeatures(qgsUrl, qgsProjectPath, layerName, filter
     ...(token ? { TOKEN: token } : {})
     });
 
+    // Construir URL manualmente para CQL_FILTER para evitar problemas de codificación
+    let requestUrl = `${url}?${params.toString()}`;
     if (filter) {
-      params.set('CQL_FILTER', filter);
+      // Codificar el filtro CQL manualmente, escapando comillas y otros caracteres especiales
+      const encodedFilter = encodeURIComponent(filter);
+      requestUrl += `&CQL_FILTER=${encodedFilter}`;
     }
 
-    const response = await fetch(`${url}?${params.toString()}`);
+    const response = await fetch(requestUrl);
     if (!response.ok) {
       throw new Error(`HTTP error while fetching page: ${response.status} ${response.statusText}`);
     }
@@ -1030,8 +1059,33 @@ export async function insertFeatureWithGeometry(
     throw new Error(exceptionReport.textContent || 'Error en la transacción WFS.');
   }
 
-  const insertedFeature = xmlDoc.querySelector('ogc\\:FeatureId, FeatureId, wfs\\:FeatureId');
-  const fid = insertedFeature?.getAttribute('fid') || insertedFeature?.getAttribute('gml:id') || null;
+  // Intentar múltiples selectores para encontrar el FeatureId
+  const selectors = [
+    'ogc\\:FeatureId',
+    'FeatureId',
+    'wfs\\:FeatureId',
+    '*[local-name()="FeatureId"]',
+    '*[local-name()="InsertResults"] *[local-name()="FeatureId"]',
+    '*[local-name()="TransactionResponse"] *[local-name()="FeatureId"]'
+  ];
+  
+  let insertedFeature = null;
+  for (const selector of selectors) {
+    insertedFeature = xmlDoc.querySelector(selector);
+    if (insertedFeature) {
+      break;
+    }
+  }
+  
+  if (!insertedFeature) {
+    console.warn('[qgisWFSFetcher] No se encontró FeatureId en la respuesta XML');
+  }
+  
+  const fid = insertedFeature?.getAttribute('fid') || 
+              insertedFeature?.getAttribute('gml:id') || 
+              insertedFeature?.getAttribute('id') ||
+              insertedFeature?.textContent?.trim() ||
+              null;
 
   return {
     fid,

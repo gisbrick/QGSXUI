@@ -50,6 +50,9 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const originalGeometryNormalizedRef = useRef(null);
   const [geometryHasChanges, setGeometryHasChanges] = useState(false);
   const geometryHasChangesRef = useRef(false);
+  const editingMultiGeometriesRef = useRef(null);
+  const editingActiveGeometryIndexRef = useRef(null);
+  const [multiGeometryNavigation, setMultiGeometryNavigation] = useState({ total: 0, activeIndex: null });
   useEffect(() => { isEditingExistingGeometryRef.current = isEditingExistingGeometry; }, [isEditingExistingGeometry]);
   useEffect(() => { geometryHasChangesRef.current = geometryHasChanges; }, [geometryHasChanges]);
   useEffect(() => { isDrawingRef.current = isDrawing; }, [isDrawing]);
@@ -127,6 +130,116 @@ export const MapProvider = ({ layerName, featureId, children }) => {
       type,
       coordinates: normalizedCoords
     };
+  };
+
+  const clonePointCoords = (point) => {
+    if (!Array.isArray(point) || point.length < 2) {
+      return null;
+    }
+    return [point[0], point[1]];
+  };
+
+  const resetEditingMultiStore = () => {
+    editingMultiGeometriesRef.current = null;
+    editingActiveGeometryIndexRef.current = null;
+    setMultiGeometryNavigation({ total: 0, activeIndex: null });
+  };
+
+  const updateMultiNavigationState = () => {
+    const total = Array.isArray(editingMultiGeometriesRef.current)
+      ? editingMultiGeometriesRef.current.length
+      : 0;
+    const activeIndex = total > 0 ? (editingActiveGeometryIndexRef.current ?? 0) : null;
+    setMultiGeometryNavigation({ total, activeIndex });
+  };
+
+  const serializeActiveGeometryForStore = () => {
+    const mode = drawModeRef.current;
+    if (!mode) return null;
+    if (mode === 'point') {
+      if (drawPointsRef.current.length >= 1) {
+        return clonePointCoords(drawPointsRef.current[0]);
+      }
+      return null;
+    }
+    if (mode === 'line') {
+      if (!drawPointsRef.current.length) {
+        return null;
+      }
+      return drawPointsRef.current.map((pt) => clonePointCoords(pt)).filter(Boolean);
+    }
+    if (mode === 'polygon') {
+      if (!drawPointsRef.current.length) {
+        return null;
+      }
+      const rings = [];
+      const outer = drawPointsRef.current.map((pt) => clonePointCoords(pt)).filter(Boolean);
+      if (!outer.length) {
+        return null;
+      }
+      rings.push(outer);
+      if (Array.isArray(holesRef.current) && holesRef.current.length) {
+        holesRef.current.forEach((ring) => {
+          const normalizedRing = (ring || []).map((pt) => clonePointCoords(pt)).filter(Boolean);
+          if (normalizedRing.length) {
+            rings.push(normalizedRing);
+          }
+        });
+      }
+      return rings;
+    }
+    return null;
+  };
+
+  const commitActiveGeometryToEditingStore = () => {
+    if (!Array.isArray(editingMultiGeometriesRef.current)) {
+      return;
+    }
+    const index = editingActiveGeometryIndexRef.current;
+    if (
+      index === null ||
+      index === undefined ||
+      index < 0 ||
+      index >= editingMultiGeometriesRef.current.length
+    ) {
+      return;
+    }
+    const serialized = serializeActiveGeometryForStore();
+    if (serialized) {
+      editingMultiGeometriesRef.current[index] = serialized;
+    }
+  };
+
+  const normalizeGeometryPartsForMode = (mode, geometryType, coords) => {
+    if (!coords) return [];
+    const type = (geometryType || '').toUpperCase();
+    if (mode === 'point') {
+      if (type === 'POINT') {
+        return coords.length >= 2 ? [[coords[0], coords[1]]] : [];
+      }
+      if (type === 'MULTIPOINT') {
+        return (coords || []).map(([lng, lat]) => [lng, lat]);
+      }
+    } else if (mode === 'line') {
+      if (type === 'LINESTRING') {
+        return [coords.map(([lng, lat]) => [lng, lat])];
+      }
+      if (type === 'MULTILINESTRING') {
+        return (coords || []).map((line) => line.map(([lng, lat]) => [lng, lat]));
+      }
+    } else if (mode === 'polygon') {
+      if (type === 'POLYGON') {
+        return [
+          (coords || []).map((ring) => ring.map(([lng, lat]) => [lng, lat]))
+        ];
+      }
+      if (type === 'MULTIPOLYGON') {
+        return (coords || []).map((poly) =>
+          (poly || []).map((ring) => ring.map(([lng, lat]) => [lng, lat]))
+        );
+      }
+    }
+    return [];
   };
 
   // Historial de navegación (centro/zoom)
@@ -301,6 +414,45 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     } catch (e) { console.warn('syncMultiLayer error', e); }
     if (isEditingExistingGeometryRef.current) {
       updateGeometryChangeFlag();
+    }
+  };
+
+  const syncEditingStoreToLegacyMulti = (mode) => {
+    if (!Array.isArray(editingMultiGeometriesRef.current)) {
+      multiGeometriesRef.current = [];
+      if (mode) {
+        syncMultiLayer(mode);
+      }
+      return;
+    }
+    const activeIdx = editingActiveGeometryIndexRef.current ?? 0;
+    const clones = [];
+    editingMultiGeometriesRef.current.forEach((geometryEntry, idx) => {
+      if (idx === activeIdx) {
+        return;
+      }
+      if (mode === 'point') {
+        const pt = clonePointCoords(geometryEntry);
+        if (pt) {
+          clones.push(pt);
+        }
+      } else if (mode === 'line') {
+        const clonedLine = (geometryEntry || []).map((pt) => clonePointCoords(pt)).filter(Boolean);
+        if (clonedLine.length) {
+          clones.push(clonedLine);
+        }
+      } else if (mode === 'polygon') {
+        const clonedPoly = (geometryEntry || []).map((ring) =>
+          (ring || []).map((pt) => clonePointCoords(pt)).filter(Boolean)
+        );
+        if (clonedPoly.length) {
+          clones.push(clonedPoly);
+        }
+      }
+    });
+    multiGeometriesRef.current = clones;
+    if (mode) {
+      syncMultiLayer(mode);
     }
   };
 
@@ -494,6 +646,71 @@ export const MapProvider = ({ layerName, featureId, children }) => {
         buildRingHandles(ring, updateHoleAt, insertHoleAt, true, `POLY-HOLE-${ringIdx}`);
       });
     }
+  };
+
+  const applyEditingGeometryAtIndex = (index) => {
+    if (!Array.isArray(editingMultiGeometriesRef.current)) {
+      return false;
+    }
+    const mode = drawModeRef.current;
+    if (!mode) {
+      return false;
+    }
+    const entry = editingMultiGeometriesRef.current[index];
+    if (!entry) {
+      return false;
+    }
+
+    if (mode === 'point') {
+      const point = clonePointCoords(entry);
+      if (!point) {
+        return false;
+      }
+      drawPointsRef.current = [point];
+      holesRef.current = [];
+      setHoleCount(0);
+    } else if (mode === 'line') {
+      const points = (entry || []).map((pt) => clonePointCoords(pt)).filter(Boolean);
+      drawPointsRef.current = points;
+      holesRef.current = [];
+      setHoleCount(0);
+    } else if (mode === 'polygon') {
+      const rings = (entry || []).map((ring) =>
+        (ring || []).map((pt) => clonePointCoords(pt)).filter(Boolean)
+      );
+      const outer = rings[0] || [];
+      const inner = rings.slice(1);
+      drawPointsRef.current = outer;
+      holesRef.current = inner;
+      setHoleCount(inner.length);
+    }
+
+    editingActiveGeometryIndexRef.current = index;
+    setHasGeometry(true);
+    redrawFinalGeometry();
+    rebuildEditHandles(mode);
+    syncEditingStoreToLegacyMulti(mode);
+    updateMultiNavigationState();
+    return true;
+  };
+
+  const navigateEditingGeometry = (direction) => {
+    if (
+      !isEditingExistingGeometryRef.current ||
+      !Array.isArray(editingMultiGeometriesRef.current) ||
+      editingMultiGeometriesRef.current.length <= 1
+    ) {
+      return false;
+    }
+    const total = editingMultiGeometriesRef.current.length;
+    commitActiveGeometryToEditingStore();
+    let nextIndex = (editingActiveGeometryIndexRef.current ?? 0) + direction;
+    if (nextIndex < 0) {
+      nextIndex = total - 1;
+    } else if (nextIndex >= total) {
+      nextIndex = 0;
+    }
+    return applyEditingGeometryAtIndex(nextIndex);
   };
 
   const ensureDrawingLayers = () => {
@@ -976,6 +1193,66 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     if (!mode) {
       return null;
     }
+
+    const hasEditingStore =
+      isEditingExistingGeometryRef.current &&
+      Array.isArray(editingMultiGeometriesRef.current) &&
+      editingMultiGeometriesRef.current.length > 0;
+
+    if (hasEditingStore) {
+      commitActiveGeometryToEditingStore();
+      if (mode === 'point') {
+        const coords = editingMultiGeometriesRef.current
+          .map((pt) => clonePointCoords(pt))
+          .filter(Boolean);
+        if (coords.length === 0) {
+          return null;
+        }
+        if (coords.length === 1) {
+          return { type: 'Point', coordinates: coords[0] };
+        }
+        return { type: 'MultiPoint', coordinates: coords };
+      }
+
+      if (mode === 'line') {
+        const lines = editingMultiGeometriesRef.current
+          .map((line) => (line || []).map((pt) => clonePointCoords(pt)).filter(Boolean))
+          .filter((line) => line.length >= 2);
+        if (lines.length === 0) {
+          return null;
+        }
+        if (lines.length === 1) {
+          return { type: 'LineString', coordinates: lines[0] };
+        }
+        return { type: 'MultiLineString', coordinates: lines };
+      }
+
+      if (mode === 'polygon') {
+        const polys = editingMultiGeometriesRef.current
+          .map((poly) =>
+            (poly || []).map((ring) => {
+              const normalizedRing = (ring || []).map((pt) => clonePointCoords(pt)).filter(Boolean);
+              if (
+                normalizedRing.length >= 2 &&
+                !areCoordsEqual(normalizedRing[0], normalizedRing[normalizedRing.length - 1])
+              ) {
+                normalizedRing.push([...normalizedRing[0]]);
+              }
+              return normalizedRing;
+            })
+          )
+          .filter((poly) => poly[0] && poly[0].length >= 4);
+
+        if (polys.length === 0) {
+          return null;
+        }
+        if (polys.length === 1) {
+          return { type: 'Polygon', coordinates: polys[0] };
+        }
+        return { type: 'MultiPolygon', coordinates: polys };
+      }
+    }
+
     // Construir colecciones incluyendo la geometría activa si existe
     if (mode === 'point') {
       if ((multiGeometriesRef.current?.length || 0) > 0) {
@@ -1049,6 +1326,22 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     if (hasChanges !== geometryHasChangesRef.current) {
       setGeometryHasChanges(hasChanges);
     }
+  };
+
+  const goToNextMultiGeometry = () => {
+    const moved = navigateEditingGeometry(1);
+    if (moved) {
+      updateGeometryChangeFlag();
+    }
+    return moved;
+  };
+
+  const goToPreviousMultiGeometry = () => {
+    const moved = navigateEditingGeometry(-1);
+    if (moved) {
+      updateGeometryChangeFlag();
+    }
+    return moved;
   };
 
   // Iniciar dibujo de agujero dentro de un polígono ya finalizado
@@ -1233,6 +1526,7 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     drawPointsRef.current = [];
     holesRef.current = [];
     multiGeometriesRef.current = [];
+    resetEditingMultiStore();
     setHoleCount(0);
     holeTempRef.current = [];
     // Limpiar estado de edición de geometría existente
@@ -1346,69 +1640,18 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     drawLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
     previewLayerRef.current = window.L.featureGroup([]).addTo(mapInstance);
 
-    // Cargar la geometría existente en los refs
     const coords = geometry.coordinates;
-    if (mode === 'point') {
-      if (geometryType === 'POINT') {
-        drawPointsRef.current = [[coords[0], coords[1]]];
-        multiGeometriesRef.current = [];
-      } else if (geometryType === 'MULTIPOINT') {
-        if (geometryInfo.isMulti) {
-          // Si la capa admite multi, cargar todas las geometrías
-          multiGeometriesRef.current = coords.map(coord => [coord]);
-          drawPointsRef.current = coords.length > 0 ? [[coords[0][0], coords[0][1]]] : [];
-        } else {
-          // Si la capa NO admite multi, solo cargar la primera geometría
-          drawPointsRef.current = coords.length > 0 ? [[coords[0][0], coords[0][1]]] : [];
-          multiGeometriesRef.current = [];
-        }
-      }
-    } else if (mode === 'line') {
-      if (geometryType === 'LINESTRING') {
-        drawPointsRef.current = coords.map(([lng, lat]) => [lng, lat]);
-        multiGeometriesRef.current = [];
-      } else if (geometryType === 'MULTILINESTRING') {
-        if (geometryInfo.isMulti) {
-          // Si la capa admite multi, cargar todas las líneas
-          multiGeometriesRef.current = coords;
-          drawPointsRef.current = coords.length > 0 ? coords[0].map(([lng, lat]) => [lng, lat]) : [];
-        } else {
-          // Si la capa NO admite multi, solo cargar la primera línea
-          drawPointsRef.current = coords.length > 0 ? coords[0].map(([lng, lat]) => [lng, lat]) : [];
-          multiGeometriesRef.current = [];
-        }
-      }
-    } else if (mode === 'polygon') {
-      if (geometryType === 'POLYGON') {
-        drawPointsRef.current = coords[0].map(([lng, lat]) => [lng, lat]);
-        holesRef.current = coords.slice(1);
-        setHoleCount(holesRef.current.length);
-        multiGeometriesRef.current = [];
-      } else if (geometryType === 'MULTIPOLYGON') {
-        if (geometryInfo.isMulti) {
-          // Si la capa admite multi, cargar todos los polígonos
-          multiGeometriesRef.current = coords;
-          if (coords.length > 0) {
-            drawPointsRef.current = coords[0][0].map(([lng, lat]) => [lng, lat]);
-            holesRef.current = coords[0].slice(1);
-            setHoleCount(holesRef.current.length);
-          }
-        } else {
-          // Si la capa NO admite multi, solo cargar el primer polígono
-          if (coords.length > 0) {
-            drawPointsRef.current = coords[0][0].map(([lng, lat]) => [lng, lat]);
-            holesRef.current = coords[0].slice(1);
-            setHoleCount(holesRef.current.length);
-          }
-          multiGeometriesRef.current = [];
-        }
-      }
+    const normalizedParts = normalizeGeometryPartsForMode(mode, geometryType, coords);
+    if (normalizedParts.length === 0) {
+      drawPointsRef.current = [];
+      holesRef.current = [];
+      multiGeometriesRef.current = [];
+      setHoleCount(0);
+      setHasGeometry(false);
+    } else {
+      editingMultiGeometriesRef.current = normalizedParts;
+      applyEditingGeometryAtIndex(0);
     }
-
-    // Redibujar la geometría y crear los handles de edición
-    redrawFinalGeometry();
-    syncMultiLayer(mode);
-    rebuildEditHandles(mode);
 
     // Configurar el cursor y el contenedor
     try {
@@ -1474,6 +1717,9 @@ export const MapProvider = ({ layerName, featureId, children }) => {
     getEditingFeature: () => editingFeatureRef.current,
     getEditingLayerConfig: () => editingLayerConfigRef.current,
     geometryHasChanges,
+    multiGeometryNavigation,
+    goToNextMultiGeometry,
+    goToPreviousMultiGeometry,
   };
 
   return (

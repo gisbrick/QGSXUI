@@ -13,7 +13,7 @@ import { FormLayoutQGS, LoadingQGS } from '../../UI_QGS';
  * Componente de formulario dinámico para edición de features de QGIS
  * Genera campos de formulario basados en la configuración del proyecto QGIS
  */
-const Form = ({ layerName, featureId, feature: featureProp = null, readOnly = false, onSave = null, hideActions = false, renderActions = null, onValuesChange = null }) => {
+const Form = ({ layerName, featureId, feature: featureProp = null, readOnly = false, onSave = null, hideActions = false, renderActions = null, onValuesChange = null, cancelDrawing = null, refreshWMSLayer = null, mapInstance = null }) => {
   // Obtener configuración QGIS y función de traducción del contexto
   const { config, t, notificationManager } = useContext(QgisConfigContext);
   
@@ -23,7 +23,16 @@ const Form = ({ layerName, featureId, feature: featureProp = null, readOnly = fa
   }
 
   return (
-    <FormProvider layerName={layerName} featureId={featureId} feature={featureProp} readOnly={readOnly} onSave={onSave}>
+    <FormProvider
+      layerName={layerName}
+      featureId={featureId}
+      feature={featureProp}
+      readOnly={readOnly}
+      onSave={onSave}
+      cancelDrawing={cancelDrawing}
+      refreshWMSLayer={refreshWMSLayer}
+      mapInstance={mapInstance}
+    >
       <Form_ layerName={layerName} featureId={featureId} hideActions={hideActions} onValuesChange={onValuesChange} />
       {renderActions && renderActions()}
     </FormProvider>
@@ -38,7 +47,10 @@ Form.propTypes = {
   onSave: PropTypes.func,
   hideActions: PropTypes.bool,
   renderActions: PropTypes.func,
-  onValuesChange: PropTypes.func
+  onValuesChange: PropTypes.func,
+  cancelDrawing: PropTypes.func,
+  refreshWMSLayer: PropTypes.func,
+  mapInstance: PropTypes.object
 };
 
 export { QgisConfigProvider };

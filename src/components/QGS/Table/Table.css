@@ -1,25 +1,540 @@
+/* ==========================================================================
+   Table Styles - Moderno y Funcional
+   ========================================================================== */
+
 .table {
-  padding: 1rem;
+  padding: var(--spacing-lg);
+  background: var(--color-background);
+  border-radius: var(--border-radius-lg);
 }
 
-.table h3 {
-  margin: 0 0 1rem 0;
-  color: #333;
-}
-
-.table table {
+.table table,
+.table__native {
   width: 100%;
-  border-collapse: collapse;
+  border-collapse: separate;
+  border-spacing: 0;
+  background: var(--color-paper);
+  border-radius: var(--border-radius-md);
+  overflow: hidden;
+  box-shadow: var(--shadow-1);
 }
 
 .table th,
-.table td {
-  padding: 0.5rem;
+.table td,
+.table__native th,
+.table__native td {
+  padding: var(--spacing-xs) var(--spacing-sm);
   text-align: left;
-  border: 1px solid #ddd;
+  border-bottom: var(--border-width-thin) solid var(--color-border);
+  border-right: var(--border-width-thin) solid var(--color-border);
+  font-size: var(--font-size-sm);
+  line-height: var(--line-height-tight);
+  color: var(--color-text-primary);
+  overflow: hidden;
 }
 
-.table th {
-  background-color: #f5f5f5;
-  font-weight: bold;
+.table th:last-child,
+.table td:last-child,
+.table__native th:last-child,
+.table__native td:last-child {
+  border-right: none;
+}
+
+.table td {
+  white-space: normal;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.table th,
+.table__native th {
+  background: var(--color-surface);
+  font-weight: var(--font-weight-semibold);
+  color: var(--color-text-primary);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  user-select: none;
+  /* Permitir wrap solo cuando sea necesario */
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  /* Altura mínima reducida para hacer más compacto */
+  min-height: 32px;
+  /* Asegurar fondo opaco para que no se vea el contenido de debajo */
+  background-color: var(--color-surface) !important;
+  opacity: 1;
+  /* Padding más compacto para headers */
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+.table th:first-child,
+.table__native th:first-child {
+  border-top-left-radius: var(--border-radius-md);
+}
+
+.table th:last-child,
+.table__native th:last-child {
+  border-top-right-radius: var(--border-radius-md);
+}
+
+.table tbody tr,
+.table__native tbody tr {
+  transition: background-color 0.15s ease;
+}
+
+.table tbody tr:hover,
+.table__native tbody tr:hover {
+  background-color: var(--color-hover);
+}
+
+.table tbody tr:focus-within,
+.table__native tbody tr:focus-within {
+  background-color: var(--color-selected);
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+}
+
+.table tbody tr:last-child td,
+.table__native tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.table__empty-cell {
+  padding: var(--spacing-2xl);
+  text-align: center;
+  color: var(--color-text-secondary);
+  font-size: var(--font-size-sm);
+}
+
+/* ==========================================================================
+   Column Resizing
+   ========================================================================== */
+
+.table__header-cell {
+  position: relative;
+  padding-right: var(--spacing-lg) !important;
+  overflow: visible;
+}
+
+.table__resize-handle {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  background: transparent;
+  z-index: 20;
+  user-select: none;
+  touch-action: none;
+  margin-right: -3px;
+  transition: background-color 0.15s ease;
+}
+
+.table__resize-handle:hover {
+  background: var(--color-primary);
+  opacity: 0.5;
+}
+
+.table__resize-handle--active {
+  background: var(--color-primary);
+  width: 2px;
+  opacity: 1;
+}
+
+/* ==========================================================================
+   Sortable Headers
+   ========================================================================== */
+
+.table__sortable {
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.15s ease;
+  position: relative;
+  /* Asegurar fondo opaco */
+  background-color: var(--color-surface) !important;
+  opacity: 1;
+}
+
+.table__sortable:hover {
+  background-color: #f0f0f0 !important;
+  opacity: 1;
+}
+
+.table__sortable--filtered {
+  color: var(--color-primary);
+}
+
+.table__sortable-content {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  width: 100%;
+  min-width: 0;
+}
+
+.table__sortable-label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-xs);
+  flex: 1;
+  min-width: 0;
+}
+
+.table__sortable-label > span {
+  flex: 1;
+  min-width: 0;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+  line-height: var(--line-height-normal);
+  /* Permitir wrap solo si es necesario */
+  white-space: normal;
+}
+
+.table__sortable:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: -2px;
+  border-radius: var(--border-radius-sm);
+}
+
+.table__sort-icon {
+  color: var(--color-text-hint);
+  font-size: 0.7rem;
+  flex-shrink: 0;
+  transition: color 0.15s ease;
+  width: 14px;
+  text-align: center;
+  /* Asegurar que siempre tenga espacio reservado */
+  min-width: 14px;
+}
+
+.table__sortable:hover .table__sort-icon {
+  color: var(--color-text-secondary);
+}
+
+/* ==========================================================================
+   Filter Button
+   ========================================================================== */
+
+.table__filter-button {
+  border: none;
+  background: transparent;
+  cursor: pointer;
+  color: var(--color-text-hint);
+  padding: 2px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  border-radius: var(--border-radius-sm);
+  transition: all 0.15s ease;
+  width: 18px;
+  height: 18px;
+  min-width: 18px;
+  /* Asegurar que siempre tenga espacio reservado */
+}
+
+.table__filter-button:hover {
+  background-color: var(--color-hover);
+  color: var(--color-text-secondary);
+}
+
+.table__filter-button.active {
+  color: var(--color-primary);
+  background-color: var(--color-selected);
+}
+
+.table__filter-button:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+/* ==========================================================================
+   Filter Popover
+   ========================================================================== */
+
+.table__filter-popover {
+  position: absolute;
+  z-index: 2000;
+  background: var(--color-paper);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-lg);
+  min-width: 280px;
+  max-width: 400px;
+  box-shadow: var(--shadow-3);
+}
+
+.table-filter__title {
+  font-weight: var(--font-weight-semibold);
+  margin-bottom: var(--spacing-md);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+}
+
+.table-filter__body {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-md);
+}
+
+.table-filter__label {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-secondary);
+  font-weight: var(--font-weight-medium);
+  margin-bottom: var(--spacing-xs);
+}
+
+.table-filter__body select,
+.table-filter__body input {
+  width: 100%;
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  font-size: var(--font-size-sm);
+  font-family: var(--font-family-primary);
+  color: var(--color-text-primary);
+  background: var(--color-background);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+
+.table-filter__body select:focus,
+.table-filter__body input:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-focus);
+}
+
+.table-filter__actions {
+  display: flex;
+  justify-content: space-between;
+  gap: var(--spacing-sm);
+  margin-top: var(--spacing-md);
+  padding-top: var(--spacing-md);
+  border-top: var(--border-width-thin) solid var(--color-border);
+}
+
+.table-filter__actions button {
+  padding: var(--spacing-sm) var(--spacing-lg);
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--font-size-sm);
+  font-weight: var(--font-weight-medium);
+  transition: all 0.15s ease;
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--spacing-xs);
+}
+
+.table-filter__actions button:hover:not(:disabled) {
+  background: var(--color-hover);
+  border-color: var(--color-border-dark);
+}
+
+.table-filter__actions .table-filter__apply {
+  background: var(--color-primary);
+  color: var(--color-text-on-primary);
+  border-color: var(--color-primary);
+}
+
+.table-filter__actions .table-filter__apply:hover:not(:disabled) {
+  background: var(--color-primary-dark);
+  border-color: var(--color-primary-dark);
+}
+
+.table-filter__loading {
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  text-align: center;
+  padding: var(--spacing-md);
+}
+
+/* ==========================================================================
+   Footer & Pagination
+   ========================================================================== */
+
+.table__footer {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: var(--spacing-lg);
+  margin-top: var(--spacing-lg);
+  padding-top: var(--spacing-lg);
+  border-top: var(--border-width-thin) solid var(--color-border);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  align-items: center;
+}
+
+.table__footer--compact {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: var(--spacing-lg);
+}
+
+.table__pagination {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.table__pagination button {
+  padding: var(--spacing-sm) var(--spacing-md);
+  border: var(--border-width-thin) solid var(--color-border);
+  background: var(--color-paper);
+  border-radius: var(--border-radius-md);
+  cursor: pointer;
+  font-size: var(--font-size-sm);
+  color: var(--color-text-primary);
+  transition: all 0.15s ease;
+  font-weight: var(--font-weight-medium);
+}
+
+.table__pagination button:hover:not(:disabled) {
+  background: var(--color-hover);
+  border-color: var(--color-border-dark);
+}
+
+.table__pagination button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  background: var(--color-disabled-bg);
+}
+
+.table__hint {
+  font-size: var(--font-size-xs);
+  color: var(--color-text-hint);
+  text-align: right;
+}
+
+.table__summary {
+  margin-top: var(--spacing-md);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.table__clear-all-filters {
+  border: none;
+  background: transparent;
+  color: var(--color-primary);
+  cursor: pointer;
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-xs);
+  border-radius: var(--border-radius-sm);
+  transition: background-color 0.15s ease;
+  text-decoration: underline;
+}
+
+.table__clear-all-filters:hover {
+  background-color: var(--color-hover);
+}
+
+.table__page-size {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+}
+
+.table__page-size label {
+  display: flex;
+  align-items: center;
+  gap: var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.table__page-size select {
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  padding: var(--spacing-xs) var(--spacing-sm);
+  font-size: var(--font-size-sm);
+  background: var(--color-paper);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: border-color 0.15s ease;
+}
+
+.table__page-size select:focus {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 2px var(--color-focus);
+}
+
+/* ==========================================================================
+   Scroll Container
+   ========================================================================== */
+
+.table__scroll-container {
+  border: var(--border-width-thin) solid var(--color-border);
+  border-radius: var(--border-radius-md);
+  overflow: auto;
+  background: var(--color-paper);
+  box-shadow: var(--shadow-1);
+}
+
+/* Scrollbar styling */
+.table__scroll-container::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
+}
+
+.table__scroll-container::-webkit-scrollbar-track {
+  background: var(--color-surface);
+}
+
+.table__scroll-container::-webkit-scrollbar-thumb {
+  background: var(--color-border-dark);
+  border-radius: var(--border-radius-sm);
+}
+
+.table__scroll-container::-webkit-scrollbar-thumb:hover {
+  background: var(--color-text-secondary);
+}
+
+.table__loading-inline {
+  text-align: center;
+  padding: var(--spacing-xl);
+  font-size: var(--font-size-sm);
+  color: var(--color-text-secondary);
+}
+
+.table__error {
+  margin-top: var(--spacing-md);
+  color: var(--color-error);
+  font-size: var(--font-size-sm);
+  padding: var(--spacing-md);
+  background: rgba(244, 67, 54, 0.1);
+  border-radius: var(--border-radius-md);
+  border-left: 3px solid var(--color-error);
+}
+
+/* ==========================================================================
+   Responsive
+   ========================================================================== */
+
+@media (max-width: 768px) {
+  .table {
+    padding: var(--spacing-sm);
+  }
+
+  .table th,
+  .table td,
+  .table__native th,
+  .table__native td {
+    padding: var(--spacing-sm);
+    font-size: var(--font-size-xs);
+  }
+
+  .table__footer {
+    grid-template-columns: 1fr;
+    gap: var(--spacing-md);
+  }
 }

@@ -1,5 +1,5 @@
 import { useCallback, useRef, useEffect } from 'react';
-import { updateFeature } from '../../../../services/qgisWFSFetcher';
+import { updateFeature, fetchFeatureById } from '../../../../services/qgisWFSFetcher';
 
 /**
  * Hook para gestionar las acciones del formulario (guardar, cancelar, eliminar)
@@ -42,7 +42,10 @@ export const useFormActions = ({
   notificationManager,
   onSaveProp,
   getHandler,
-  language
+  language,
+  cancelDrawing = null,
+  refreshWMSLayer = null,
+  mapInstance = null
 }) => {
   // Referencia a los valores actuales para evitar problemas con closures
   const valuesRef = useRef(values);
@@ -51,30 +54,99 @@ export const useFormActions = ({
   }, [values]);
 
   /**
+   * Helper para limpiar geometrías temporales y refrescar el mapa
+   * Se usa después de un INSERT exitoso para eliminar las geometrías de edición
+   * y forzar el refresco del mapa para evitar imágenes cacheadas
+   */
+  const cleanupDrawingAndRefreshMap = useCallback(() => {
+    // Limpiar geometrías temporales de edición
+    if (cancelDrawing) {
+      try {
+        cancelDrawing();
+      } catch (err) {
+        console.warn('[useFormActions] No se pudo limpiar la geometría temporal tras el INSERT:', err);
+      }
+    }
+
+    // Forzar refresco del mapa para evitar caches (igual que en el borrado)
+    if (mapInstance) {
+      try {
+        // Actualizar el cache busting para forzar la recarga de tiles
+        if (mapInstance.wmsLayer && mapInstance.wmsLayer.options) {
+          mapInstance.wmsLayer.options.cacheBust = Date.now();
+        }
+        // Redibujar todos los tiles visibles
+        if (mapInstance.wmsLayer && mapInstance.wmsLayer.redraw) {
+          mapInstance.wmsLayer.redraw();
+        }
+        // Invalidar el tamaño del mapa para forzar actualización
+        if (mapInstance.invalidateSize) {
+          mapInstance.invalidateSize();
+        }
+      } catch (err) {
+        console.warn('[useFormActions] No se pudo forzar el refresco del mapa tras el INSERT:', err);
+      }
+    }
+
+    // Refrescar la capa WMS
+    if (refreshWMSLayer) {
+      try {
+        refreshWMSLayer();
+      } catch (err) {
+        console.warn('[useFormActions] No se pudo refrescar la capa WMS tras el INSERT:', err);
+      }
+    }
+  }, [cancelDrawing, refreshWMSLayer, mapInstance]);
+
+  const dispatchFeatureUpdatedEvent = useCallback(
+    (changeType = 'attributes', featureIdOverride = null, layerNameOverride = null) => {
+      if (typeof window === 'undefined' || !window.dispatchEvent) {
+        return;
+      }
+      const featureIdToUse = featureIdOverride || feature?.id;
+      const layerNameToUse = layerNameOverride || layer?.name;
+      if (!featureIdToUse || !layerNameToUse) {
+        return;
+      }
+      try {
+        window.dispatchEvent(
+          new CustomEvent('qgs-feature-updated', {
+            detail: {
+              type: changeType,
+              layerName: layerNameToUse,
+              featureId: featureIdToUse
+            }
+          })
+        );
+      } catch (err) {
+        console.warn('[useFormActions] No se pudo despachar evento de actualización de feature:', err);
+      }
+    },
+    [feature?.id, layer?.name]
+  );
+
+  const refreshFeatureAttributes = useCallback(
+    async (layerNameForRequest, fidValue) => {
+      if (!qgsUrl || !qgsProjectPath || !layerNameForRequest || !fidValue) {
+        return null;
+      }
+      try {
+        return await fetchFeatureById(qgsUrl, qgsProjectPath, layerNameForRequest, fidValue, token);
+      } catch (error) {
+        console.warn('[useFormActions] No se pudieron refrescar los atributos tras el INSERT:', error);
+        return null;
+      }
+    },
+    [qgsUrl, qgsProjectPath, token]
+  );
+
+  /**
    * Handler por defecto para guardar el formulario
    * Valida todos los campos y guarda los cambios
    */
   const defaultSave = useCallback(async (data, context) => {
-    console.log('[useFormActions] defaultSave - LLAMADO', {
-      dataKeys: Object.keys(data || {}),
-      context,
-      isNewFeature,
-      featureId: feature?.id,
-      hasFeature: !!feature,
-      hasLayer: !!layer,
-      hasService: !!layer?.service,
-      qgsUrl: !!qgsUrl,
-      qgsProjectPath: !!qgsProjectPath
-    });
-    
     // Validar todos los campos antes de guardar
-    console.log('[useFormActions] defaultSave - Validando campos...');
     const validationResult = validateAllFields();
-    console.log('[useFormActions] defaultSave - Validación completada', {
-      valid: validationResult.valid,
-      errorsCount: Object.keys(validationResult.errors || {}).length,
-      errors: validationResult.errors
-    });
     if (!validationResult.valid) {
       // Si hay errores de validación, mostrar notificación con detalles
       const errorFields = Object.keys(validationResult.errors);
@@ -135,20 +207,8 @@ export const useFormActions = ({
     
     if (hasServiceWithMethods) {
       try {
-        console.log('[useFormActions] defaultSave - INICIO', {
-          isNewFeature,
-          featureId: feature?.id,
-          hasFeature: !!feature,
-          layerName: context?.layerName,
-          dataToSaveKeys: Object.keys(dataToSave || {}),
-          hasService: !!layer?.service,
-          hasCreateFeature: !!(layer?.service?.createFeature),
-          hasUpdateFeature: !!(layer?.service?.updateFeature)
-        });
-        
         let result;
         if (isNewFeature) {
-          console.log('[useFormActions] defaultSave - INSERT mode');
           
           // Si hay servicio con createFeature, usarlo; sino usar insertFeatureWithGeometry directamente
           if (layer.service.createFeature) {
@@ -171,47 +231,44 @@ export const useFormActions = ({
               layer
             );
           }
-          console.log('[useFormActions] defaultSave - INSERT result', {
-            result,
-            hasFid: !!(result?.fid),
-            hasId: !!(result?.id),
-            fid: result?.fid,
-            id: result?.id
-          });
           
           // Después de un insert exitoso, crear la feature con el ID devuelto
           // Esto cambiará el formulario a modo update
           if (result && (result.fid || result.id)) {
-            const newFeatureId = result.fid || result.id;
-            // El ID de la feature debe estar en formato "layerName.featureId"
-            const featureId = context?.layerName ? `${context.layerName}.${newFeatureId}` : newFeatureId;
-            
-            console.log('[useFormActions] defaultSave - Creando nueva feature con ID', {
-              newFeatureId,
-              featureId,
-              layerName: context?.layerName
-            });
-            
+            // El fid viene en formato "layerName_normalized.featureId" (ej: "poligono_t.106")
+            // Necesitamos extraer solo el número del ID y concatenarlo con el layerName original
+            const fid = result.fid || result.id;
+            const fidParts = fid.split('.');
+            const numericId = fidParts[fidParts.length - 1]; // Extraer solo el número (ej: "106")
+            const layerName = context?.layerName || layer?.name;
+            const featureId = layerName ? `${layerName}.${numericId}` : numericId;
+
+            let refreshedProperties = dataToSave;
+            let refreshedGeometry = feature?.geometry || null;
+            const serverFeature = await refreshFeatureAttributes(layerName, fid);
+            if (serverFeature?.properties) {
+              refreshedProperties = serverFeature.properties;
+            }
+            if (serverFeature?.geometry) {
+              refreshedGeometry = serverFeature.geometry;
+            }
+
             // Crear la feature con el ID correcto
             const newFeature = {
               id: featureId,
               type: 'Feature',
-              properties: dataToSave,
-              geometry: feature?.geometry || null
+              properties: refreshedProperties,
+              geometry: refreshedGeometry
             };
-            
-            console.log('[useFormActions] defaultSave - Nueva feature creada', {
-              newFeature,
-              newFeatureId: newFeature.id
-            });
             
             // Actualizar la feature para que el formulario entre en modo update
             setFeature(newFeature);
             
             // Resetear el formulario con los valores guardados para que isDirty vuelva a false
-            resetForm(dataToSave);
+            resetForm(refreshedProperties);
             
-            console.log('[useFormActions] defaultSave - Feature actualizada, debería cambiar a modo UPDATE');
+            // Limpiar geometrías temporales y refrescar el mapa después de un INSERT exitoso
+            cleanupDrawingAndRefreshMap();
           } else {
             console.warn('[useFormActions] defaultSave - INSERT result no tiene fid ni id', result);
             // Si no hay ID en el resultado, mantener como estaba pero actualizar propiedades
@@ -227,12 +284,6 @@ export const useFormActions = ({
             resetForm(dataToSave);
           }
         } else {
-          console.log('[useFormActions] defaultSave - UPDATE mode', {
-            featureId: feature?.id,
-            hasService: !!layer?.service,
-            hasUpdateFeature: !!(layer?.service?.updateFeature)
-          });
-          
           // Si hay servicio con updateFeature, usarlo; sino usar updateFeature directamente
           if (layer?.service?.updateFeature) {
             result = await layer.service.updateFeature(feature.id, dataToSave);
@@ -240,7 +291,6 @@ export const useFormActions = ({
             // Usar updateFeature directamente de qgisWFSFetcher (solo atributos, sin geometría)
             result = await updateFeature(qgsUrl, qgsProjectPath, feature, dataToSave, token);
           }
-          console.log('[useFormActions] defaultSave - UPDATE result', result);
           
           // Después de guardar exitosamente, actualizar feature y resetear estado del formulario
           // Actualizar la feature con los valores guardados
@@ -256,12 +306,11 @@ export const useFormActions = ({
           // Resetear el formulario con los valores guardados para que isDirty vuelva a false
           // Esto deshabilitará el botón de guardar hasta que se hagan nuevos cambios
           resetForm(dataToSave);
+          dispatchFeatureUpdatedEvent('attributes', feature?.id);
         }
         
-        // Llamar al callback onSave si está disponible
-        if (onSaveProp && typeof onSaveProp === 'function') {
-          await onSaveProp(dataToSave, context);
-        }
+        // NO llamar a onSaveProp aquí porque ya se ha guardado correctamente con el servicio de capa
+        // onSaveProp solo se debe usar como fallback cuando NO hay servicio de capa
         return result;
       } catch (error) {
         const titleKey = 'ui.qgis.error.savingFeature.title';
@@ -288,23 +337,15 @@ export const useFormActions = ({
     // Si no hay servicio (o el servicio no tiene métodos) pero tenemos los parámetros QGIS, usar las funciones directas
     // Esto es para cuando no hay servicio de capa configurado o el servicio está vacío
     if (!hasServiceWithMethods && qgsUrl && qgsProjectPath) {
-      console.log('[useFormActions] defaultSave - Sin servicio, usando funciones directas', {
-        isNewFeature,
-        hasFeature: !!feature,
-        featureId: feature?.id,
-        qgsUrl: !!qgsUrl,
-        qgsProjectPath: !!qgsProjectPath
-      });
-      
       try {
         let result;
         if (isNewFeature) {
-          console.log('[useFormActions] defaultSave - INSERT mode (sin servicio)');
           // Para insert sin servicio, necesitamos la geometría
           const geometry = feature?.geometry || null;
           if (!geometry) {
             throw new Error('No se puede insertar una feature sin geometría');
           }
+          
           const { insertFeatureWithGeometry } = await import('../../../../services/qgisWFSFetcher');
           result = await insertFeatureWithGeometry(
             qgsUrl,
@@ -316,42 +357,40 @@ export const useFormActions = ({
             layer
           );
           
-          console.log('[useFormActions] defaultSave - INSERT result (sin servicio)', {
-            result,
-            hasFid: !!(result?.fid),
-            hasId: !!(result?.id),
-            fid: result?.fid,
-            id: result?.id
-          });
-          
           // Después de un insert exitoso, crear la feature con el ID devuelto
           if (result && (result.fid || result.id)) {
-            const newFeatureId = result.fid || result.id;
-            const featureId = context?.layerName ? `${context.layerName}.${newFeatureId}` : newFeatureId;
+            // El fid viene en formato "layerName_normalized.featureId" (ej: "poligono_t.106")
+            // Necesitamos extraer solo el número del ID y concatenarlo con el layerName original
+            const fid = result.fid || result.id;
+            const fidParts = fid.split('.');
+            const numericId = fidParts[fidParts.length - 1]; // Extraer solo el número (ej: "106")
+            const layerName = context?.layerName || layer?.name;
+            const featureId = layerName ? `${layerName}.${numericId}` : numericId;
             
-            console.log('[useFormActions] defaultSave - Creando nueva feature con ID (sin servicio)', {
-              newFeatureId,
-              featureId,
-              layerName: context?.layerName
-            });
-            
+            let refreshedProperties = dataToSave;
+            let refreshedGeometry = feature?.geometry || null;
+            const serverFeature = await refreshFeatureAttributes(layerName, fid);
+            if (serverFeature?.properties) {
+              refreshedProperties = serverFeature.properties;
+            }
+            if (serverFeature?.geometry) {
+              refreshedGeometry = serverFeature.geometry;
+            }
+
             const newFeature = {
               id: featureId,
               type: 'Feature',
-              properties: dataToSave,
-              geometry: feature?.geometry || null
+              properties: refreshedProperties,
+              geometry: refreshedGeometry
             };
             
-            console.log('[useFormActions] defaultSave - Nueva feature creada (sin servicio)', {
-              newFeature,
-              newFeatureId: newFeature.id
-            });
-            
             setFeature(newFeature);
-            resetForm(dataToSave);
-            console.log('[useFormActions] defaultSave - Feature actualizada, debería cambiar a modo UPDATE (sin servicio)');
+            resetForm(refreshedProperties);
+            
+            // Limpiar geometrías temporales y refrescar el mapa después de un INSERT exitoso
+            cleanupDrawingAndRefreshMap();
           } else {
-            console.warn('[useFormActions] defaultSave - INSERT result no tiene fid ni id (sin servicio)', result);
+            console.warn('[useFormActions] INSERT result no tiene fid ni id', result);
             const updatedFeature = feature ? {
               ...feature,
               properties: dataToSave
@@ -364,12 +403,8 @@ export const useFormActions = ({
             resetForm(dataToSave);
           }
         } else if (!isNewFeature && feature && feature.id) {
-          console.log('[useFormActions] defaultSave - UPDATE mode (sin servicio)', {
-            featureId: feature?.id
-          });
           // Usar updateFeature directamente (solo atributos, sin geometría)
           result = await updateFeature(qgsUrl, qgsProjectPath, feature, dataToSave, token);
-          console.log('[useFormActions] defaultSave - UPDATE result (sin servicio)', result);
           
           // Actualizar la feature con los valores guardados
           const updatedFeature = feature ? {
@@ -382,6 +417,7 @@ export const useFormActions = ({
           }
           
           resetForm(dataToSave);
+          dispatchFeatureUpdatedEvent('attributes', feature?.id);
         } else {
           throw new Error('No se puede guardar: falta información de la feature');
         }
@@ -400,10 +436,8 @@ export const useFormActions = ({
           });
         }
         
-        // Llamar al callback onSave si está disponible
-        if (onSaveProp && typeof onSaveProp === 'function') {
-          await onSaveProp(dataToSave, context);
-        }
+        // NO llamar a onSaveProp aquí porque ya se ha guardado correctamente con el servicio de capa
+        // onSaveProp solo se debe usar como fallback cuando NO hay servicio de capa
         return result;
       } catch (error) {
         const titleKey = 'ui.qgis.error.savingFeature.title';
@@ -428,8 +462,49 @@ export const useFormActions = ({
     }
     
     // Fallback: si no hay servicio ni parámetros directos, intentar onSave proporcionado
-    if (typeof onSaveProp === 'function') {
-      return await onSaveProp(dataToSave, context);
+    // SOLO para INSERT de nuevas features
+    if (typeof onSaveProp === 'function' && isNewFeature) {
+      const result = await onSaveProp(dataToSave, context);
+      
+      // Si el resultado tiene un ID, actualizar la feature para cambiar a modo UPDATE
+      if (result && (result.fid || result.id)) {
+        // El fid viene en formato "layerName_normalized.featureId" (ej: "poligono_t.106")
+        // Necesitamos extraer solo el número del ID y concatenarlo con el layerName original
+        const fid = result.fid || result.id;
+        const fidParts = fid.split('.');
+        const numericId = fidParts[fidParts.length - 1]; // Extraer solo el número (ej: "106")
+        const layerName = layer?.name || context?.layerName;
+        const fullFeatureId = layerName ? `${layerName}.${numericId}` : numericId;
+        
+        let refreshedProperties = dataToSave;
+        let refreshedGeometry = feature?.geometry || null;
+        const serverFeature = await refreshFeatureAttributes(layerName, fid);
+        if (serverFeature?.properties) {
+          refreshedProperties = serverFeature.properties;
+        }
+        if (serverFeature?.geometry) {
+          refreshedGeometry = serverFeature.geometry;
+        }
+
+        const updatedFeature = {
+          ...feature,
+          id: fullFeatureId,
+          properties: refreshedProperties,
+          geometry: refreshedGeometry
+        };
+        setFeature(updatedFeature);
+        resetForm(refreshedProperties);
+        
+        // Limpiar geometrías temporales y refrescar el mapa después de un INSERT exitoso
+        cleanupDrawingAndRefreshMap();
+      }
+      
+      return result;
+    }
+    
+    // Si llegamos aquí y es UPDATE sin servicio, no podemos hacer nada
+    if (!isNewFeature) {
+      console.error('[useFormActions] No se puede hacer UPDATE sin servicio de capa');
     }
 
     // Si llegamos aquí, no hay forma de guardar
@@ -454,7 +529,12 @@ export const useFormActions = ({
     t,
     notificationManager,
     onSaveProp,
-    language
+    language,
+    refreshFeatureAttributes,
+    cancelDrawing,
+    refreshWMSLayer,
+    mapInstance,
+    cleanupDrawingAndRefreshMap
   ]);
 
   /**

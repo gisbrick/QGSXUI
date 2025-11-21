@@ -51,7 +51,10 @@ const MapToolbar = () => {
     isEditingExistingGeometry,
     getEditingFeature,
     getEditingLayerConfig,
-    geometryHasChanges
+    geometryHasChanges,
+    multiGeometryNavigation,
+    goToNextMultiGeometry,
+    goToPreviousMultiGeometry
   } = mapContext;
   const qgisConfig = useContext(QgisConfigContext);
   const token = qgisConfig?.token || null;
@@ -184,7 +187,17 @@ const MapToolbar = () => {
   }, []);
 
   const openAttributesDialog = useCallback((layerEntry, geometrySnapshot, mode) => {
-    if (!layerEntry || !geometrySnapshot) return;
+    if (!layerEntry || !geometrySnapshot) {
+      return;
+    }
+    
+    const tempFeature = {
+      id: `${layerEntry.name}.temp`,
+      type: 'Feature',
+      properties: {},
+      geometry: geometrySnapshot
+    };
+    
     setAttributeFormValues({});
     setAttributeDialogState({
       layerName: layerEntry.name,
@@ -193,13 +206,9 @@ const MapToolbar = () => {
       geometry: geometrySnapshot,
       drawMode: mode,
       key: Date.now(),
-      feature: {
-        id: `${layerEntry.name}.temp`,
-        type: 'Feature',
-        properties: {},
-        geometry: geometrySnapshot
-      }
+      feature: tempFeature
     });
+    
   }, []);
 
   const handleAttributeDialogClose = useCallback(() => {
@@ -316,7 +325,7 @@ const MapToolbar = () => {
         formValues && Object.keys(formValues || {}).length > 0
           ? formValues
           : attributeFormValues || {};
-
+      
       const result = await insertFeatureWithGeometry(
         qgsUrl,
         qgsProjectPath,
@@ -357,22 +366,24 @@ const MapToolbar = () => {
       }
 
       // Actualizar el estado del diálogo con la feature recargada (o con los datos disponibles si falló la recarga)
-      setAttributeDialogState((prev) =>
-        prev
+      const newFeatureId = result?.fid ? `${layerName}.${result.fid}` : null;
+      const finalFeature = reloadedFeature || {
+        id: newFeatureId,
+        type: 'Feature',
+        properties: reloadedFeature?.properties || effectiveValues,
+        geometry: geometry
+      };
+      
+      setAttributeDialogState((prev) => {
+        return prev
           ? {
               ...prev,
-              feature: reloadedFeature || {
-                id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.feature?.id || null,
-                properties: reloadedFeature?.properties || effectiveValues
-              },
-              savedFeature: reloadedFeature || {
-                id: result?.fid ? `${prev.layerName}.${result.fid}` : prev.savedFeature?.id || prev.feature?.id || null,
-                properties: reloadedFeature?.properties || effectiveValues
-              },
+              feature: finalFeature,
+              savedFeature: finalFeature,
               geometry: geometry
             }
-          : prev
-      );
+          : prev;
+      });
 
       if (cancelDrawing) {
         try {
@@ -421,22 +432,45 @@ const MapToolbar = () => {
   }, [attributeDialogState, cancelDrawing, notify, qgsProjectPath, qgsUrl, refreshWMSLayer, token, tr]);
 
   const attributeDialogFeature = useMemo(() => {
+    console.log('📝 [MapToolbar] attributeDialogFeature - Calculando feature para diálogo', {
+      hasAttributeDialogState: !!attributeDialogState,
+      hasFeature: !!attributeDialogState?.feature,
+      hasSavedFeature: !!attributeDialogState?.savedFeature,
+      hasGeometry: !!attributeDialogState?.geometry,
+      featureId: attributeDialogState?.feature?.id,
+      savedFeatureId: attributeDialogState?.savedFeature?.id,
+      timestamp: new Date().toISOString()
+    });
+    
     if (!attributeDialogState) {
+      console.log('📝 [MapToolbar] attributeDialogFeature - Sin attributeDialogState, retornando null');
       return null;
     }
     if (attributeDialogState.feature) {
+      console.log('📝 [MapToolbar] attributeDialogFeature - Usando feature del estado', {
+        featureId: attributeDialogState.feature.id,
+        hasGeometry: !!attributeDialogState.feature.geometry
+      });
       return attributeDialogState.feature;
     }
     if (attributeDialogState.savedFeature) {
+      console.log('📝 [MapToolbar] attributeDialogFeature - Usando savedFeature', {
+        savedFeatureId: attributeDialogState.savedFeature.id,
+        hasGeometry: !!attributeDialogState.savedFeature.geometry
+      });
       return attributeDialogState.savedFeature;
     }
     // Para nuevas features, incluir la geometría en la feature
-    return {
+    const tempFeature = {
       id: null,
       type: 'Feature',
       properties: {},
       geometry: attributeDialogState.geometry || null
     };
+    console.log('📝 [MapToolbar] attributeDialogFeature - Creando feature temporal', {
+      hasGeometry: !!tempFeature.geometry
+    });
+    return tempFeature;
   }, [attributeDialogState]);
 
   // Detectar capacidades de añadir por tipo geométrico y capas disponibles
@@ -445,6 +479,12 @@ const MapToolbar = () => {
   const canAddPolygon = insertableLayersByMode.polygon.length > 0;
 
   const hasEditableTools = canAddPoint || canAddLine || canAddPolygon;
+  const multiGeometryTotal = multiGeometryNavigation?.total || 0;
+  const canNavigateMultiGeometries =
+    isEditingExistingGeometry &&
+    multiGeometryTotal > 1 &&
+    typeof goToNextMultiGeometry === 'function' &&
+    typeof goToPreviousMultiGeometry === 'function';
 
   const deactivateAllTools = (except = null) => {
     if (except !== 'zoom-in-box') setBoxZoomActive(false);
@@ -521,7 +561,7 @@ const MapToolbar = () => {
   const toolbarItems = [
     { key: 'zoom-in-box', type: 'tool', circular: true, icon: 'fg-zoom-in', title: tr('ui.map.zoomInBox','Zoom a caja','Box zoom') },
     { key: 'zoom-out', type: 'tool', circular: true, icon: 'fg-zoom-out', title: tr('ui.map.zoomOut','Alejar','Zoom out') },
-    { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-extent', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
+    { key: 'zoom-extent', type: 'action', circular: true, icon: 'fg-home', title: tr('ui.map.resetView','Vista completa','Full extent'), onClick: handleZoomToExtent },
     // Navegación de extensiones (solo cuando funcional) - action tools que no deseleccionan la herramienta activa
     ...(canGoBack ? [{ key: 'nav-back', type: 'action', circular: true, icon: 'fas fa-arrow-left', title: tr('ui.map.navBack','Atrás','Back'), onClick: () => goBack && goBack() }] : []),
     ...(canGoForward ? [{ key: 'nav-forward', type: 'action', circular: true, icon: 'fas fa-arrow-right', title: tr('ui.map.navForward','Adelante','Forward'), onClick: () => goForward && goForward() }] : []),
@@ -638,6 +678,53 @@ const MapToolbar = () => {
         tr('ui.map.draw.save.success.message', 'El elemento se ha guardado correctamente.', 'The feature was saved successfully.')
       );
 
+      let refreshedFeatureForPopup = null;
+      const hasFetchParams =
+        Boolean(qgsUrl && qgsProjectPath && editingFeature?.id) &&
+        Boolean(
+          editingLayerConfig?.layerName ||
+            editingLayerConfig?.name ||
+            (editingFeature?.id && editingFeature.id.includes('.'))
+        );
+
+      if (hasFetchParams) {
+        const layerNameForFetch =
+          editingLayerConfig?.layerName ||
+          editingLayerConfig?.name ||
+          (editingFeature.id ? editingFeature.id.split('.')[0] : null);
+        try {
+          refreshedFeatureForPopup = await fetchFeatureById(
+            qgsUrl,
+            qgsProjectPath,
+            layerNameForFetch,
+            editingFeature.id,
+            token
+          );
+        } catch (err) {
+          console.warn('[MapToolbar] No se pudo refrescar la feature tras actualizar geometría:', err);
+        }
+      }
+
+      // Avisar a otros componentes (como FeatureInfoPopup) para que refresquen los datos de la feature
+      if (typeof window !== 'undefined' && window.dispatchEvent) {
+        const layerNameForEvent =
+          editingLayerConfig?.layerName ||
+          editingLayerConfig?.name ||
+          (editingFeature.id ? editingFeature.id.split('.')[0] : null);
+        if (editingFeature?.id && layerNameForEvent) {
+          window.dispatchEvent(
+            new CustomEvent('qgs-feature-updated', {
+              detail: {
+                type: 'geometry',
+                layerName: layerNameForEvent,
+                featureId: editingFeature.id,
+                featureData: refreshedFeatureForPopup
+              }
+            })
+          );
+        }
+      }
+
       // Limpiar la geometría de edición
       if (cancelDrawing) {
         cancelDrawing();
@@ -717,6 +804,25 @@ const MapToolbar = () => {
     }
     
     toolbarItems.push({ key: 'draw-cancel', type: 'action', circular: true, icon: 'fas fa-times', title: tr('ui.map.cancelDrawing','Cancelar dibujo','Cancel drawing'), onClick: () => { cancelDrawing && cancelDrawing(); } });
+
+    if (canNavigateMultiGeometries) {
+      toolbarItems.push({
+        key: 'multi-geometry-prev',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-angle-left',
+        title: tr('ui.map.multiGeometry.prev', 'Geometría anterior', 'Previous geometry'),
+        onClick: () => goToPreviousMultiGeometry && goToPreviousMultiGeometry()
+      });
+      toolbarItems.push({
+        key: 'multi-geometry-next',
+        type: 'action',
+        circular: true,
+        icon: 'fas fa-angle-right',
+        title: tr('ui.map.multiGeometry.next', 'Geometría siguiente', 'Next geometry'),
+        onClick: () => goToNextMultiGeometry && goToNextMultiGeometry()
+      });
+    }
   }
 
   // Botón de ayuda solo si hay herramientas editables
@@ -832,6 +938,9 @@ const MapToolbar = () => {
           language={uiLanguage}
           onSave={handleAttributeSave}
           onFormValuesChange={handleAttributeFormValuesChange}
+          cancelDrawing={cancelDrawing}
+          refreshWMSLayer={refreshWMSLayer}
+          mapInstance={mapInstance}
         />
       )}
 
