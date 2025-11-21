@@ -119,12 +119,12 @@ TreeNode.displayName = 'TreeNode';
 
 const TreeView = ({ 
   data, 
-  onSelect, 
-  selectedNode, 
+  onSelect = () => {},
+  selectedNode = null,
   defaultExpandedNodes = [],
   defaultCheckedNodes = [],
   checkable = false,
-  onCheck,
+  onCheck = null,
   onToggle: onToggleProp,
   locale,
   translations
@@ -305,13 +305,5 @@ TreeView.propTypes = {
   translations: PropTypes.object,
 };
 
-TreeView.defaultProps = {
-  onSelect: () => {},
-  selectedNode: null,
-  defaultExpandedNodes: [],
-  defaultCheckedNodes: [],
-  checkable: false,
-  onCheck: null,
-};
 
 export default TreeView;

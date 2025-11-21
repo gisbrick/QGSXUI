@@ -18,9 +18,9 @@ const OpenTablesManager = ({ onShowTable }) => {
   const [activeTabIndex, setActiveTabIndex] = useState(0);
   const [isDrawerOpen, setIsDrawerOpen] = useState(false);
   
-  // Obtener función para actualizar filtros del mapa
+  // Obtener función para actualizar filtros del mapa y funciones de edición
   const mapContext = useMap();
-  const { updateLayerFilter } = mapContext || {};
+  const { updateLayerFilter, mapInstance, startEditingGeometry } = mapContext || {};
   
   // Usar ref para mantener referencia estable a la función
   const handleShowTableRef = useRef(null);
@@ -95,6 +95,28 @@ const OpenTablesManager = ({ onShowTable }) => {
       const tableId = `table-infinite-${layerNameToClose}`;
       clearTableState(tableId);
       
+      // Limpiar la capa de selección del mapa cuando se cierra la tabla
+      if (typeof window !== 'undefined' && window.__tableCleanupFunctions) {
+        const cleanupFunction = window.__tableCleanupFunctions.get(tableId);
+        if (cleanupFunction && typeof cleanupFunction === 'function') {
+          console.log('[OpenTablesManager] Limpiando capa de selección para tabla cerrada:', tableId);
+          cleanupFunction();
+        }
+      }
+      
+      // También limpiar desde el almacenamiento global de capas si existe
+      if (typeof window !== 'undefined' && window.__tableSelectionLayers) {
+        const selectionLayer = window.__tableSelectionLayers.get(tableId);
+        if (selectionLayer && mapInstance) {
+          selectionLayer.clearLayers();
+          if (mapInstance.hasLayer(selectionLayer)) {
+            mapInstance.removeLayer(selectionLayer);
+          }
+          window.__tableSelectionLayers.delete(tableId);
+          console.log('[OpenTablesManager] Capa de selección eliminada del almacenamiento global:', tableId);
+        }
+      }
+      
       // Restaurar el filtro base de la capa cuando se cierra la tab
       if (updateLayerFilter) {
         updateLayerFilter(layerNameToClose, '');
@@ -116,7 +138,7 @@ const OpenTablesManager = ({ onShowTable }) => {
       }
       // Si la tab cerrada estaba después de la activa, no cambiar el índice
     }
-  }, [openTables, activeTabIndex, updateLayerFilter]);
+  }, [openTables, activeTabIndex, updateLayerFilter, mapInstance]);
 
   // Manejar cambio de tab
   const handleTabChange = useCallback((index) => {
@@ -138,28 +160,45 @@ const OpenTablesManager = ({ onShowTable }) => {
               <span className="open-tables-manager__tab-name">
                 {displayName}
               </span>
-              <button
+              <span
                 className="open-tables-manager__tab-close"
-                onClick={(e) => handleCloseTab(e, actualIndex)}
+                onClick={(e) => {
+                  e.stopPropagation();
+                  handleCloseTab(e, actualIndex);
+                }}
+                role="button"
+                tabIndex={0}
                 aria-label="Cerrar tabla"
                 title="Cerrar tabla"
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter' || e.key === ' ') {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    handleCloseTab(e, actualIndex);
+                  }
+                }}
               >
                 <i className="fas fa-times" aria-hidden="true" />
-              </button>
+              </span>
             </div>
           ),
           content: (
             <div className="open-tables-manager__table-container">
               <TableInfiniteScroll 
+                key={table.id} // Usar key estable para mantener el estado del componente
                 layerName={table.layerName}
                 height="100%"
                 onFilterChange={updateLayerFilter}
+                onMinimizeDrawer={() => setIsDrawerOpen(false)}
+                mapInstance={mapInstance}
+                startEditingGeometry={startEditingGeometry}
+                isVisible={isDrawerOpen && activeTabIndex === actualIndex}
               />
             </div>
           )
         };
       });
-  }, [openTables, handleCloseTab]);
+  }, [openTables, handleCloseTab, updateLayerFilter, mapInstance, startEditingGeometry]);
 
   // Si no hay tablas abiertas, no mostrar nada
   if (openTables.length === 0) {

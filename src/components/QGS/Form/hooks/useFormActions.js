@@ -307,10 +307,18 @@ export const useFormActions = ({
           // Esto deshabilitará el botón de guardar hasta que se hagan nuevos cambios
           resetForm(dataToSave);
           dispatchFeatureUpdatedEvent('attributes', feature?.id);
+          
+          // Llamar a onSaveProp si está disponible (para que la tabla se refresque)
+          if (typeof onSaveProp === 'function') {
+            try {
+              await onSaveProp(dataToSave, context);
+            } catch (onSaveError) {
+              console.warn('[useFormActions] Error en onSaveProp callback:', onSaveError);
+              // No lanzar el error, solo loguearlo, porque el guardado ya fue exitoso
+            }
+          }
         }
         
-        // NO llamar a onSaveProp aquí porque ya se ha guardado correctamente con el servicio de capa
-        // onSaveProp solo se debe usar como fallback cuando NO hay servicio de capa
         return result;
       } catch (error) {
         const titleKey = 'ui.qgis.error.savingFeature.title';
@@ -418,6 +426,16 @@ export const useFormActions = ({
           
           resetForm(dataToSave);
           dispatchFeatureUpdatedEvent('attributes', feature?.id);
+          
+          // Llamar a onSaveProp si está disponible (para que la tabla se refresque)
+          if (typeof onSaveProp === 'function') {
+            try {
+              await onSaveProp(dataToSave, context);
+            } catch (onSaveError) {
+              console.warn('[useFormActions] Error en onSaveProp callback:', onSaveError);
+              // No lanzar el error, solo loguearlo, porque el guardado ya fue exitoso
+            }
+          }
         } else {
           throw new Error('No se puede guardar: falta información de la feature');
         }
@@ -436,8 +454,6 @@ export const useFormActions = ({
           });
         }
         
-        // NO llamar a onSaveProp aquí porque ya se ha guardado correctamente con el servicio de capa
-        // onSaveProp solo se debe usar como fallback cuando NO hay servicio de capa
         return result;
       } catch (error) {
         const titleKey = 'ui.qgis.error.savingFeature.title';

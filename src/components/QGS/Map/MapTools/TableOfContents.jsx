@@ -18,12 +18,20 @@ const TableOfContents = ({ onShowTable }) => {
 
   const {
     config,
-    refreshWMSLayer,
+    refreshWMSLayer: refreshWMSLayerFromContext,
     t,
     qgsUrl,
     qgsProjectPath,
     token
   } = mapContext || configContext || {};
+  
+  // Asegurar que refreshWMSLayer sea una función válida
+  // Si no es una función, intentar obtenerla directamente del mapContext
+  const refreshWMSLayer = (typeof refreshWMSLayerFromContext === 'function') 
+    ? refreshWMSLayerFromContext 
+    : (mapContext?.refreshWMSLayer && typeof mapContext.refreshWMSLayer === 'function')
+      ? mapContext.refreshWMSLayer
+      : null;
 
 
   const translate = typeof t === 'function' ? t : (key, defaultEs, defaultEn) => defaultEs || key;
@@ -500,8 +508,57 @@ const TableOfContents = ({ onShowTable }) => {
       }
 
       // Actualizar isVisible en el qgisChild del nodo actual
+      // qgisChild es una referencia al objeto child del config.layerTree, así que esto actualiza el original
       if (fullNode.qgisChild) {
+        const oldValue = fullNode.qgisChild.isVisible;
         fullNode.qgisChild.isVisible = checked;
+        // Asegurar que el valor se haya actualizado correctamente
+        const newValue = fullNode.qgisChild.isVisible;
+        
+        // IMPORTANTE: qgisChild es una referencia al objeto original en config.layerTree
+        // Cuando se asigna config a map.QGISPRJ, se mantiene la misma referencia
+        // Así que al actualizar qgisChild.isVisible, también se actualiza en map.QGISPRJ
+        // Pero para estar seguros, verificamos que la referencia sea la misma
+        const isSameReference = fullNode.qgisChild === config?.layerTree?.children?.find(c => c.name === fullNode.qgisChild.name);
+        
+        // También actualizar directamente en map.QGISPRJ por si acaso
+        if (mapContext?.mapInstance?.QGISPRJ) {
+          const mapConfig = mapContext.mapInstance.QGISPRJ;
+          // Verificar si es la misma referencia
+          if (mapConfig === config) {
+            console.log('[TableOfContents] map.QGISPRJ y config son la misma referencia - cambios se propagarán automáticamente');
+          } else {
+            console.warn('[TableOfContents] map.QGISPRJ y config NO son la misma referencia - actualizando manualmente');
+            // Buscar el nodo correspondiente en map.QGISPRJ.layerTree y actualizarlo
+            const updateInMapQGISPRJ = (children, targetName) => {
+              for (const child of children || []) {
+                if (child.name === targetName) {
+                  child.isVisible = checked;
+                  return true;
+                }
+                if (child.children && Array.isArray(child.children)) {
+                  if (updateInMapQGISPRJ(child.children, targetName)) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+            
+            const mapLayerTree = mapConfig?.layerTree;
+            if (mapLayerTree) {
+              const mapChildren = mapLayerTree.children || (mapLayerTree.nodeType ? [mapLayerTree] : []);
+              updateInMapQGISPRJ(mapChildren, fullNode.qgisChild.name);
+            }
+          }
+        }
+        
+        console.log(`[TableOfContents] handleCheck - Actualizado isVisible del nodo:`, {
+          layerName: fullNode.qgisChild.name,
+          oldVisible: oldValue,
+          newVisible: newValue,
+          updatedInMapQGISPRJ: !!mapContext?.mapInstance?.QGISPRJ
+        });
       }
 
       // Obtener todos los descendientes recursivamente
@@ -518,6 +575,30 @@ const TableOfContents = ({ onShowTable }) => {
         // Actualizar isVisible en el qgisChild de cada descendiente
         if (descendant.qgisChild) {
           descendant.qgisChild.isVisible = checked;
+          
+          // También actualizar en map.QGISPRJ si existe
+          if (mapContext?.mapInstance?.QGISPRJ) {
+            const updateInMapQGISPRJ = (children, targetName) => {
+              for (const child of children || []) {
+                if (child.name === targetName) {
+                  child.isVisible = checked;
+                  return true;
+                }
+                if (child.children && Array.isArray(child.children)) {
+                  if (updateInMapQGISPRJ(child.children, targetName)) {
+                    return true;
+                  }
+                }
+              }
+              return false;
+            };
+            
+            const mapLayerTree = mapContext.mapInstance.QGISPRJ?.layerTree;
+            if (mapLayerTree) {
+              const mapChildren = mapLayerTree.children || (mapLayerTree.nodeType ? [mapLayerTree] : []);
+              updateInMapQGISPRJ(mapChildren, descendant.qgisChild.name);
+            }
+          }
         }
       });
 
@@ -575,12 +656,55 @@ const TableOfContents = ({ onShowTable }) => {
     }, 0);
 
     // Refrescar la capa WMS después de un pequeño delay para agrupar cambios
-    if (refreshWMSLayer) {
-      setTimeout(() => {
-        refreshWMSLayer();
-      }, 100);
+    // Usar un delay más largo y asegurar que los cambios se hayan propagado
+    console.log('[TableOfContents] handleCheck - Estado de refreshWMSLayer:', {
+      hasRefreshWMSLayer: !!refreshWMSLayer,
+      isFunction: typeof refreshWMSLayer === 'function',
+      type: typeof refreshWMSLayer,
+      value: refreshWMSLayer,
+      mapInstance: !!mapContext?.mapInstance,
+      mapQGISPRJ: !!mapContext?.mapInstance?.QGISPRJ
+    });
+    
+    // Intentar obtener refreshWMSLayer directamente del mapContext si no es una función
+    let refreshFunction = refreshWMSLayer;
+    if (!refreshFunction || typeof refreshFunction !== 'function') {
+      // Si no es una función, intentar obtenerla del mapContext directamente
+      refreshFunction = mapContext?.refreshWMSLayer;
+      console.log('[TableOfContents] Intentando obtener refreshWMSLayer del mapContext:', {
+        hasMapContext: !!mapContext,
+        hasRefreshWMSLayer: !!mapContext?.refreshWMSLayer,
+        isFunction: typeof mapContext?.refreshWMSLayer === 'function'
+      });
     }
-  }, [treeData, findNodeById, getAllDescendants, findParents, recalculateGroupState, refreshWMSLayer, forceTreeUpdate]);
+    
+    if (refreshFunction && typeof refreshFunction === 'function') {
+      // Usar requestAnimationFrame para asegurar que el DOM se haya actualizado
+      requestAnimationFrame(() => {
+        setTimeout(() => {
+          console.log('[TableOfContents] Llamando a refreshWMSLayer después de cambio de visibilidad');
+          try {
+            const result = refreshFunction();
+            // Si es una promesa, esperarla
+            if (result && typeof result.then === 'function') {
+              result.catch(error => {
+                console.error('[TableOfContents] Error en refreshWMSLayer (async):', error);
+              });
+            }
+          } catch (error) {
+            console.error('[TableOfContents] Error al refrescar capa WMS:', error);
+          }
+        }, 150); // Aumentar delay a 150ms para dar más tiempo a la propagación
+      });
+    } else {
+      console.warn('[TableOfContents] refreshWMSLayer no está disponible o no es una función:', {
+        hasRefreshWMSLayer: !!refreshWMSLayer,
+        type: typeof refreshWMSLayer,
+        hasMapContextRefresh: !!mapContext?.refreshWMSLayer,
+        mapContextRefreshType: typeof mapContext?.refreshWMSLayer
+      });
+    }
+  }, [treeData, findNodeById, getAllDescendants, findParents, recalculateGroupState, refreshWMSLayer, forceTreeUpdate, mapContext, config]);
 
   if (!config || !treeData || treeData.length === 0) {
     return (

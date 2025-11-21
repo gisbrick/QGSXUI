@@ -111,10 +111,16 @@
   cursor: not-allowed;
 }
 
+/* Estilo para botón de peligro (eliminar) - igual que en la tabla */
+.feature-info-popup-toolbar-button--danger {
+  color: var(--color-error, #f44336);
+  border-color: var(--color-error, #f44336);
+}
+
 .feature-info-popup-toolbar-button--danger:hover:not(:disabled) {
-  color: var(--color-danger, #d32f2f);
-  border-color: var(--color-danger, #d32f2f);
-  background-color: rgba(211, 47, 47, 0.08);
+  background-color: rgba(244, 67, 54, 0.1);
+  color: var(--color-error, #f44336);
+  border-color: var(--color-error, #f44336);
 }
 
 /* Lista de capas disponibles */

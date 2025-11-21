@@ -115,8 +115,6 @@
       "rowsPerPage": "Rows per page",
       "totalRecords": "Total records: {{count}}",
       "resizeColumn": "Resize column",
-      "actions": "Actions",
-      "selectRow": "Select row",
       "filter": {
         "open": "Open filter",
         "title": "Filter by {{field}}",
@@ -297,8 +295,13 @@
         "viewData": "View data",
         "editAttributes": "Edit attributes",
         "editGeometry": "Edit geometry",
-        "deleteData": "Delete feature"
+        "deleteData": "Delete feature",
+        "zoomToFeature": "Zoom to feature"
       },
+      "zoomToFeatureError": "Error",
+      "zoomToFeatureErrorMessage": "Missing data needed to zoom to feature",
+      "zoomToFeatureSuccess": "Zoom completed",
+      "zoomToFeatureSuccessMessage": "Zoomed to feature",
       "previousLayer": "Previous layer",
       "nextLayer": "Next layer",
       "previousFeature": "Previous feature",
@@ -321,12 +324,12 @@
       "infoClickError": "Error getting information",
       "tableOfContents": {
         "showTable": "Show table",
-        "noLayers": "No layers available"
+        "noLayers": "No layers available",
+        "title": "Table of contents"
       },
       "deleteConfirmTitle": "Delete feature",
       "deleteConfirmMessage": "You are about to delete the selected item. This action cannot be undone. Do you want to continue?",
       "deleteSuccess": "Feature deleted",
-      "tableOfContents": "Table of contents",
       "bookmarks": {
         "title": "Map bookmarks",
         "add": "Add bookmark",

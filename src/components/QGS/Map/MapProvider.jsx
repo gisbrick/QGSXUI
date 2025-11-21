@@ -8,7 +8,39 @@ export const MapProvider = ({ layerName, featureId, children }) => {
   const mapInstanceRef = useRef(null);
   const initialBoundsRef = useRef(null);
   const [mapInstance, setMapInstance] = useState(null);
-  const [refreshWMSLayer, setRefreshWMSLayer] = useState(null);
+  // Usar useRef en lugar de useState para guardar la función, ya que React puede envolver funciones en el estado
+  const refreshWMSLayerRef = useRef(null);
+  const [refreshWMSLayerState, setRefreshWMSLayerState] = useState(null);
+  
+  // Función setter que actualiza tanto el ref como el state
+  const setRefreshWMSLayer = useCallback((fn) => {
+    if (typeof fn === 'function') {
+      refreshWMSLayerRef.current = fn;
+      setRefreshWMSLayerState(fn);
+      console.log('[MapProvider] setRefreshWMSLayer - Función guardada:', {
+        type: typeof fn,
+        isFunction: typeof fn === 'function',
+        hasRef: !!refreshWMSLayerRef.current
+      });
+    } else {
+      console.warn('[MapProvider] setRefreshWMSLayer - No es una función:', typeof fn);
+    }
+  }, []);
+  
+  // Exponer la función desde el ref (siempre actualizada) o del state (para reactividad)
+  const refreshWMSLayer = refreshWMSLayerRef.current || refreshWMSLayerState;
+  
+  // Log cuando se actualice refreshWMSLayer para debug
+  useEffect(() => {
+    if (refreshWMSLayer) {
+      console.log('[MapProvider] refreshWMSLayer disponible:', {
+        type: typeof refreshWMSLayer,
+        isFunction: typeof refreshWMSLayer === 'function',
+        fromRef: !!refreshWMSLayerRef.current,
+        fromState: !!refreshWMSLayerState
+      });
+    }
+  }, [refreshWMSLayer, refreshWMSLayerState]);
 
   // Capas para dibujo: multi (acumuladas) y activa (sketch o geometría activa)
   const multiLayerRef = useRef(null);

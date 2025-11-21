@@ -1,7 +1,7 @@
 import React, { useContext, useEffect, useMemo, useState, useCallback, useRef } from 'react';
 import PropTypes from 'prop-types';
 import { QgisConfigContext } from '../QgisConfigContext';
-import { fetchFeatureCount, fetchFeatures } from '../../../services/qgisWFSFetcher';
+import { fetchFeatureCount, fetchFeatures, fetchFeatureById } from '../../../services/qgisWFSFetcher';
 import { LoadingQGS } from '../../UI_QGS';
 import { Pagination } from '../../UI';
 import './Table.css';
@@ -11,14 +11,37 @@ import { getTableState, setTableState } from './tableStateStore';
 import { useColumnResize } from './hooks/useColumnResize';
 import TableActionsColumn, { calculateActionsColumnWidth } from './TableActionsColumn';
 
+// Importar condicionalmente el contexto del mapa para evitar dependencias circulares
+let useMap = null;
+try {
+  const mapProvider = require('../Map/MapProvider');
+  useMap = mapProvider.useMap;
+} catch (e) {
+  // Si no está disponible, continuar sin él
+}
+
 /**
  * Tabla paginada que carga los datos de forma perezosa (lazy) por página.
  */
 const PAGE_SIZE_OPTIONS = [10, 25, 50, 100];
 
-const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) => {
+const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360, onMinimizeDrawer }) => {
   const { config, t, notificationManager, qgsUrl, qgsProjectPath, token, language } =
     useContext(QgisConfigContext);
+  
+  // Obtener mapInstance y startEditingGeometry del contexto del mapa si está disponible
+  let mapInstance = null;
+  let startEditingGeometry = null;
+  if (useMap) {
+    try {
+      const mapContext = useMap();
+      mapInstance = mapContext?.mapInstance || null;
+      startEditingGeometry = mapContext?.startEditingGeometry || null;
+    } catch (e) {
+      // Si no está disponible el contexto del mapa, continuar sin él
+      console.warn('No se pudo obtener el contexto del mapa:', e);
+    }
+  }
   const translate = typeof t === 'function' ? t : (key) => key;
   const tableId = useMemo(() => `table-paginated-${layerName}`, [layerName]);
   const persistentState = useMemo(() => getTableState(tableId) || {}, [tableId]);
@@ -38,7 +61,13 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
   const [page, setPage] = useState(persistentState.page ?? 0);
   const [rows, setRows] = useState([]);
   const [featuresData, setFeaturesData] = useState([]); // Guardar features completas con id
-  const [selectedRows, setSelectedRows] = useState(new Set());
+  // Inicializar selectedRows desde el estado persistente
+  const [selectedRows, setSelectedRows] = useState(() => {
+    const saved = persistentState.selectedRows;
+    return saved && Array.isArray(saved) ? new Set(saved) : new Set();
+  });
+  const selectionLayerRef = useRef(null); // Capa de selección en el mapa
+  const selectedFeaturesMapRef = useRef(new Map()); // Mapa de featureId -> layer para poder eliminar específicamente
   const [pageSize, setPageSize] = useState(
     persistentState.pageSize ?? (PAGE_SIZE_OPTIONS.includes(defaultPageSize) ? defaultPageSize : PAGE_SIZE_OPTIONS[0])
   );
@@ -52,13 +81,14 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
   const popoverRef = useRef(null);
   const scrollContainerRef = useRef(null);
   const savedScrollLeftRef = useRef(0);
+  const savedScrollTopRef = useRef(0);
   
   // Hook para redimensionamiento de columnas (columns ya está definido arriba)
   const { getColumnWidth, handleMouseDown, resizing } = useColumnResize(tableId, columns, 50, 150);
 
-  // Restaurar scroll horizontal después de que los datos se hayan renderizado
+  // Restaurar scroll horizontal y vertical después de que los datos se hayan renderizado
   useEffect(() => {
-    if (savedScrollLeftRef.current === 0 || loading || !scrollContainerRef.current) {
+    if ((savedScrollLeftRef.current === 0 && savedScrollTopRef.current === 0) || loading || !scrollContainerRef.current) {
       return;
     }
     
@@ -67,27 +97,30 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
       return;
     }
     
-    console.log('[TablePaginated] useEffect rows - Intentando restaurar scroll horizontal:', savedScrollLeftRef.current);
-    console.log('[TablePaginated] useEffect rows - rows.length:', rows.length);
+    console.log('[TablePaginated] useEffect rows - Intentando restaurar scroll:', { 
+      left: savedScrollLeftRef.current, 
+      top: savedScrollTopRef.current 
+    });
     
     // Usar requestAnimationFrame para asegurar que el DOM se haya actualizado
     requestAnimationFrame(() => {
       requestAnimationFrame(() => {
         if (scrollContainerRef.current) {
-          console.log('[TablePaginated] useEffect rows - Restaurando scrollLeft a:', savedScrollLeftRef.current);
-          console.log('[TablePaginated] useEffect rows - scrollLeft antes de restaurar:', scrollContainerRef.current.scrollLeft);
-          scrollContainerRef.current.scrollLeft = savedScrollLeftRef.current;
-          console.log('[TablePaginated] useEffect rows - scrollLeft después de restaurar:', scrollContainerRef.current.scrollLeft);
+          // Restaurar scroll horizontal
+          if (savedScrollLeftRef.current > 0) {
+            console.log('[TablePaginated] Restaurando scrollLeft a:', savedScrollLeftRef.current);
+            scrollContainerRef.current.scrollLeft = savedScrollLeftRef.current;
+          }
           
-          // Verificar que se mantuvo después de un pequeño delay
-          setTimeout(() => {
-            if (scrollContainerRef.current) {
-              console.log('[TablePaginated] useEffect rows - scrollLeft después de 100ms:', scrollContainerRef.current.scrollLeft);
-            }
-          }, 100);
+          // Restaurar scroll vertical
+          if (savedScrollTopRef.current > 0) {
+            console.log('[TablePaginated] Restaurando scrollTop a:', savedScrollTopRef.current);
+            scrollContainerRef.current.scrollTop = savedScrollTopRef.current;
+          }
           
-          // Resetear el valor guardado después de restaurarlo
+          // Resetear los valores guardados después de restaurarlos
           savedScrollLeftRef.current = 0;
+          savedScrollTopRef.current = 0;
         } else {
           console.warn('[TablePaginated] useEffect rows - scrollContainerRef.current es null');
         }
@@ -101,9 +134,10 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
       page,
       pageSize,
       sortState,
-      columnFilters
+      columnFilters,
+      selectedRows: Array.from(selectedRows) // Convertir Set a Array para guardar
     });
-  }, [tableId, page, pageSize, sortState, columnFilters]);
+  }, [tableId, page, pageSize, sortState, columnFilters, selectedRows]);
 
   useEffect(() => {
     setPage(0);
@@ -144,6 +178,143 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
       cancelled = true;
     };
   }, [layer, layerName, qgsUrl, qgsProjectPath, token, columnFilters]);
+
+  // Crear y gestionar la capa de selección en el mapa
+  useEffect(() => {
+    if (!mapInstance || !window.L) {
+      return;
+    }
+
+    // Crear la capa gráfica si no existe
+    if (!selectionLayerRef.current) {
+      selectionLayerRef.current = window.L.featureGroup([]);
+      selectionLayerRef.current.addTo(mapInstance);
+      // Asegurar que la capa de selección esté en el frente
+      if (selectionLayerRef.current.bringToFront) {
+        selectionLayerRef.current.bringToFront();
+      }
+    }
+
+    // NO limpiar la selección cuando se minimiza el drawer
+    // Solo se limpiará cuando el componente se desmonte completamente (cuando se cierra la tabla)
+    return () => {
+      // Solo limpiar cuando el componente se desmonta completamente
+      // Esto ocurre cuando se cierra la tabla, no cuando se minimiza el drawer
+      if (selectionLayerRef.current) {
+        selectionLayerRef.current.clearLayers();
+        if (mapInstance && mapInstance.hasLayer(selectionLayerRef.current)) {
+          mapInstance.removeLayer(selectionLayerRef.current);
+        }
+        selectionLayerRef.current = null;
+      }
+      selectedFeaturesMapRef.current.clear();
+    };
+  }, [mapInstance]);
+
+  // Función para añadir una feature al mapa como selección
+  const addFeatureToMapSelection = async (featureId) => {
+    if (!mapInstance || !qgsUrl || !qgsProjectPath || !layerName || !window.L) {
+      return;
+    }
+
+    try {
+      // Obtener la geometría completa de la feature
+      const fullFeature = await fetchFeatureById(qgsUrl, qgsProjectPath, layerName, featureId, token);
+      
+      if (!fullFeature || !fullFeature.geometry) {
+        return;
+      }
+
+      // Estilo de resaltado para la feature seleccionada
+      const highlightStyle = {
+        color: '#3388ff',
+        weight: 3,
+        opacity: 1,
+        fillColor: '#3388ff',
+        fillOpacity: 0.3
+      };
+
+      // Crear la capa GeoJSON con el estilo de resaltado
+      const geoJsonLayer = window.L.geoJSON(fullFeature, {
+        style: highlightStyle,
+        pointToLayer: (feature, latlng) => {
+          // Para puntos, usar un círculo más grande
+          return window.L.circleMarker(latlng, {
+            radius: 8,
+            fillColor: '#3388ff',
+            color: '#3388ff',
+            weight: 3,
+            opacity: 1,
+            fillOpacity: 0.5
+          });
+        }
+      });
+
+      // Añadir cada layer de la feature a la capa de selección y guardar referencia
+      const layers = [];
+      geoJsonLayer.eachLayer((layer) => {
+        if (selectionLayerRef.current) {
+          selectionLayerRef.current.addLayer(layer);
+          layers.push(layer);
+          // Asegurar que cada layer esté en el frente
+          if (layer.bringToFront) {
+            layer.bringToFront();
+          }
+        }
+      });
+
+      // Asegurar que la capa de selección esté en el frente del mapa
+      if (selectionLayerRef.current && selectionLayerRef.current.bringToFront) {
+        selectionLayerRef.current.bringToFront();
+      }
+
+      // Guardar referencia para poder eliminar después
+      selectedFeaturesMapRef.current.set(featureId, layers);
+    } catch (error) {
+      console.error('[TablePaginated] Error al añadir feature al mapa:', error);
+    }
+  };
+
+  // Función para eliminar una feature del mapa de selección
+  const removeFeatureFromMapSelection = (featureId) => {
+    if (!selectionLayerRef.current) {
+      return;
+    }
+
+    const layers = selectedFeaturesMapRef.current.get(featureId);
+    if (layers) {
+      layers.forEach((layer) => {
+        if (selectionLayerRef.current.hasLayer(layer)) {
+          selectionLayerRef.current.removeLayer(layer);
+        }
+      });
+      selectedFeaturesMapRef.current.delete(featureId);
+    }
+  };
+
+  // Restaurar selecciones en el mapa cuando hay selecciones guardadas
+  // Esto debe ejecutarse independientemente de si el drawer está abierto o cerrado
+  useEffect(() => {
+    if (!mapInstance || selectedRows.size === 0 || !qgsUrl || !qgsProjectPath || !layerName) {
+      return;
+    }
+
+    // Restaurar todas las selecciones guardadas en el mapa
+    // Solo añadir las que no estén ya en el mapa
+    const restoreSelections = async () => {
+      for (const featureId of selectedRows) {
+        // Verificar si ya está en el mapa
+        if (!selectedFeaturesMapRef.current.has(featureId)) {
+          await addFeatureToMapSelection(featureId);
+        }
+      }
+    };
+
+    // Ejecutar inmediatamente si hay selecciones y la capa está creada
+    if (selectionLayerRef.current) {
+      restoreSelections();
+    }
+  }, [mapInstance, selectedRows.size, qgsUrl, qgsProjectPath, layerName, token]);
 
   const loadPage = useCallback(() => {
     if (!layer || !qgsUrl || !qgsProjectPath) {
@@ -400,9 +571,9 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                   <th 
                     className="table__actions-header" 
                     style={{ 
-                      width: `${calculateActionsColumnWidth(layer, null)}px`, 
-                      minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
-                      maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                      width: `${calculateActionsColumnWidth(layer, mapInstance, startEditingGeometry)}px`, 
+                      minWidth: `${calculateActionsColumnWidth(layer, mapInstance, startEditingGeometry)}px`, 
+                      maxWidth: `${calculateActionsColumnWidth(layer, mapInstance, startEditingGeometry)}px` 
                     }}
                   >
                     {translate('ui.table.actions')}
@@ -452,7 +623,7 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                           onMouseDown={(e) => handleMouseDown(e, adjustedIndex, colWidth)}
                           role="separator"
                           aria-orientation="vertical"
-                          aria-label={translate('ui.table.resizeColumn', 'Redimensionar columna')}
+                          aria-label={translate('ui.table.resizeColumn')}
                         />
                       </th>
                     );
@@ -484,9 +655,9 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                         <td 
                           className="table__actions-cell" 
                           style={{ 
-                            width: `${calculateActionsColumnWidth(layer, null)}px`, 
-                            minWidth: `${calculateActionsColumnWidth(layer, null)}px`, 
-                            maxWidth: `${calculateActionsColumnWidth(layer, null)}px` 
+                            width: `${calculateActionsColumnWidth(layer, null, null)}px`, 
+                            minWidth: `${calculateActionsColumnWidth(layer, null, null)}px`, 
+                            maxWidth: `${calculateActionsColumnWidth(layer, null, null)}px` 
                           }}
                         >
                           <TableActionsColumn
@@ -495,7 +666,7 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                             layer={layer}
                             layerName={layerName}
                             selected={selectedRows.has(featureId)}
-                            onSelectChange={(id, checked) => {
+                            onSelectChange={async (id, checked) => {
                               setSelectedRows(prev => {
                                 const next = new Set(prev);
                                 if (checked) {
@@ -503,39 +674,80 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                                 } else {
                                   next.delete(id);
                                 }
+                                
+                                // Guardar el estado de selección en tableStateStore
+                                setTableState(tableId, {
+                                  selectedRows: Array.from(next) // Convertir Set a Array para guardar
+                                });
+                                
                                 return next;
                               });
+                              
+                              // Añadir/eliminar del mapa si hay mapInstance
+                              if (mapInstance) {
+                                if (checked) {
+                                  await addFeatureToMapSelection(id);
+                                } else {
+                                  removeFeatureFromMapSelection(id);
+                                }
+                              }
                             }}
-                            onAction={(actionPayload) => {
+                            onAction={async (actionPayload) => {
+                              console.log('[TablePaginated] onAction recibido:', actionPayload);
                               // Refrescar datos después de acciones que modifican features
                               if (actionPayload.action === 'update' || actionPayload.action === 'delete') {
-                                // Recargar datos
-                                setLoading(true);
-                                const sortOptions =
-                                  sortState.field && sortState.direction
-                                    ? { sortBy: sortState.field, sortDirection: sortState.direction.toUpperCase() }
-                                    : undefined;
-                                const fieldsMap = (layer?.fields || []).reduce((acc, f) => {
-                                  acc[f.name] = f;
-                                  return acc;
-                                }, {});
-                                const cqlFilter = buildFilterQuery(columnFilters, fieldsMap);
-                                const startIndex = page * pageSize;
-                                fetchFeatures(qgsUrl, qgsProjectPath, layerName, cqlFilter, startIndex, pageSize, token, sortOptions)
-                                  .then(features => {
-                                    const datosExtraidos = features.map(f => {
-                                      const props = f.properties || {};
-                                      return props;
-                                    });
-                                    setFeaturesData(features);
-                                    setRows(datosExtraidos);
-                                    setHasMorePages(features.length === pageSize);
-                                    setLoading(false);
-                                  })
-                                  .catch(err => {
-                                    console.error('Error al recargar datos:', err);
-                                    setLoading(false);
+                                console.log('[TablePaginated] Recargando datos después de', actionPayload.action);
+                                
+                                // Guardar posición de scroll antes de recargar
+                                if (scrollContainerRef.current) {
+                                  savedScrollLeftRef.current = scrollContainerRef.current.scrollLeft;
+                                  savedScrollTopRef.current = scrollContainerRef.current.scrollTop;
+                                  console.log('[TablePaginated] Scroll guardado:', { 
+                                    left: savedScrollLeftRef.current, 
+                                    top: savedScrollTopRef.current 
                                   });
+                                }
+                                
+                                // Si se borró una feature, volver a la primera página si estamos en una página que ya no tiene datos
+                                // Por ahora, simplemente recargar la página actual
+                                setLoading(true);
+                                setError(null);
+                                try {
+                                  const sortOptions =
+                                    sortState.field && sortState.direction
+                                      ? { sortBy: sortState.field, sortDirection: sortState.direction.toUpperCase() }
+                                      : undefined;
+                                  const fieldsMap = (layer?.fields || []).reduce((acc, f) => {
+                                    acc[f.name] = f;
+                                    return acc;
+                                  }, {});
+                                  const cqlFilter = buildFilterQuery(columnFilters, fieldsMap);
+                                  const startIndex = page * pageSize;
+                                  const features = await fetchFeatures(qgsUrl, qgsProjectPath, layerName, cqlFilter, startIndex, pageSize, token, sortOptions);
+                                  const datosExtraidos = features.map(f => {
+                                    const props = f.properties || {};
+                                    return props;
+                                  });
+                                  setFeaturesData(features);
+                                  setRows(datosExtraidos);
+                                  setHasMorePages(features.length === pageSize);
+                                  
+                                  // Si la página actual está vacía y no es la primera, volver a la primera página
+                                  if (features.length === 0 && page > 0) {
+                                    console.log('[TablePaginated] Página vacía, volviendo a la primera página');
+                                    setPage(0);
+                                  }
+                                } catch (err) {
+                                  console.error('[TablePaginated] Error al recargar datos:', err);
+                                  setError(err.message);
+                                  notificationManager?.addNotification?.({
+                                    title: translate('ui.table.error'),
+                                    text: err.message || translate('ui.table.errorLoadingData'),
+                                    level: 'error'
+                                  });
+                                } finally {
+                                  setLoading(false);
+                                }
                               }
                             }}
                             translate={translate}
@@ -543,6 +755,9 @@ const TablePaginated = ({ layerName, defaultPageSize = 10, tableHeight = 360 }) 
                             qgsProjectPath={qgsProjectPath}
                             token={token}
                             notificationManager={notificationManager}
+                            mapInstance={mapInstance}
+                            startEditingGeometry={startEditingGeometry}
+                            onMinimizeDrawer={onMinimizeDrawer}
                           />
                         </td>
                         {columns.map((column, colIndex) => {

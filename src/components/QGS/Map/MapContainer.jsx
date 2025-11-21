@@ -411,8 +411,14 @@ const MapContainer = ({
     const loadLayers = async () => {
       try {
         // Actualizar QGISPRJ y WMTSLAYERS en el mapa (como en el legacy: mapView.QGISPRJ = QGISPRJ)
+        // IMPORTANTE: Asignar la referencia directamente para que los cambios en config se reflejen en map.QGISPRJ
         if (config) {
           map.QGISPRJ = config;
+          // Asegurar que la referencia se mantenga actualizada
+          console.log('[MapContainer] Config asignado a map.QGISPRJ:', {
+            hasLayerTree: !!config.layerTree,
+            hasChildren: !!(config.layerTree?.children && config.layerTree.children.length > 0)
+          });
         }
         if (baseLayersConfig) {
           map.WMTSLAYERS = baseLayersConfig;
@@ -472,22 +478,83 @@ const MapContainer = ({
             
             // Crear función para refrescar la capa WMS (recrear con nuevas capas visibles)
             refreshWMSLayerRef.current = async () => {
-              if (!map || !config || !qgsUrl || !qgsProjectPath) {
+              // IMPORTANTE: Leer siempre desde map.QGISPRJ que es donde se guarda el config actualizado
+              // Cuando el TOC actualiza isVisible, lo hace en qgisChild que es una referencia al objeto original
+              // en config.layerTree, y ese config se guarda en map.QGISPRJ
+              const currentConfig = map?.QGISPRJ || config;
+              const currentBaseLayersConfig = map?.WMTSLAYERS || baseLayersConfig;
+              
+              if (!map || !currentConfig || !qgsUrl || !qgsProjectPath) {
+                console.warn('[MapContainer] refreshWMSLayer - Faltan parámetros necesarios:', {
+                  hasMap: !!map,
+                  hasConfig: !!currentConfig,
+                  hasQgsUrl: !!qgsUrl,
+                  hasQgsProjectPath: !!qgsProjectPath,
+                  hasMapQGISPRJ: !!map?.QGISPRJ
+                });
                 return;
               }
 
               try {
                 // Obtener las nuevas capas visibles
-                const children = config.layerTree.children || (config.layerTree.nodeType ? [config.layerTree] : []);
-                const newVisibleLayers = getVisibleLayersInChildren(children, [], baseLayersConfig);
+                // IMPORTANTE: Leer desde map.QGISPRJ.layerTree que es donde están los cambios de isVisible
+                const layerTree = currentConfig.layerTree;
+                if (!layerTree) {
+                  console.warn('[MapContainer] refreshWMSLayer - No hay layerTree en el config');
+                  return;
+                }
+                
+                const children = layerTree.children || (layerTree.nodeType ? [layerTree] : []);
+                
+                console.log('[MapContainer] refreshWMSLayer - Inicio');
+                console.log('[MapContainer] refreshWMSLayer - Leyendo desde:', {
+                  source: map?.QGISPRJ ? 'map.QGISPRJ' : 'config',
+                  hasMapQGISPRJ: !!map?.QGISPRJ,
+                  hasConfig: !!config,
+                  childrenCount: children.length,
+                  children: children.map(c => ({
+                    name: c.name,
+                    isVisible: c.isVisible,
+                    nodeType: c.nodeType,
+                    hasChildren: !!(c.children && c.children.length > 0)
+                  }))
+                });
+                
+                // Log detallado de todos los nodos recursivamente para debug
+                const logAllNodes = (nodes, depth = 0) => {
+                  nodes.forEach(node => {
+                    console.log(`[MapContainer] refreshWMSLayer - Nodo (depth ${depth}):`, {
+                      name: node.name,
+                      isVisible: node.isVisible,
+                      nodeType: node.nodeType,
+                      hasChildren: !!(node.children && node.children.length > 0)
+                    });
+                    if (node.children && node.children.length > 0) {
+                      logAllNodes(node.children, depth + 1);
+                    }
+                  });
+                };
+                logAllNodes(children);
+                
+                const newVisibleLayers = getVisibleLayersInChildren(children, [], currentBaseLayersConfig);
+                
+                console.log('[MapContainer] refreshWMSLayer - Capas visibles encontradas:', {
+                  count: newVisibleLayers.length,
+                  layers: newVisibleLayers
+                });
                 
                 // Filtrar capas visibles que existen en el config
                 const newVisibleProjectLayers = newVisibleLayers.filter((layerName) => {
-                  return !!config.layers[layerName];
+                  return !!currentConfig.layers?.[layerName];
+                });
+                
+                console.log('[MapContainer] refreshWMSLayer - Capas visibles filtradas:', {
+                  count: newVisibleProjectLayers.length,
+                  layers: newVisibleProjectLayers
                 });
 
                 // Obtener nuevos filtros WMS
-                const newWmsFilters = getWMSFilters(config, newVisibleProjectLayers);
+                const newWmsFilters = getWMSFilters(currentConfig, newVisibleProjectLayers);
 
                 // Si no hay capas visibles, eliminar la capa WMS existente
                 if (newVisibleProjectLayers.length === 0) {
@@ -605,11 +672,54 @@ const MapContainer = ({
   ]);
   
   // Exponer la función de refresh a través del contexto
+  // Actualizar cuando cambie el config o cuando se cree la función
   useEffect(() => {
-    if (setRefreshWMSLayer) {
-      setRefreshWMSLayer(() => refreshWMSLayerRef.current);
+    if (setRefreshWMSLayer && refreshWMSLayerRef.current) {
+      // Crear una función wrapper que siempre use la referencia actual y el config más reciente
+      const refreshFunction = async () => {
+        const map = contextMapInstance || mapInstanceRef?.current;
+        if (!map) {
+          console.warn('[MapContainer] refreshFunction - No hay instancia del mapa');
+          return;
+        }
+        
+        // Asegurar que map.QGISPRJ esté actualizado con el config más reciente
+        if (config && map.QGISPRJ !== config) {
+          console.log('[MapContainer] refreshFunction - Actualizando map.QGISPRJ con config más reciente');
+          map.QGISPRJ = config;
+        }
+        
+        // Llamar a la función de refresh si existe
+        if (refreshWMSLayerRef.current) {
+          console.log('[MapContainer] refreshFunction - Llamando a refreshWMSLayerRef.current');
+          await refreshWMSLayerRef.current();
+        } else {
+          console.warn('[MapContainer] refreshFunction - refreshWMSLayerRef.current no está disponible');
+        }
+      };
+      
+      // IMPORTANTE: Guardar la función directamente
+      // Verificar que refreshFunction sea realmente una función antes de guardarla
+      if (typeof refreshFunction === 'function') {
+        // IMPORTANTE: Guardar la función directamente, NO usar () => refreshFunction
+        // porque eso crea una función que retorna otra función, y React la guarda como objeto
+        setRefreshWMSLayer(refreshFunction);
+        console.log('[MapContainer] refreshWMSLayer expuesto al contexto:', {
+          type: typeof refreshFunction,
+          isFunction: typeof refreshFunction === 'function',
+          hasRefreshWMSLayerRef: !!refreshWMSLayerRef.current,
+          functionName: refreshFunction.name || 'anonymous'
+        });
+      } else {
+        console.error('[MapContainer] refreshFunction no es una función:', typeof refreshFunction, refreshFunction);
+      }
+    } else {
+      console.warn('[MapContainer] No se puede exponer refreshWMSLayer:', {
+        hasSetRefreshWMSLayer: !!setRefreshWMSLayer,
+        hasRefreshWMSLayerRef: !!refreshWMSLayerRef.current
+      });
     }
-  }, [setRefreshWMSLayer]);
+  }, [setRefreshWMSLayer, config, baseLayersConfig, contextMapInstance, mapInstanceRef]); // Añadir todas las dependencias necesarias
 
   return (
     <div
