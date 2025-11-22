@@ -595,7 +595,7 @@ const MapToolbar = ({ toolsConfig = null }) => {
       // Solo cancelar dibujo si se está activando el GPS, no al desactivarlo
       if (newActive && cancelDrawing) cancelDrawing();
     } },
-    isToolEnabled('info-click') && { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click'), disabled: !hasQueryableLayers },
+    isToolEnabled('info-click') && hasQueryableLayers && { key: 'info-click', type: 'tool', circular: true, icon: 'fg-poi-info', title: tr('ui.map.infoClick','Info en click','Info click') },
     measureSelectItem
   ].filter(Boolean); // Filtrar elementos falsy (false, null, undefined)
 
